@@ -1,0 +1,61 @@
+{
+  "chars": {
+    "CHAR-233A04": {
+      "id": "CHAR-233A04",
+      "name": "落盘测试",
+      "hairstyle": "",
+      "face": "",
+      "physique": "",
+      "identity": "",
+      "avatar_path": "",
+      "created_at": 1791700025088,
+      "updated_at": 1791700025088
+    }
+  },
+  "assets": {
+    "1": {
+      "id": 1,
+      "character_id": "CHAR-233A04",
+      "kind": "head_dressed",
+      "slot": "front",
+      "path": "c59dfe6a3b75426a9f0131d1e445b91a.png",
+      "url": "/api/images/c59dfe6a3b75426a9f0131d1e445b91a.png",
+      "note": "",
+      "created_at": 1791723131448,
+      "updated_at": 1791723131448
+    },
+    "2": {
+      "id": 2,
+      "character_id": "CHAR-233A04",
+      "kind": "head_dressed",
+      "slot": "side",
+      "path": "b4af235a91fa4576bcfa23574ef226f2.png",
+      "url": "/api/images/b4af235a91fa4576bcfa23574ef226f2.png",
+      "note": "",
+      "created_at": 1791724272041,
+      "updated_at": 1791724272041
+    }
+  },
+  "slot_prompts": {
+    "CHAR-233A04|head_dressed|front": "high-quality 2D anime character design sheet, head_dressed front view,  , clean line, flat color, front/side/back consistent, masterpiece"
+  },
+  "slot_svgs": {},
+  "outfits": {},
+  "outfit_cats": {},
+  "docs": {
+    "CHAR-233A04": {
+      "doc_html": ""
+    },
+    "CHAR-95D72E": {
+      "doc_html": ""
+    }
+  },
+  "versions": {
+    "CHAR-233A04": []
+  },
+  "seq": {
+    "asset": 3,
+    "outfit": 2,
+    "version": 2
+  }
+}

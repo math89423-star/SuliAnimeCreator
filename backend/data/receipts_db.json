@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "package_id": "MANUAL-LILY-T01",
+      "shot_id": "SHOT-LILY-MASTER",
+      "task_id": "LILY-T01-1be3af00",
+      "engine": "comfyui",
+      "provider": "local",
+      "media_url": "/api/generate/image/%E7%B4%AB%E5%8F%91%E7%99%BE%E5%90%88%E5%B0%91%E5%A5%B3/master_1be3af00_LILY-OP-T01_00001_.png",
+      "status": "done",
+      "log_tail": "28步/cfg6.5/seed1055429653/done",
+      "deviations": "D1裙色反/D2刀+斜挎带/D3泪痣不可辨(皆执行层)",
+      "created_at": 1791719936695
+    }
+  ]
+}

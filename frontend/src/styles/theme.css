@@ -1,0 +1,108 @@
+/* SuliAnimeCreator theme v3.1 — 白灰底 + 樱粉点缀（按钮/激活/眉题/logo）
+ * 底面全部中性灰（Geist 灰阶），粉只出现在操作与激活态。
+ */
+:root {
+  /* suli 自有 tokens（无冲突，原样保留） */
+  --suli-bg: #fafafa;
+  --suli-bg-2: #f4f4f5;
+  --suli-surface: #ffffff;
+  --suli-surface-hover: #f4f4f5;
+  --suli-surface-active: #e4e4e7;
+  --suli-border: #e4e4e7;
+  --suli-border-hover: #d4d4d8;
+  --suli-text: #171717;
+  --suli-text-2: #525252;
+  --suli-text-3: #a3a3a3;
+  --suli-primary: #FB7299;
+  --suli-primary-ink: #ffffff;
+  --suli-primary-hover: #F95A86;
+  --suli-accent: #23ADE5;
+  --suli-accent-soft: #E3F4FC;
+  --suli-gold: #FFB84D;
+  --suli-success: #3EC97F;
+  --suli-warning: #FF9F43;
+  --suli-danger: #FF5D5D;
+  --suli-radius: 16px;
+  --suli-radius-sm: 12px;
+  --suli-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --suli-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --suli-font: "Hiragino Maru Gothic ProN", "Yuanti SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --suli-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --suli-kana: "Hiragino Kaku Gothic ProN", "Yu Gothic", "PingFang SC", sans-serif;
+}
+/* Element Plus 全局主色跟樱粉走：html:root(0,1,1) 压过 element 自带 :root(0,1,0)，
+ * 与按需引入的样式先后无关。 */
+html:root {
+  --el-color-primary: #FB7299;
+  --el-color-primary-light-3: #FC9BB8;
+  --el-color-primary-light-5: #FDC4D6;
+  --el-color-primary-light-7: #FEE0EA;
+  --el-color-primary-light-8: #FEEAF0;
+  --el-color-primary-light-9: #FFF3F7;
+  --el-color-primary-dark-2: #E55A82;
+  --el-border-radius-base: 12px;
+  --el-border-color: #e4e4e7;
+  --el-text-color-regular: #2B2B3A;
+  --el-text-color-secondary: #8A7A85;
+  --el-link-text-color: #23ADE5;
+}
+html, body, #app { height: 100%; }
+body {
+  margin: 0; color: var(--suli-text);
+  background: var(--suli-bg) linear-gradient(180deg, #f4f4f5 0%, var(--suli-bg) 220px);
+  font-family: var(--suli-font); font-size: 14px; line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.page-title { font-size: 22px; font-weight: 800; letter-spacing: 0.01em; margin: 0 0 4px; }
+.page-desc { font-size: 13px; color: var(--suli-text-2); margin-bottom: 10px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--suli-primary); font-family: var(--suli-kana); }
+.kana { font-family: var(--suli-kana); letter-spacing: 0.2em; }
+.tnum { font-family: var(--suli-mono); font-variant-numeric: tabular-nums; }
+/* kun式页面骨架：7xl居中 + radial 底 */
+.kun-page{max-width:96rem;margin:0 auto}
+.bg-radial{background-image:radial-gradient(ellipse 60% 40% at 50% 0%,#e4e4e7 0%,transparent 70%)}
+h3 { font-size: 16px; font-weight: 800; margin: 0 0 8px; }
+.suli-card {
+  background: var(--suli-surface); border: 1.5px solid var(--suli-border);
+  border-radius: var(--suli-radius); box-shadow: none;
+}
+.suli-card.hoverable:hover { border-color: var(--suli-border-hover); box-shadow: var(--suli-shadow-sm); }
+.suli-muted { color: var(--suli-text-2); font-size: 13px; }
+.suli-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 1100px) { .suli-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 820px) {
+  .suli-grid-3 { grid-template-columns: 1fr; }
+  .shell { flex-direction: column; height: auto !important; }
+  .left, .right { width: 100% !important; border: none !important; border-bottom: 1.5px solid var(--suli-border) !important; }
+}
+/* 主按钮樱粉实心，hover 加深（html body 提权，压过按需引入的后加载样式） */
+html body .el-button--primary {
+  --el-button-bg-color: var(--suli-primary);
+  --el-button-border-color: var(--suli-primary);
+  --el-button-hover-bg-color: var(--suli-primary-hover);
+  --el-button-hover-border-color: var(--suli-primary-hover);
+  border-radius: 999px;
+}
+html body .el-button { border-radius: 999px; }
+html body .el-menu { border-right: none !important; background: transparent !important; }
+html body .el-menu-item { font-size: 14px; font-weight: 600; border-radius: 999px; margin: 2px 10px; height: 38px; line-height: 38px; }
+html body .el-menu-item:hover { background: var(--suli-surface-hover) !important; }
+html body .el-menu-item.is-active { background: var(--suli-primary) !important; color: #fff !important; font-weight: 800; box-shadow: var(--suli-shadow-sm); }
+html body .el-menu-item.is-active .kana { color: rgba(255,255,255,.75) !important; }
+html body .el-tag { border-radius: 999px; }
+html body .el-input__wrapper { border-radius: 999px; }
+html body a { color: var(--suli-accent); }
+pre.suli-pre { background: var(--suli-bg-2); border: 1px solid var(--suli-border); border-radius: var(--suli-radius-sm); padding: 10px; white-space: pre-wrap; font-size: 13px; font-family: var(--suli-mono); }
+.slot-card { transition: border-color 0.15s, box-shadow 0.15s, transform 0.18s; }
+.slot-card:hover { border-color: var(--suli-primary); box-shadow: var(--suli-shadow); transform: translateY(-3px); }
+.slot-thumb { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 12px; background: linear-gradient(135deg, var(--suli-bg-2), #fff); border: 1.5px solid var(--suli-border); display: flex; align-items: center; justify-content: center; color: var(--suli-text-3); font-size: 12px; }
+.skeleton { background: linear-gradient(90deg, #f4f4f5 25%, #e4e4e7 37%, #f4f4f5 63%); background-size: 400% 100%; animation: suli-shimmer 1.2s infinite; border-radius: 12px; min-height: 14px; }
+@keyframes suli-shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+/* sparkle 装饰 */
+.sparkle { position: absolute; color: var(--suli-gold); opacity: 0.85; pointer-events: none; animation: twinkle 2.6s ease-in-out infinite; }
+::selection { background: #e4e4e7; color: #171717; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 999px; border: 2px solid #fafafa; }
+*::-webkit-scrollbar-track { background: transparent; }
+:focus-visible { outline: 2px solid var(--suli-primary); outline-offset: 2px; border-radius: 6px; }
+@keyframes twinkle { 0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.4; } 50% { transform: scale(1.15) rotate(20deg); opacity: 1; } }

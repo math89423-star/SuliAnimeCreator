@@ -1,0 +1,78 @@
+{
+  "eps": {
+    "EP-落盘": {
+      "id": "EP-落盘",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft"
+    },
+    "EP-D1": {
+      "id": "EP-D1",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft"
+    },
+    "EP-LLM1": {
+      "id": "EP-LLM1",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft"
+    },
+    "EP-DEMO01": {
+      "verdict": "PASS",
+      "screenplay_md": "## EP001-SC001 内·洗衣房·夜\n沈禾：取衣牌呢？\n蒋姨：烘干机停了。",
+      "segs": []
+    }
+  },
+  "shots": {
+    "SHOT-P-落盘-001-1": {
+      "id": "SHOT-P-落盘-001-1",
+      "episode_id": "EP-落盘",
+      "duty": "[规则拆]甲台词：你好。",
+      "duration_s": 5,
+      "camera": {
+        "crop": "medium",
+        "height": "eye"
+      },
+      "sound": "甲：你好。",
+      "key_text_en": "甲 speaking, dialogue beat"
+    },
+    "SHOT-P-D1-001-1": {
+      "id": "SHOT-P-D1-001-1",
+      "episode_id": "EP-D1",
+      "duty": "[规则拆]沈禾台词：取衣牌呢？",
+      "duration_s": 5,
+      "camera": {
+        "crop": "medium",
+        "height": "eye"
+      },
+      "sound": "沈禾：取衣牌呢？",
+      "key_text_en": "沈禾 speaking, dialogue beat"
+    },
+    "SHOT-MO01-M001": {
+      "id": "SHOT-MO01-M001",
+      "episode_id": "EP-DEMO01",
+      "ord": 0,
+      "duty": "",
+      "duration_s": 3,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "拉"
+      },
+      "sound": "",
+      "key_text_en": "",
+      "images": [
+        {
+          "name": "2217033815af446bbfbb7450421fe7fc.png",
+          "kind": "last"
+        },
+        {
+          "name": "163973da95eb46ef9ccf873b942d9183.webp",
+          "kind": "first"
+        }
+      ],
+      "image": ""
+    }
+  }
+}
