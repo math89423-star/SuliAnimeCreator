@@ -1,3 +1,6 @@
+"""LEGACY 占位：业务真源是 data/*.json（见 services/disk_store + services/repo）。
+本文件仅保留 SQLAlchemy 建表兼容，不写业务读/写。新代码不要再引用 db。
+"""
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()

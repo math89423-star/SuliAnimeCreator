@@ -1,25 +1,22 @@
-import { defineStore } from 'pinia'
-import { ref } from 'vue'
+/** app 门面：保持旧 `useAppStore` 可用。新代码请按域直引 useProjectStore/useEpisodeStore/useUiStore。 */
+import { defineStore, storeToRefs } from 'pinia'
+import { useProjectStore } from './project'
+import { useEpisodeStore } from './episode'
+import { useUiStore } from './ui'
+
 export const useAppStore = defineStore('app', () => {
-  const module = ref<'gallery' | 'story' | 'character' | 'scriptboard' | 'director' | 'art'>('gallery')
-  const episodeId = ref('EP-DEMO01')
-  const projectId = ref('')
-  const projects = ref<any[]>([])
-  const selectedCharId = ref('')
-  const lastSavedAt = ref(0)
-  function touchSaved() { lastSavedAt.value = Date.now() }
-  const shots = ref<any[]>([])
-  const health = ref<any>(null)
-  const leftCollapsed = ref(false)
-  const rightCollapsed = ref(false)
-  // 全局速查本：浮窗跨路由保留；默认收起（仅📖），记住工具与几何，可关闭
-  const quickRef = ref<{ open: boolean; minimized: boolean; tool: string; x: number | null; y: number | null; w: number | null; h: number | null }>(
-    { open: false, minimized: false, tool: 'composition-camera', x: null, y: null, w: null, h: null })
-  function openQuickRef(tool?: string) { if (tool) quickRef.value.tool = tool; quickRef.value.open = true; quickRef.value.minimized = false }
-  function closeQuickRef() { quickRef.value.open = false; quickRef.value.minimized = false }
-  function minimizeQuickRef() { quickRef.value.open = false; quickRef.value.minimized = true }
-  function switchModule(m: any) { module.value = m }
-  function toggleLeft() { leftCollapsed.value = !leftCollapsed.value }
-  function toggleRight() { rightCollapsed.value = !rightCollapsed.value }
-  return { module, episodeId, projectId, projects, selectedCharId, lastSavedAt, touchSaved, shots, health, leftCollapsed, rightCollapsed, switchModule, toggleLeft, toggleRight, quickRef, openQuickRef, closeQuickRef, minimizeQuickRef }
+  const project = useProjectStore()
+  const episode = useEpisodeStore()
+  const ui = useUiStore()
+  const { projectId, projects, selectedCharId } = storeToRefs(project)
+  const { episodeId, shots, lastSavedAt, centralApplySeq, centralApplyEpisode } = storeToRefs(episode)
+  const { module, health, leftCollapsed, rightCollapsed, quickRef } = storeToRefs(ui)
+  return {
+    module, episodeId, projectId, projects, selectedCharId, lastSavedAt, shots, health,
+    leftCollapsed, rightCollapsed, quickRef, centralApplySeq, centralApplyEpisode,
+    touchSaved: episode.touchSaved,
+    switchModule: ui.switchModule, toggleLeft: ui.toggleLeft, toggleRight: ui.toggleRight,
+    openQuickRef: ui.openQuickRef, closeQuickRef: ui.closeQuickRef, minimizeQuickRef: ui.minimizeQuickRef,
+    requestCentralApply: episode.requestCentralApply,
+  }
 })

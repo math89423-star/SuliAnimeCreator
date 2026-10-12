@@ -5,6 +5,7 @@ from flask import Blueprint, request, jsonify
 import uuid
 import time
 from ..services.disk_store import load, save
+from ..services.character_prompts import build_slot_prompt, SLOT_CN
 
 bp = Blueprint("character", __name__, url_prefix="/api/v1/characters")
 
@@ -146,17 +147,21 @@ def set_slot_prompt(cid):
     _persist()
     return ok({"kind": b.get("kind"), "slot": b.get("slot"), "prompt": b.get("prompt")})
 
+# SLOT_CN 见 services/character_prompts（唯一真源，此处保留导入名兼容）
+
+
 @bp.post("/<cid>/slot-prompts/generate")
 def gen_slot_prompt(cid):
+    """槽位提示词：按目标出图引擎出稿（novelai=tag 轨 / tsubaki3=五槽自然语言 / seedream=用途+连贯描述）。
+    不传 engine 时保持旧行为（兼容既有前端）。craft 归 skills/image/production-image-models。"""
     b = request.get_json(force=True) or {}
     kind, slot = b.get("kind", ""), b.get("slot", "")
+    engine = (b.get("engine") or "").strip()
     c = _CHARS.get(cid, {})
-    prompt = (f"high-quality 2D anime character design sheet, {kind} {slot} view, "
-              f"{c.get('hairstyle','')} {c.get('identity','')}, clean line, flat color, "
-              f"front/side/back consistent, masterpiece")
+    prompt = build_slot_prompt(c, kind, slot, engine)
     _SLOT_PROMPTS[(cid, kind, slot)] = prompt
     _persist()
-    return ok({"kind": kind, "slot": slot, "prompt": prompt, "mocked": True})
+    return ok({"kind": kind, "slot": slot, "prompt": prompt, "mocked": True, "engine": engine or "legacy"})
 
 @bp.get("/<cid>/slot-svgs")
 def list_slot_svgs(cid):

@@ -1,0 +1,32 @@
+import { http } from './http'
+export const characterApi = {
+  listCharacters: () => http.get('/v1/characters').then(r => r.data),
+  gallery: () => http.get('/v1/characters/gallery').then(r => r.data),
+  createCharacter: (p: any) => http.post('/v1/characters', p).then(r => r.data),
+  updateCharacter: (id: string, p: any) => http.put(`/v1/characters/${id}`, p).then(r => r.data),
+  charConstants: () => http.get('/v1/characters/constants').then(r => r.data),
+  listAssets: (id: string) => http.get(`/v1/characters/${id}/assets`).then(r => r.data),
+  addAssetMeta: (id: string, p: any) => http.post(`/v1/characters/${id}/assets`, p).then(r => r.data),
+  listSlotPrompts: (id: string) => http.get(`/v1/characters/${id}/slot-prompts`).then(r => r.data),
+  genSlotPrompt: (id: string, kind: string, slot: string, engine = '') => http.post(`/v1/characters/${id}/slot-prompts/generate`, { kind, slot, engine }).then(r => r.data),
+  saveSlotPrompt: (id: string, kind: string, slot: string, prompt: string) => http.put(`/v1/characters/${id}/slot-prompts`, { kind, slot, prompt }).then(r => r.data),
+  listOutfits: (id: string) => http.get(`/v1/characters/${id}/outfits`).then(r => r.data),
+  createOutfit: (id: string, p: any) => http.post(`/v1/characters/${id}/outfits`, p).then(r => r.data),
+  deleteOutfit: (id: string, oid: number) => http.delete(`/v1/characters/${id}/outfits/${oid}`).then(r => r.data),
+  activateOutfit: (id: string, oid: number) => http.post(`/v1/characters/${id}/outfits/${oid}/activate`).then(r => r.data),
+  listOutfitCats: (id: string) => http.get(`/v1/characters/${id}/outfit-categories`).then(r => r.data),
+  saveOutfitCat: (id: string, category: string, description: string) => http.put(`/v1/characters/${id}/outfit-categories`, { category, description }).then(r => r.data),
+  getDoc: (id: string) => http.get(`/v1/characters/${id}/doc`).then(r => r.data),
+  saveDoc: (id: string, doc_html: string) => http.put(`/v1/characters/${id}/doc`, { doc_html }).then(r => r.data),
+  iterate: (id: string, dimension: string, instruction: string) => http.post(`/v1/characters/${id}/iterate`, { dimension, instruction }).then(r => r.data),
+  listVersions: (id: string) => http.get(`/v1/characters/${id}/versions`).then(r => r.data),
+  rollback: (id: string, version_id: number) => http.post(`/v1/characters/${id}/rollback`, { version_id }).then(r => r.data),
+  freezeVersions: (id: string) => http.post(`/v1/characters/${id}/freeze`).then(r => r.data),
+  pack: (id: string) => http.get(`/v1/characters/${id}/pack`).then(r => r.data),
+  uploadAvatar: (id: string, f: File) => { const fd = new FormData(); fd.append('file', f); return http.post(`/v1/characters/${id}/avatar`, fd).then(r => r.data) },
+  uploadSlotImage: (id: string, kind: string, slot: string, f: File) => { const fd = new FormData(); fd.append('file', f); fd.append('kind', kind); fd.append('slot', slot); return http.post(`/v1/characters/${id}/assets/file`, fd).then(r => r.data) },
+}
+export const DIMS = [
+  { key: 'hairstyle', label: '发型' }, { key: 'face', label: '面部' },
+  { key: 'physique', label: '体态' }, { key: 'identity', label: '身份' },
+]
