@@ -1,8 +1,14 @@
 import { http } from './http'
 export const boardApi = {
   saveScreenplay: (eid: string, md: string) => http.put(`/v1/scriptboard/screenplay/${eid}`, { screenplay_md: md }).then(r => r.data),
+  getScreenplay: (eid: string) => http.get(`/v1/scriptboard/screenplay/${eid}`).then(r => r.data),
+  uploadEpisodeImage: (eid: string, f: File) => { const fd = new FormData(); fd.append('file', f); return http.post(`/v1/scriptboard/episode/${eid}/image`, fd).then(r => r.data) },
+  deleteEpisodeImage: (eid: string, name: string) => http.delete(`/v1/scriptboard/episode/${eid}/image/${name}`).then(r => r.data),
+  setEpisodeImageMeta: (eid: string, name: string, meta: any) => http.post(`/v1/scriptboard/episode/${eid}/image/meta`, { name, ...meta }).then(r => r.data),
   getOutline: (eid: string) => http.get(`/v1/scriptboard/outline/${eid}`).then(r => r.data),
   saveOutline: (eid: string, p: any) => http.put(`/v1/scriptboard/outline/${eid}`, p).then(r => r.data),
+  outlineGenerate: (eid: string, p: any) => http.post(`/v1/scriptboard/outline/generate/${eid}`, p).then(r => r.data),
+  draftFromOutline: (eid: string, p: any = {}) => http.post(`/v1/scriptboard/draft/from-outline/${eid}`, p).then(r => r.data),
   autoSplit: (eid: string, story_md: string, use_llm = false) => http.post(`/v1/scriptboard/auto-split/${eid}`, { story_md, use_llm }).then(r => r.data),
   uploadFile: (f: File) => { const fd = new FormData(); fd.append('file', f); return http.post('/v1/uploads', fd).then(r => r.data) },
   listShots: (eid: string) => http.get('/v1/scriptboard/shots', { params: { episode_id: eid } }).then(r => r.data),
@@ -15,4 +21,5 @@ export const boardApi = {
   reviewRun: (eid: string) => http.post(`/v1/scriptboard/review/run/${eid}`).then(r => r.data),
   updateShot: (sid: string, p: any) => http.put(`/v1/scriptboard/shots/${sid}`, p).then(r => r.data),
   deleteShot: (sid: string) => http.delete(`/v1/scriptboard/shots/${sid}`).then(r => r.data),
+  clearEpisode: (eid: string, target: 'shots' | 'outline' | 'script') => http.post(`/v1/scriptboard/clear/${eid}`, { target }).then(r => r.data),
 }

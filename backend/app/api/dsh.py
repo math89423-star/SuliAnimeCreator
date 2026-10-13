@@ -17,6 +17,15 @@ from ..services.disk_store import load, save
 bp = Blueprint("dsh", __name__, url_prefix="/api/v1/dsh")
 
 _STORE = load("dsh_sessions.json", {"sessions": []})
+
+
+def _refresh():
+    """每次读写前从磁盘重载：单例内存 + 整盘 _persist() 在进程交错时会用旧快照覆盖丢数据。"""
+    global _STORE
+    try:
+        _STORE = load("dsh_sessions.json", {"sessions": []})
+    except Exception:
+        pass
 _LOCKS = {}
 _LOCKS_GUARD = threading.Lock()
 
@@ -49,6 +58,7 @@ def _find(session_id=None, scope=None, key=None):
 
 
 def _upsert_mapping(scope, key, dsh_session_id):
+    _refresh()
     s = _find(scope=scope, key=key)
     now = int(time.time() * 1000)
     if s:
@@ -117,6 +127,7 @@ def _run_headless(message, session_id=None):
 
 @bp.get("/sessions")
 def list_sessions():
+    _refresh()
     scope = request.args.get("scope", "")
     rows = _STORE.get("sessions", [])
     if scope:
@@ -124,8 +135,42 @@ def list_sessions():
     return ok(rows)
 
 
+@bp.get("/skills")
+def list_skills():
+    """skill 加载状态：扫 skills/*/SKILL.md 的 name/description，供前端展示已加载项。"""
+    from pathlib import Path as _P
+    roots = [
+        _P(__file__).resolve().parents[3] / "skills",
+        _P(__file__).resolve().parents[1] / "skills",
+    ]
+    seen, out = set(), []
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for f in sorted(root.rglob("SKILL.md")):
+            try:
+                text = f.read_text(encoding="utf-8")
+            except Exception:
+                continue
+            name, desc = "", ""
+            for line in text.splitlines()[:20]:
+                s = line.strip()
+                if s.startswith("name:"):
+                    name = s.split(":", 1)[1].strip().strip("\"'")
+                if s.startswith("description:"):
+                    desc = s.split(":", 1)[1].strip().strip("\"'")[:160]
+            key = name or str(f.parent)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({"name": name or f.parent.name,
+                        "description": desc, "path": str(f.parent).replace(str(root.parent) + "/", "")})
+    return ok({"skills": out, "count": len(out)})
+
+
 @bp.post("/sessions")
 def get_or_create():
+    _refresh()
     b = request.get_json(force=True) or {}
     scope, key = b.get("scope", "story"), b.get("key", "global")
     s = _find(scope=scope, key=key)
@@ -139,8 +184,45 @@ def get_or_create():
     return ok(s)
 
 
+@bp.put("/sessions/rename")
+def rename_session():
+    """改名：同 scope 内 key 改名，dsh_session_id 不变；撞名 409。"""
+    _refresh()
+    b = request.get_json(force=True) or {}
+    scope = (b.get("scope") or "").strip()
+    key = (b.get("key") or "").strip()
+    new_key = (b.get("new_key") or "").strip()
+    if not scope or not key or not new_key:
+        return jsonify({"code": 4001, "msg": "scope/key/new_key 为空"}), 400
+    s = _find(scope=scope, key=key)
+    if not s:
+        return jsonify({"code": 4004, "msg": "会话不存在"}), 404
+    if new_key != key and _find(scope=scope, key=new_key):
+        return jsonify({"code": 4002, "msg": f"同组已存在 {new_key}"}), 409
+    s["key"] = new_key
+    s["last_active"] = int(time.time() * 1000)
+    _persist()
+    return ok(s)
+
+
+@bp.delete("/sessions")
+def delete_session():
+    """删映射：清掉 {scope,key} 的本地映射与 dsh_session_id，前端同时清本地对话。"""
+    _refresh()
+    b = request.get_json(force=True, silent=True) or {}
+    scope = ((b.get("scope") or "") or request.args.get("scope", "")).strip()
+    key = ((b.get("key") or "") or request.args.get("key", "")).strip()
+    if not scope or not key:
+        return jsonify({"code": 4001, "msg": "scope/key 为空"}), 400
+    rows = _STORE.get("sessions", [])
+    _STORE["sessions"] = [r for r in rows if not (r.get("scope") == scope and r.get("key") == key)]
+    _persist()
+    return ok({"deleted": True})
+
+
 @bp.post("/run")
 def run():
+    _refresh()
     b = request.get_json(force=True) or {}
     message = (b.get("message") or "").strip()
     if not message:
@@ -172,6 +254,7 @@ def _sse(event, payload):
 @bp.post("/stream")
 def stream():
     """SSE：把 headless --json 的 NDJSON 逐行转 SSE，结束帧写映射。"""
+    _refresh()
     b = request.get_json(force=True) or {}
     message = (b.get("message") or "").strip()
     if not message:
@@ -192,6 +275,7 @@ def stream():
         cmd += [message]
         env = dict(os.environ, DSH_HOME=DSH_HOME)
         lock.acquire()
+        proc = None
         try:
             proc = subprocess.Popen(cmd, cwd=str(BACKEND_DIR), env=env,
                                     stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -251,6 +335,12 @@ def stream():
             yield _sse("done", {"session_id": sid, "scope": scope, "key": key,
                                 "answer": answer, "events": len(events)})
         finally:
+            # 客户端中断（停止按钮）→ GeneratorExit 走这里，直接杀掉 dsh 子进程
+            try:
+                if proc is not None and proc.poll() is None:
+                    proc.kill()
+            except Exception:
+                pass
             if lock.locked():
                 try:
                     lock.release()

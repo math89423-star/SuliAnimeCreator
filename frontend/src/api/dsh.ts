@@ -2,7 +2,11 @@ import { http } from './http'
 export const dshApi = {
   dshSessions: (scope = '') => http.get('/v1/dsh/sessions', { params: scope ? { scope } : {} }).then(r => r.data),
   dshEnsure: (scope: string, key: string) => http.post('/v1/dsh/sessions', { scope, key }).then(r => r.data),
+  // 单会话收敛：一集一会话，默认 scope=episode key=episodeId，不再按角色/故事分域建会话
+  dshEnsureEpisode: (episodeId: string) => http.post('/v1/dsh/sessions', { scope: 'episode', key: episodeId }).then(r => r.data),
+  dshSkills: () => http.get('/v1/dsh/skills').then(r => r.data),
   dshDeleteSession: (scope: string, key: string) => http.delete('/v1/dsh/sessions', { data: { scope, key }, params: { scope, key } }).then(r => r.data),
+  dshRename: (scope: string, key: string, new_key: string) => http.put('/v1/dsh/sessions/rename', { scope, key, new_key }).then(r => r.data),
   dshRun: (p: { scope: string; key: string; message: string; session_id?: string }) => http.post('/v1/dsh/run', p, { timeout: 200000 }).then(r => r.data),
   dshRunStream: async (p: { scope: string; key: string; message: string; session_id?: string }, onEvent: (ev: string, data: any) => void, signal?: AbortSignal) => {
     const res = await fetch('/api/v1/dsh/stream', {

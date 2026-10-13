@@ -1,4 +1,5 @@
-"""human-in-loop 最小链：suggest 只给草稿，confirm 才写库。落盘 data/story_db.json。"""
+"""human-in-loop 最小链：suggest/expand 只给草稿，confirm 才写库。落盘 data/story_db.json。
+轻链（2026-10-13）：expand 走 services/draft，不走 dsh；suggest 保留兼容模板。"""
 from flask import Blueprint, request, jsonify
 from ..services.disk_store import load, save
 
@@ -32,6 +33,21 @@ def confirm():
     _STORE.setdefault("confirmed", []).append(pick)
     _persist()
     return ok({"confirmed": pick, "total": len(_STORE["confirmed"])})
+
+@bp.post("/expand")
+def expand():
+    """轻发散：不走 dsh，直接调 draft.expand_idea（LLM 优先，模板回退）。"""
+    from ..services.draft import expand_idea
+    b = request.get_json(force=True) or {}
+    idea = (b.get("idea") or "").strip()
+    try:
+        n = max(2, min(int(b.get("n", 3)), 5))
+    except (ValueError, TypeError):
+        n = 3
+    drafts, engine = expand_idea(idea, n)
+    _STORE["drafts"] = drafts
+    _persist()
+    return ok({"drafts": drafts, "engine": engine, "tip": "confirm后才落库"})
 
 @bp.get("/list")
 def list_all():

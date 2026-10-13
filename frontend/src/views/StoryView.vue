@@ -1,6 +1,5 @@
 <template>
   <div class="suli-card kun-page" style="padding:14px">
-    <div class="eyebrow kana">ストーリー STORY</div>
     <h3>故事</h3>
     <el-input v-model="idea" type="textarea" :rows="3" placeholder="想法" />
     <div style="margin-top:8px;display:flex;gap:8px">
@@ -31,14 +30,17 @@ import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
 import { copyText } from '../utils/clipboard'
-const idea = ref('灰水村血税牢，星璃登场')
+import { watch } from 'vue'
+const DRAFT_KEY = 'suli.story.idea'
+const idea = ref(localStorage.getItem(DRAFT_KEY) || '灰水村血税牢，星璃登场')
+watch(idea, v => { try { localStorage.setItem(DRAFT_KEY, v) } catch {} })
 const drafts = ref<any>(null)
 const confirmed = ref<any[]>([])
 const loading = ref(false)
 const dirs = computed(() => (drafts.value?.drafts || []) as any[])
 async function suggest() {
   loading.value = true
-  try { const r = await api.storySuggest(idea.value); drafts.value = r.data }
+  try { const r = await api.storyExpand(idea.value, 3); drafts.value = r.data }
   catch { ElMessage.error('后端未起') }
   finally { loading.value = false }
 }

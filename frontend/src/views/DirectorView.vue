@@ -9,30 +9,77 @@
       <el-button size="small" @click="refresh">刷新</el-button>
     </div>
 
-    <!-- 单图Agent导演 -->
-    <AgentDirectCard
-      v-model:ask="agentAsk" v-model:total="agentTotal" v-model:tier="agentTier"
-      :img="agentImg" :loading="agentLoading" :progress="agentProgress" :answer="agentAnswer"
-      :outline-md="outline.md" :tier-opts="tierOpts"
-      @pick="agentFileEl?.click()" @clear="agentImg = null" @stop="stopAgent"
-      @outline="startAgentDirect" @draft="buildDraftShots"
-    />
+    <el-tabs v-model="dtab" class="dir-tabs">
+      <el-tab-pane label="剧本" name="script">
+        <div class="script-refs top">
+          <span class="suli-muted" style="font-size:12px">参考图</span>
+          <span v-for="im in scriptRefs" :key="im.name" class="shot-refwrap col">
+            <el-image :src="imgUrl(im.name)" :preview-src-list="[imgUrl(im.name)]" fit="cover" class="shot-thumb sm" preview-teleported />
+            <span class="ref-label-row">
+              <span
+                v-if="editingRef !== im.name" class="ref-label" :title="im.label || im.name"
+                @click="editingRef = im.name; refLabelText = im.label || ''"
+              >{{ im.label || '未命名' }}</span>
+              <el-input
+                v-else v-model="refLabelText" size="small" class="ref-input" placeholder="命名，回车保存"
+                maxlength="40" @keydown.enter="saveRefLabel(im)" @keydown.esc="editingRef = ''" @blur="saveRefLabel(im)"
+              />
+              <el-button link type="danger" @click="delScriptRef(im.name)">×</el-button>
+            </span>
+          </span>
+          <el-button link type="primary" @click="scriptFileEl?.click()">+参考图</el-button>
+        </div>
+        <input ref="scriptFileEl" type="file" accept="image/*" hidden @change="onScriptRef" />
+        <el-input v-model="script" type="textarea" :rows="22" placeholder="剧本底稿（与分镜页同一份，只存不拆）" />
+        <div class="script-foot">
+          <div class="foot-actions">
+            <el-button size="small" @click="() => saveScript()" :loading="scriptSaving">保存剧本</el-button>
+            <el-button size="small" type="primary" @click="genOutlineLite" :loading="agentLoading">生成大纲·轻</el-button>
+            <el-button size="small" @click="genOutlineHere" :loading="agentLoading">专家dsh</el-button>
+            <el-popconfirm title="清空剧本，并连带清理大纲和全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearScript">
+              <template #reference><el-button size="small" type="danger" text :loading="clearingScript">清空</el-button></template>
+            </el-popconfirm>
+          </div>
+          <div class="foot-status">
+            <span v-if="scriptSaving" class="st"><LoadingSpinner :size="12" /> 保存中…</span>
+            <span v-else-if="scriptSaveErr" class="st err"><i class="dot"></i>保存失败：{{ scriptSaveErr }}</span>
+            <span v-else-if="scriptDirty" class="st warn"><i class="dot"></i>未保存</span>
+            <span v-else-if="scriptSavedAt" class="st ok"><i class="dot"></i>已保存 {{ scriptSavedAt }}</span>
+          </div>
+          <span class="suli-muted tnum foot-count">{{ script.length }}字</span>
+        </div>
+      </el-tab-pane>
+      <el-tab-pane label="大纲" name="outline">
+    <el-empty v-if="!outline.md" description="暂无大纲，先去剧本页签生成" :image-size="64">
+      <el-button size="small" type="primary" @click="dtab = 'script'">去剧本</el-button>
+    </el-empty>
     <div v-if="outline.md" class="suli-card outline-card">
-      <div class="outline-head"><b>方案大纲</b><span style="flex:1" /><el-button size="small" @click="buildDraftShots" :loading="agentLoading">转草案分镜</el-button></div>
-      <div class="outline-main">
+      <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-button size="small" type="primary" @click="buildDraftShotsLite" :loading="agentLoading">② 转草案·轻</el-button><el-button size="small" @click="buildDraftShots" :loading="agentLoading">专家转草案</el-button><el-popconfirm title="清空大纲，并连带清理全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearOutline"><template #reference><el-button size="small" type="danger" text :loading="clearingOutline">清空</el-button></template></el-popconfirm></div>
+      <div v-show="!outlineFolded" class="outline-main">
         <el-image v-if="outline.image" :src="`/api/images/${outline.image}`" class="outline-thumb" fit="cover" :preview-src-list="[`/api/images/${outline.image}`]" preview-teleported />
-        <div class="outline-text">{{ outline.md }}</div>
+        <div v-if="!outlineEditing" class="outline-textwrap">
+          <MarkdownView class="outline-text" :content="outline.md" :style="{ zoom: outlineZoom, maxHeight: outlineMaxH + 'px' }" />
+          <div class="outline-rz" title="上下拖动调整高度，双击恢复默认" @mousedown="startOutlineResize" @dblclick="resetOutlineMaxH" />
+        </div>
+        <div v-else class="outline-editwrap">
+          <el-input v-model="outlineDraft" type="textarea" :rows="16" placeholder="markdown 源码，保存后即进预览" />
+          <div style="display:flex;gap:8px;align-items:center">
+            <el-tag v-if="outlineDirty" size="small" type="warning">未存*</el-tag>
+            <span style="flex:1" />
+            <span class="suli-muted tnum" style="font-size:12px">{{ outlineDraft.length }}字</span>
+          </div>
+        </div>
       </div>
     </div>
-    <input ref="agentFileEl" type="file" accept="image/*" hidden @change="onAgentFile" />
-
+      </el-tab-pane>
+      <el-tab-pane label="草案" name="draft">
     <!-- 组装工具条：动作在左，设置在右 -->
     <div class="dir-bar">
       <div class="bar-group">
-        <el-button type="primary" size="small" @click="assembleAll" :loading="vloading" :disabled="!store.shots.length">全部组装</el-button>
-        <el-button size="small" @click="assembleVEp" :loading="vloading" :disabled="!store.episodeId">整集组装</el-button>
-        <el-button size="small" @click="assemble8" :loading="loading8" :disabled="!store.shots.length">8-block静帧</el-button>
-        <el-button size="small" type="success" @click="onBundle" :loading="bundleLoading" :disabled="!store.episodeId">交付包</el-button>
+        <el-button type="primary" size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId">生成草案文档</el-button>
+        <el-popconfirm title="清空本集全部草案分镜？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearShots">
+          <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
+        </el-popconfirm>
       </div>
       <span class="bar-spacer" />
       <div class="bar-group">
@@ -46,8 +93,8 @@
           <el-option v-for="m in pixaiModels" :key="m.key" :label="m.label" :value="m.key" />
         </el-select>
         <el-select v-if="engine === 'pixai'" v-model="refMode" size="small" class="w-ref">
-          <el-option label="锁首帧" value="startframe" />
-          <el-option v-if="refSupportsMulti" label="锚身份" value="reference" />
+          <el-option label="首尾帧" value="startframe" />
+          <el-option v-if="refSupportsMulti" label="参考图" value="reference" />
         </el-select>
       </div>
     </div>
@@ -58,61 +105,25 @@
     <div v-else class="dir-flow">
       <ShotCard
         v-for="(s, i) in store.shots" :key="s.id"
-        :shot="s" :index="i" :result="vmap[s.id]" :loading="oneLoading === s.id"
-        :engine="engine" :tier-label="tierLabel"
-        @assemble="assembleOne" @copy="copy" @board="goBoard"
+        :shot="s" :index="i" :tier-label="tierLabel"
       />
     </div>
-    <!-- 执行回执：折叠面板，默认收起，不占版面 -->
-    <el-collapse v-model="openPanels" class="dir-collapse">
-      <el-collapse-item name="receipts">
-        <template #title>
-          <b>执行回执</b>
-          <el-tag v-if="receiptRows.length" size="small" class="tnum">{{ receiptRows.length }}</el-tag>
-          <el-tag v-else size="small" type="info">空</el-tag>
-        </template>
-        <div class="panel-actions">
-          <el-button size="small" @click="loadReceipts">刷新</el-button>
-        </div>
-        <el-table v-if="receiptRows.length" :data="receiptRows" size="small">
-          <el-table-column prop="shot_id" label="镜" width="170" />
-          <el-table-column prop="task_id" label="任务" width="170" />
-          <el-table-column prop="engine" label="引擎" width="90" />
-          <el-table-column prop="status" label="态" width="80" />
-          <el-table-column prop="media_url" label="媒体" />
-        </el-table>
-        <div v-else class="suli-muted" style="font-size:13px;padding:4px 0">暂无回执</div>
-      </el-collapse-item>
-
-      <el-collapse-item v-if="list8.length" name="still8">
-        <template #title>
-          <b>8-block 静帧</b>
-          <el-tag size="small" class="tnum">{{ list8.length }}</el-tag>
-        </template>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div v-for="p in list8" :key="p.shot_id" class="suli-card" style="padding:10px">
-            <div style="display:flex;gap:8px;align-items:center"><b>{{ p.shot_id }}</b><span style="flex:1" /><el-button size="small" @click="copy(p.assembled_en)">复制英文</el-button></div>
-            <div style="font-size:13px;margin-top:6px;white-space:pre-wrap">{{ p.assembled_en }}</div>
-          </div>
-        </div>
-      </el-collapse-item>
-    </el-collapse>
+    <!-- 8-block 静帧：折叠面板，默认收起，不占版面 -->
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
-import { useShotAssemble } from '../composables/useShotAssemble'
 import { useAgentDirect } from '../composables/useAgentDirect'
 import ShotCard from '../components/director/ShotCard.vue'
-import AgentDirectCard from '../components/director/AgentDirectCard.vue'
+import MarkdownView from '../components/MarkdownView.vue'
+import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const store = useAppStore()
-const router = useRouter()
-function goBoard() { router.push('/board') }
 
 // 分级四档（真源在后端 /director/tiers）：'' = 按镜设置
 const tierOpts = ref<{ key: string; label: string }[]>([{ key: '', label: '不分级' }])
@@ -134,35 +145,185 @@ const pixaiModels = ref<any[]>([
 const pixaiModel = ref('tsubaki-video')
 const refSupportsMulti = computed(() => (pixaiModels.value.find(m => m.key === pixaiModel.value) || {}).ref === 'multi')
 function assembleParams() { return { tier: globalTier.value, engine: engine.value, ref_mode: refMode.value, pixai_model: pixaiModel.value } }
+const dtab = ref('outline')
+
+// 剧本页（与分镜页同一份后端数据）
+const script = ref('')
+const savedScript = ref('')
+const scriptDirty = computed(() => script.value !== savedScript.value)
+let suspendScriptWatch = false
+let scriptTimer: any = null
+const scriptSaving = ref(false)
+const scriptSavedAt = ref('')
+const scriptSaveErr = ref('')
+async function saveScript(silent = false) {
+  scriptSaving.value = true
+  try {
+    await api.saveScreenplay(store.episodeId, script.value)
+    savedScript.value = script.value
+    scriptSavedAt.value = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    scriptSaveErr.value = ''
+    if (!silent) ElMessage.success('已保存')
+  } catch (e: any) {
+    scriptSaveErr.value = e?.response?.data?.msg || e?.message || '后端未起？'
+    if (!silent) ElMessage.error('保存失败，后端未起？')
+  } finally { scriptSaving.value = false }
+}
+watch(script, () => {
+  if (suspendScriptWatch) return
+  clearTimeout(scriptTimer)
+  scriptTimer = setTimeout(() => saveScript(true), 3000)
+})
+const scriptRefs = ref<any[]>([])
+const scriptFileEl = ref<HTMLInputElement | null>(null)
+function imgUrl(name: string) { return `/api/images/${name}` }
+async function loadScript() {
+  suspendScriptWatch = true
+  try {
+    const r = await api.getScreenplay(store.episodeId)
+    script.value = ((r as any).data?.screenplay_md ?? '') as string
+    savedScript.value = script.value
+    scriptRefs.value = ((r as any).data?.ref_images ?? []) as any[]
+  } catch {} finally { suspendScriptWatch = false }
+}
+async function loadScriptRefs() {
+  try {
+    const r = await api.getScreenplay(store.episodeId)
+    scriptRefs.value = ((r as any).data?.ref_images ?? []) as any[]
+  } catch {}
+}
+async function onScriptRef(e: any) {
+  const f = e.target.files?.[0]
+  e.target.value = ''
+  if (!f) return
+  try {
+    await api.uploadEpisodeImage(store.episodeId, f)
+    ElMessage.success('参考图已上传')
+    await loadScriptRefs()
+  } catch { ElMessage.error('上传失败，后端未起或需重启？') }
+}
+async function delScriptRef(name: string) {
+  try {
+    await api.deleteEpisodeImage(store.episodeId, name)
+    ElMessage.success('已删')
+    await loadScriptRefs()
+  } catch { ElMessage.error('删除失败，后端未起或需重启？') }
+}
+// 参考图命名：点名字进编辑，回车/失焦保存（无变化则直接收起），Esc 取消
+const editingRef = ref('')
+const refLabelText = ref('')
+async function saveRefLabel(im: any) {
+  if (editingRef.value !== im.name) return
+  editingRef.value = ''
+  const v = (refLabelText.value || '').trim().slice(0, 40)
+  if (v === (im.label || '')) return
+  try {
+    await api.setEpisodeImageMeta(store.episodeId, im.name, { label: v })
+    im.label = v
+    ElMessage.success(v ? `已命名 ${v}` : '已清除命名')
+  } catch { ElMessage.error('命名失败，后端未起或需重启？') }
+}
 const totalS = computed(() => Math.round((store.shots || []).reduce((a: number, s: any) => a + (Number(s.duration_s) || 0), 0) * 10) / 10)
 
 async function refresh() {
   try { const r = await api.listShots(store.episodeId); store.shots = (r as any).data } catch {}
 }
 
-// 组装域（抽到 composable，视图只剩装配）
-const { vmap, vloading, oneLoading, loading8, list8, bundleLoading, receiptRows, assembleOne, assembleAll, assembleVEp: _vep, assemble8, downloadBundle, loadReceipts, copy } = useShotAssemble(
-  () => store.shots, assembleParams, refresh,
-)
-async function assembleVEp() { await _vep(store.episodeId) }
-async function onBundle() { await downloadBundle({ episode_id: store.episodeId, engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value }) }
+// 草案文档：方向草案交接件（大纲全文 + 草案表 + 逐镜提示词），落一个 .md
+const docLoading = ref(false)
+const clearing = ref(false)
+const clearingScript = ref(false)
+async function clearScript() {
+  clearingScript.value = true
+  try {
+    const r = await api.clearEpisode(store.episodeId, 'script')
+    await loadScript()
+    await refresh()
+    await loadOutline()
+    ElMessage.success(`已清空剧本，连带清理大纲和草案${(r as any)?.data?.shot_count ?? 0}镜`)
+  } catch { ElMessage.error('清空失败，后端未起？') }
+  finally { clearingScript.value = false }
+}
+async function clearShots() {
+  clearing.value = true
+  try {
+    await api.clearEpisode(store.episodeId, 'shots')
+    await refresh()
+    ElMessage.success('本集草案已清空')
+  } catch { ElMessage.error('清空失败，后端未起？') }
+  finally { clearing.value = false }
+}
+async function downloadDraft() {
+  docLoading.value = true
+  try {
+    const blob = await api.draftDoc({ episode_id: store.episodeId, engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value })
+    const url = URL.createObjectURL(new Blob([blob as any], { type: 'text/markdown' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `DRAFT-${store.episodeId}.md`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    ElMessage.success('草案文档已下载，拷给 L-Port 即交付')
+  } catch { ElMessage.error('下载失败，后端未起？') }
+  finally { docLoading.value = false }
+}
 
 // 单图Agent导演域（抽到 composable，大纲 brief 留在视图）
-const { agentFileEl, agentImg, agentAsk, agentTotal, agentLoading, agentProgress, agentAnswer, outline, loadOutline, onAgentFile, stopAgent, runBrief } = useAgentDirect(
+const { agentTotal, agentLoading, outline, loadOutline, stopAgent, runBrief } = useAgentDirect(
   () => store.episodeId, refresh,
 )
-async function startAgentDirect() {
-  if (!agentImg.value || agentLoading.value) return
+function pickOutlineImage(): string {
+  if (outline.value.image) return outline.value.image
+  if (scriptRefs.value[0]?.name) return scriptRefs.value[0].name
+  for (const s of store.shots as any[]) {
+    const imgs = (s.images?.length ? s.images : (s.image ? [{ name: s.image, kind: 'ref' }] : [])) as any[]
+    const hit = imgs.find(x => x.kind === 'first') || imgs[0]
+    if (hit?.name) return hit.name
+  }
+  return ''
+}
+async function runOutlineBrief(imgName: string) {
+  try { await api.dshEnsure('episode', store.episodeId) }
+  catch { ElMessage.error('Agent会话建失败，后端未起？'); return }
   const brief = [
-    `@data/uploads/${agentImg.value.path}`,
+    `@data/uploads/${imgName}`,
     `集号：${store.episodeId}`,
     '请按这张单图出方案大纲：看图写一份方案大纲markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/备注 / 合计时长），2-5镜，单镜3-8秒。然后 PUT /api/v1/scriptboard/outline/<集号> 保存 {outline_md: 全文, outline_image: 本图basename}，最后回复方向一句话+镜数+合计时长。只出大纲，不要写分镜库。',
     `总时长要求：${agentTotal.value}秒内，按此时长分配镜数与每镜秒数（优先保证单镜3-8秒）。`,
     `目标引擎：${(engineOpts.value.find(e => e.key === engine.value) || {}).label || engine.value}${engine.value === 'pixai' ? '（提示词按 PixAI 视频格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行，见 skills/video/pixai-video-prompting）' : '（提示词按 MiniMax H3 字段格式，见 skills/video/h3-prompt-writing）'}。`,
     agentTier.value ? `分级档位：${tierLabel(agentTier.value)}（${agentTier.value}）。按 skills/video/nsfw-directing 的该档水位出镜：成年虚构角色锚定、微动作预算（一镜一事件、呼吸级幅度）、遮挡结构、锚点carry；duty_en 用英文写可见层动作。` : '',
-    agentAsk.value.trim() ? `补充要求：${agentAsk.value.trim()}` : '',
   ].filter(Boolean).join('\n')
-  await runBrief(brief, 'Agent看图出大纲中…', '大纲已存，下方查看，确认后点转草案分镜', loadOutline)
+  await runBrief(brief, 'Agent看图出大纲中…', '大纲已存，确认后点 ② 转草案', loadOutline)
+}
+async function genOutlineHere() {
+  if (agentLoading.value) return
+  const img = pickOutlineImage()
+  if (!img) return ElMessage.warning('还没有参考图，先去大纲页签传一张图，或给分镜挂图')
+  dtab.value = 'outline'
+  await runOutlineBrief(img)
+}
+async function genOutlineLite() {
+  // 轻链默认：不走 dsh，直接调 outline/generate 落盘
+  if (agentLoading.value) return
+  const img = pickOutlineImage()
+  dtab.value = 'outline'
+  try {
+    await api.outlineGenerate(store.episodeId, {
+      total_s: agentTotal.value || 15,
+      engine: engine.value || 'pixai',
+      tier: agentTier.value || globalTier.value || '',
+      hint: script.value.slice(0, 800),
+      image: img,
+    })
+    await loadOutline()
+    ElMessage.success('大纲已存（轻），确认后点 ② 转草案·轻')
+  } catch { ElMessage.error('轻大纲失败，后端未起？') }
+}
+async function regenOutline() {
+  if (agentLoading.value) return
+  const img = pickOutlineImage()
+  if (!img) return ElMessage.warning('还没有参考图，先传一张图')
+  await runOutlineBrief(img)
 }
 
 async function buildDraftShots() {
@@ -176,13 +337,87 @@ async function buildDraftShots() {
   ].join('\n')
   await runBrief(brief, 'Agent按大纲建草案分镜中…', '草案已写库，下方分镜已刷新，逐镜检查后点组装', refresh)
 }
+async function buildDraftShotsLite() {
+  // 轻转草案：不走 dsh，直接调 draft/from-outline 落盘
+  if (agentLoading.value || !outline.value.md) return ElMessage.warning('先有大纲再转草案')
+  try {
+    const r = await api.draftFromOutline(store.episodeId, {
+      total_s: Math.round(totalS.value) || 15,
+      tier: agentTier.value || globalTier.value || '',
+    })
+    const created = (r as any)?.data?.created || (r as any)?.created || []
+    await refresh()
+    ElMessage.success(`草案已写库（轻）：${created.length}镜，逐镜检查后点组装`)
+  } catch (e: any) {
+    ElMessage.error((e?.response?.data?.msg || '轻转草案失败').slice(0, 120))
+  }
+}
 
-const openPanels = ref<string[]>([])
+const outlineFolded = ref(false)
+const outlineEditing = ref(false)
+const outlineDraft = ref('')
+const outlineSaving = ref(false)
+const clearingOutline = ref(false)
+async function clearOutline() {
+  clearingOutline.value = true
+  try {
+    const r = await api.clearEpisode(store.episodeId, 'outline')
+    outlineEditing.value = false
+    await loadOutline()
+    await refresh()
+    ElMessage.success(`已清空大纲，连带清理草案${(r as any)?.data?.shot_count ?? 0}镜`)
+  } catch { ElMessage.error('清空失败，后端未起？') }
+  finally { clearingOutline.value = false }
+}
+const outlineDirty = computed(() => outlineDraft.value !== (outline.value.md || ''))
+function toggleOutlineEdit() {
+  if (!outlineEditing.value) outlineDraft.value = outline.value.md || ''
+  outlineEditing.value = !outlineEditing.value
+}
+async function saveOutlineEdit() {
+  outlineSaving.value = true
+  try {
+    await api.saveOutline(store.episodeId, { outline_md: outlineDraft.value, outline_image: outline.value.image || '' })
+    await loadOutline()
+    outlineEditing.value = false
+    ElMessage.success('大纲已保存')
+  } catch { ElMessage.error('保存失败，后端未起？') }
+  finally { outlineSaving.value = false }
+}
+const outlineMaxH = ref(Math.min(1600, Math.max(200, Number(localStorage.getItem('suli.outlineMaxH')) || 560)))
+function persistOutlineMaxH() { try { localStorage.setItem('suli.outlineMaxH', String(outlineMaxH.value)) } catch {} }
+function resetOutlineMaxH() { outlineMaxH.value = 560; persistOutlineMaxH() }
+let orz: { y: number; h: number } | null = null
+function startOutlineResize(e: MouseEvent) {
+  orz = { y: e.clientY, h: outlineMaxH.value }
+  window.addEventListener('mousemove', onOutlineResizeMove)
+  window.addEventListener('mouseup', onOutlineResizeEnd, { once: true })
+  e.preventDefault()
+}
+function onOutlineResizeMove(e: MouseEvent) {
+  if (!orz) return
+  outlineMaxH.value = Math.min(1600, Math.max(200, Math.round(orz.h + e.clientY - orz.y)))
+}
+function onOutlineResizeEnd() {
+  window.removeEventListener('mousemove', onOutlineResizeMove)
+  orz = null
+  persistOutlineMaxH()
+}
+const outlineZoom = ref(Math.min(2, Math.max(0.5, Number(localStorage.getItem('suli.outlineZoom')) || 1)))
+function resetOutlineZoom() {
+  outlineZoom.value = 1
+  try { localStorage.setItem('suli.outlineZoom', '1') } catch {}
+}
+function zoomOutline(d: number) {
+  outlineZoom.value = Math.min(2, Math.max(0.5, +(outlineZoom.value + d).toFixed(2)))
+  try { localStorage.setItem('suli.outlineZoom', String(outlineZoom.value)) } catch {}
+}
 function tierLabel(key: string) { return (tierOpts.value.find(t => t.key === key) || {} as any).label || key }
 watch(() => store.centralApplySeq, async (seq, prev) => {
   if (!seq || seq === prev) return
   const target = (store as any).centralApplyEpisode || store.episodeId
   if (target && target !== store.episodeId) store.episodeId = target
+  await loadScript()
   await refresh()
   await loadOutline()
 })
@@ -201,37 +436,58 @@ onMounted(async () => {
     const rows = ((r as any)?.data || r || []) as any[]
     tierOpts.value = [{ key: '', label: '不分级' }, ...rows.map(t => ({ key: t.key, label: t.label }))]
   } catch {}
+  await loadScript()
   await refresh()
   await loadOutline()
-  loadReceipts()
 })
 </script>
 <style scoped>
 .director.kun-page { max-width: none; margin: 0; }
 .director { padding: 12px !important; }
 .dir-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.dir-tabs { margin-top: 8px; }
 .dir-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border: 1.5px solid var(--suli-border); border-radius: var(--suli-radius-sm); background: var(--suli-surface); }
 .dir-bar .bar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .bar-spacer { flex: 1 1 auto; min-width: 4px; }
-.dir-collapse { margin-top: 12px; border-top: 1.5px solid var(--suli-border); --el-collapse-header-bg-color: transparent; --el-collapse-content-bg-color: transparent; }
-.dir-collapse :deep(.el-collapse-item__header) { height: 40px; border-bottom: none; gap: 8px; }
-.dir-collapse :deep(.el-collapse-item__wrap) { border-bottom: none; }
-.dir-collapse :deep(.el-collapse-item__content) { padding-bottom: 8px; }
-.panel-actions { display: flex; justify-content: flex-end; margin-bottom: 6px; }
 .w-tier { width: 150px; }
 .w-engine { width: 240px; }
 .w-model { width: 210px; }
 .w-ref { width: 190px; }
 .dir-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(620px, 100%), 1fr)); gap: 10px; margin-top: 8px; align-items: start; }
+.script-refs { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.script-refs.top { margin-top: 0; margin-bottom: 8px; }
+.shot-refwrap { display: inline-flex; gap: 4px; align-items: center; }
+.shot-refwrap.col { flex-direction: column; align-items: center; }
+.ref-label-row { display: inline-flex; gap: 2px; align-items: center; max-width: 104px; }
+.ref-label { font-size: 11px; color: var(--suli-text-2); max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.ref-label:hover { color: var(--suli-primary); }
+.ref-input { max-width: 80px; }
+.shot-thumb.sm { width: 96px; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; cursor: zoom-in; }
+.shot-thumb.sm :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
+.script-foot { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--suli-border); display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.foot-actions { display: flex; gap: 8px; align-items: center; }
+.foot-status { display: flex; align-items: center; min-width: 0; }
+.st { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--suli-text-2); white-space: nowrap; }
+.st .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.st.ok .dot { background: var(--el-color-success); }
+.st.warn .dot { background: var(--el-color-warning); }
+.st.err { color: var(--el-color-danger); }
+.st.err .dot { background: var(--el-color-danger); }
+.foot-count { margin-left: auto; font-size: 12px; }
 .outline-card { margin-top: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
 .outline-head { display: flex; gap: 8px; align-items: center; }
 .outline-main { display: flex; gap: 10px; align-items: flex-start; }
-.outline-thumb { width: 260px; aspect-ratio: 3 / 4; border-radius: 10px; flex-shrink: 0; cursor: zoom-in; overflow: hidden; }
+.outline-thumb { width: 320px; aspect-ratio: 3 / 4; border-radius: 10px; flex-shrink: 0; cursor: zoom-in; overflow: hidden; }
 .outline-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
-.outline-text { flex: 1; min-width: 0; font-size: 13px; white-space: pre-wrap; max-height: 347px; overflow-y: auto; }
+.outline-textwrap { flex: 1; min-width: 0; position: relative; padding-bottom: 12px; }
+.outline-editwrap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.outline-text { max-height: 560px; overflow-y: auto; }
+.outline-rz { position: absolute; left: 0; right: 0; bottom: 0; height: 12px; cursor: ns-resize; display: flex; align-items: center; justify-content: center; }
+.outline-rz::after { content: ''; width: 56px; height: 4px; border-radius: 999px; background: var(--el-border-color); }
+.outline-rz:hover::after { background: var(--suli-primary); }
 .shot-prompt { font-size: 13px; white-space: pre-wrap; background: var(--el-fill-color-lighter); border-radius: 8px; padding: 10px; }
 @media (max-width: 900px) {
   .outline-thumb { width: 170px; }
-  .outline-text { max-height: 240px; }
+  .outline-text { max-height: 340px; }
 }
 </style>
