@@ -2,7 +2,7 @@
 组装纯函数已拆到 services/director_prompts/（still/h3/pixai/tiers/images/text），
 跨蓝图读取一律走 services/repo.py。本文件只剩路由 + 导出包 ZIP。
 """
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, Response
 
 from ..services.director_prompts import (
     TIERS, tier_list, build_prompt, build_i2va, build_pixai,
@@ -35,7 +35,7 @@ def assemble():
 
 @bp.get("/tiers")
 def tiers():
-    """成人向四档清单（前端档位选择器与交付包共用的唯一真源）。"""
+    """分级清单 sfw/nsfw（前端档位选择器与交付包共用的唯一真源）。"""
     return ok(tier_list())
 
 
@@ -232,6 +232,12 @@ def export_bundle():
                 beats.append({"beat_id": f"B{i:02d}",
                               "function": b if isinstance(b, str) else str(b),
                               "text_cn": ""})
+    if not beats:
+        try:
+            from ..services.draft import parse_beats_from_screenplay
+            beats = parse_beats_from_screenplay(ep.get("screenplay_md", ""), eid)
+        except Exception:
+            beats = []
     add_file("beats.json", __import__("json").dumps(beats, ensure_ascii=False, indent=2))
 
     # 3) 分镜 + 媒体 + 提示词
@@ -275,3 +281,71 @@ def export_bundle():
     buf.seek(0)
     return send_file(buf, mimetype="application/zip", as_attachment=True,
                      download_name=f"{pkg_id}.zip")
+
+
+@bp.get("/draft-doc")
+def draft_doc():
+    """方向草案文档（人工搬运给 L-Port 的可读交接件，一个 .md 文件）：
+    集信息 + 方案大纲全文 + 方向草案表 + 逐镜组装提示词全文。
+    query: episode_id, character_id(空=首个角色), engine=h3|pixai(默认pixai),
+           pixai_model/video_model, tier。"""
+    import datetime as _dt
+    eid = request.args.get("episode_id", "")
+    cid = request.args.get("character_id", "")
+    engine = (request.args.get("engine") or "pixai").strip() or "pixai"
+    video_model = (request.args.get("pixai_model") or request.args.get("video_model") or "tsubaki-video").strip()
+    tier = (request.args.get("tier") or "").strip()
+
+    ep = _repo.get_episode(eid)
+    chars_map = _repo.chars_map()
+    chars = list(chars_map.values())
+    character = chars_map.get(cid) if cid else (chars[0] if chars else {})
+    rows = _repo.list_shots_by_episode(eid)
+    total = round(sum(float(s.get("duration_s") or 0) for s in rows), 1)
+
+    L = []
+    L.append(f"# 方向草案 {eid or 'NA'}")
+    L.append("")
+    L.append(f"- 生成时间：{_dt.datetime.now().isoformat(timespec='seconds')}")
+    L.append(f"- 引擎：{engine}" + (f" / {video_model}" if engine == "pixai" else ""))
+    L.append(f"- 档位：{tier or '常规'}")
+    L.append(f"- 共 {len(rows)} 镜，合计 {total} 秒")
+    L.append("")
+    L.append("## 方案大纲")
+    L.append("")
+    L.append((ep.get("outline_md") or "（暂无大纲）").strip())
+    L.append("")
+    L.append("## 方向草案表")
+    L.append("")
+    L.append("| 镜号 | 内容一句话 | 时长 | 运镜 | 台词 | 分级 | 首帧 |")
+    L.append("| --- | --- | --- | --- | --- | --- | --- |")
+    for s in rows:
+        cam = s.get("camera") or {}
+        first = first_image(s)
+        L.append("| " + " | ".join([
+            str(s.get("id", "")),
+            str(s.get("duty") or "").replace("|", "/")[:60],
+            f"{s.get('duration_s', 0)}秒",
+            str(cam.get("movement") or "固定"),
+            str(s.get("sound") or "").replace("|", "/")[:40],
+            str(s.get("tier") or "常规"),
+            ("有" if first else "缺"),
+        ]) + " |")
+    L.append("")
+    L.append("## 逐镜提示词（复制即用）")
+    for s in rows:
+        sid = s.get("id", "")
+        r = (build_pixai(s, character, [], "", tier, "startframe", video_model)
+             if engine == "pixai"
+             else build_i2va(s, character, [], "", "", tier))
+        L.append("")
+        L.append(f"### {sid}（{r.get('mode', '')}，{r.get('duration_s', 0)}秒）")
+        L.append("")
+        L.append("```text")
+        L.append(r["prompt"])
+        L.append("```")
+    L.append("")
+    body = "\n".join(L)
+    name = f"DRAFT-{eid or 'NA'}.md"
+    return Response(body.encode("utf-8"), mimetype="text/markdown",
+                    headers={"Content-Disposition": f"attachment; filename={name}"})

@@ -1,49 +1,17 @@
 <template>
   <div class="right">
-    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-tag size="small" type="info" title="dsh 只做 skill 导演判断，草案发散走轻链">单会话·skill</el-tag><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
-    <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-button size="small" circle title="会话历史" @click="histOpen = true"><el-icon><Clock /></el-icon></el-button><el-button size="small" circle title="新建会话" @click="ensure"><el-icon><Plus /></el-icon></el-button><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
+    <div class="agent-sub">
       <span class="suli-muted" style="font-size:12px">本集 {{ store.episodeId }} · skill {{ skills.length ? `${skills.length}已载` : '载入中…' }}</span>
       <span style="flex:1" />
-      <el-button size="small" @click="backToEpisode">本集会话</el-button>
-      <el-button size="small" @click="ensure">新建</el-button>
+      <el-button size="small" text @click="backToEpisode">本集会话</el-button>
     </div>
-    <div v-if="loadingList"><div class="skeleton" style="margin-top:8px;height:32px" /></div>
-    <el-button v-else-if="!sessions.length" size="small" type="primary" style="margin-top:8px" @click="ensure">新建会话</el-button>
-    <div v-else style="margin-top:8px">
-      <div class="suli-card sess-head" @click="open = !open" title="点击展开/收起会话列表">
-        <template v-if="!renaming">
-          <b style="font-size:13px">{{ curKey || '无会话' }}</b>
-          <el-tag v-if="curSess" size="small" :type="curSess.dsh_session_id ? 'success' : 'info'">{{ curSess.dsh_session_id ? '进行中' : '未建' }}</el-tag>
-          <span style="flex:1" />
-          <span class="suli-muted" style="font-size:12px">{{ open ? '▲' : '▼' }}</span>
-          <el-button size="small" text circle title="重命名当前会话" @click.stop="startRename">✎</el-button>
-          <el-button size="small" text circle title="删除当前会话" @click.stop="delCurrent">✕</el-button>
-        </template>
-        <template v-else>
-          <el-input
-            ref="renameInput" v-model="renameText" size="small" style="flex:1;min-width:0"
-            placeholder="新会话名，回车确定" maxlength="60"
-            @click.stop @keydown.enter="doRename" @keydown.esc="renaming = false"
-          />
-          <el-button size="small" type="primary" @click.stop="doRename">确定</el-button>
-          <el-button size="small" @click.stop="renaming = false">取消</el-button>
-        </template>
-      </div>
-      <div v-if="open" class="sess-drop">
-        <div
-          v-for="s in sessions" :key="s.scope + ':' + s.key + s.dsh_session_id"
-          class="suli-card sess-item" :class="{ active: curKey === s.key && curScope === s.scope }"
-          @click="pickAndClose(s)"
-        >
-          <div style="display:flex;gap:6px;align-items:center">
-            <b style="font-size:12px">{{ s.key }}</b>
-            <el-tag size="small" :type="s.dsh_session_id ? 'success' : 'info'">{{ s.dsh_session_id ? '进行中' : '未建' }}</el-tag>
-            <span style="flex:1" />
-            <span class="suli-muted tnum" style="font-size:11px">{{ rel(s.last_active) }}</span>
-          </div>
-        </div>
-      </div>
+    <!-- 当前会话卡：点击打开会话历史（照参考：标题行 + 会话名） -->
+    <div class="suli-card cur-card" @click="histOpen = true" title="打开会话历史">
+      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话</span><span class="cur-count tnum">{{ sessions.length }}个</span></div>
+      <div class="cur-key">{{ curKey || '无会话' }}</div>
     </div>
+    <div v-if="loadingList" style="margin-top:8px"><div class="skeleton" style="height:32px" /></div>
 
     <!-- 消息区：居中滚动（常驻占位把输入框压到底；无会话时内部留空） -->
     <div ref="turnBox" class="turns">
@@ -70,18 +38,18 @@
                   target="_blank"
                   rel="noopener"
                   class="file-chip"
-                >📎 {{ f.name }}</a>
+                ><el-icon style="vertical-align:-2px;margin-right:2px"><Paperclip /></el-icon>{{ f.name }}</a>
               </div>
             </div>
           </div>
           <div class="bubble-row from-agent">
             <div class="bubble agent-b">
               <div v-if="!t.a" class="a thinking">思考中…</div>
-              <MarkdownView v-else class="a-md" :content="t.a" />
+              <MarkdownView v-else class="a-md" :content="displayAnswer(t)" />
           <div v-if="canApply(t)" class="turn-apply">
             <template v-if="!probe[i]">
               <span class="apply-hint">{{ applyHint(t) }}</span>
-              <el-button size="small" type="primary" @click="probeCentral(t, i)" :loading="probingIdx === i">✓ 接受并填充中央</el-button>
+              <el-button size="small" type="primary" @click="probeCentral(t, i)" :loading="probingIdx === i"><el-icon style="margin-right:4px"><Check /></el-icon>接受并填充中央</el-button>
             </template>
             <template v-else>
               <span class="apply-hint">{{ probeText(probe[i]) }}</span>
@@ -90,9 +58,9 @@
             </template>
           </div>
           <div v-if="applyMsg[i]" class="apply-msg">{{ applyMsg[i] }}</div>
-              <div class="msg-actions">
-                <el-button text size="small" @click="quoteText(t.a)">引用</el-button>
-                <el-button text size="small" @click="copyText(t.a || '')">复制</el-button>
+              <div v-if="t.a" class="msg-actions">
+                <el-button text size="small" @click="quoteText(displayAnswer(t))">引用</el-button>
+                <el-button text size="small" @click="copyText(displayAnswer(t))">复制</el-button>
                 <el-button text size="small" @click="delTurn(i)">删除</el-button>
               </div>
             </div>
@@ -107,9 +75,9 @@
       <div v-if="pending.length" class="pending">
         <div v-for="(f, i) in pending" :key="i" class="pend-chip">
           <img v-if="f.kind === 'image'" :src="f.url" class="pend-thumb" />
-          <span v-else class="pend-file">📎</span>
+          <span v-else class="pend-file"><el-icon><Paperclip /></el-icon></span>
           <span class="pend-name">{{ f.name }}</span>
-          <el-button size="small" text circle @click="pending.splice(i, 1)">✕</el-button>
+          <el-button size="small" text circle @click="pending.splice(i, 1)"><el-icon><Close /></el-icon></el-button>
         </div>
       </div>
       <div class="input-row">
@@ -124,23 +92,73 @@
       </div>
       <div class="toolbar">
         <div class="tools">
-          <el-button circle size="small" @click="imgInput?.click()" :loading="uploading" title="上传图片">🖼</el-button>
-          <el-button circle size="small" @click="fileInput?.click()" :loading="uploading" title="上传文件">📎</el-button>
+          <el-button circle size="small" @click="imgInput?.click()" :loading="uploading" title="上传图片"><el-icon><Picture /></el-icon></el-button>
+          <el-button circle size="small" @click="fileInput?.click()" :loading="uploading" title="上传文件"><el-icon><Paperclip /></el-icon></el-button>
         </div>
         <span class="tip suli-muted">Enter 发送 · Shift+Enter 换行</span>
-        <el-button v-if="loading" type="danger" round size="small" @click="stop">⏹ 停止</el-button>
+        <el-button v-if="loading" type="danger" round size="small" @click="stop"><el-icon style="margin-right:4px"><CircleClose /></el-icon>停止</el-button>
         <el-button v-else type="primary" round size="small" @click="send" :disabled="!msg.trim() && !pending.length">发送</el-button>
       </div>
       <input ref="imgInput" type="file" accept="image/*" multiple hidden @change="onPick($event, 'image')" />
       <input ref="fileInput" type="file" multiple hidden @change="onPick($event, 'file')" />
+    </div>
+
+    <!-- 会话历史抽屉（照参考：标题左 + 导出/清空/关闭右，空态居中一行字） -->
+    <div v-if="histOpen" class="hist-mask" @click="histOpen = false" />
+    <div class="hist-drawer" :class="{ open: histOpen }">
+      <div class="hist-head">
+        <b>会话历史</b>
+        <span style="flex:1" />
+        <el-button size="small" text circle title="导出全部会话" @click="exportAll"><el-icon><Download /></el-icon></el-button>
+        <el-button size="small" text circle title="清空全部会话" @click="clearAll"><el-icon><Delete /></el-icon></el-button>
+        <el-button size="small" text circle title="关闭" @click="histOpen = false"><el-icon><Close /></el-icon></el-button>
+      </div>
+      <div class="hist-tools">
+        <el-input v-model="histKw" size="small" placeholder="搜索会话名" clearable style="flex:1;min-width:0">
+          <template #prefix><el-icon><Search /></el-icon></template>
+        </el-input>
+        <el-button size="small" type="primary" @click="ensure(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>新会话</el-button>
+      </div>
+      <div class="hist-list">
+        <div v-if="!filteredSessions.length" class="hist-empty">暂无历史会话</div>
+        <div
+          v-for="s in filteredSessions" :key="s.scope + ':' + s.key"
+          class="suli-card hist-item" :class="{ active: curKey === s.key && curScope === s.scope }"
+          @click="pickAndClose(s)"
+        >
+          <template v-if="!(renaming && renameTarget === s.scope + ':' + s.key)">
+            <div class="hist-top">
+              <span class="dot" :class="s.dsh_session_id ? 'on' : 'off'" />
+              <b class="hist-key">{{ s.key }}</b>
+              <span style="flex:1" />
+              <el-button size="small" text circle title="重命名" @click.stop="startRename(s)"><el-icon><EditPen /></el-icon></el-button>
+              <el-button size="small" text circle title="导出该会话" @click.stop="exportOne(s)"><el-icon><Download /></el-icon></el-button>
+              <el-button size="small" text circle title="删除该会话" @click.stop="delSession(s)"><el-icon><Close /></el-icon></el-button>
+            </div>
+            <div class="hist-meta tnum">{{ scopeLabel(s.scope) }} · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
+          </template>
+          <template v-else>
+            <div class="hist-rename" @click.stop>
+              <el-input
+                ref="renameInput" v-model="renameText" size="small" style="flex:1;min-width:0"
+                placeholder="新会话名，回车确定" maxlength="60"
+                @keydown.enter="doRename" @keydown.esc="renaming = false"
+              />
+              <el-button size="small" type="primary" @click="doRename">确定</el-button>
+              <el-button size="small" @click="renaming = false">取消</el-button>
+            </div>
+          </template>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
+import { EditPen, Close, Check, Paperclip, Picture, CircleClose, Clock, Plus, Download, Delete, Search } from '@element-plus/icons-vue'
 import MarkdownView from './MarkdownView.vue'
 import { useAppStore } from '../stores/app'
 
@@ -166,8 +184,63 @@ function findSession(scope: string, key: string) {
 }
 // 当前选中的会话行（表头展示用）
 const curSess = computed(() => findSession(curScope.value, curKey.value))
-// 下拉展开/收起（自研，不用 el-select：它的 teleported 遮罩卡死时会吃掉整行点击）
-const open = ref(false)
+// 会话历史抽屉（照参考：右侧滑入，标题左 + 导出/清空/关闭右）
+const histOpen = ref(false)
+const histKw = ref('')
+const filteredSessions = computed(() => {
+  const kw = histKw.value.trim().toLowerCase()
+  const rows = [...sessions.value].sort((a, b) => (b.last_active || 0) - (a.last_active || 0))
+  if (!kw) return rows
+  return rows.filter(s => String(s.key || '').toLowerCase().includes(kw))
+})
+function scopeLabel(scope: string) {
+  if (scope === 'episode') return '分镜'
+  if (scope === 'character') return '角色'
+  if (scope === 'story') return '故事'
+  return scope || '会话'
+}
+function fmtTime(ts: number) {
+  if (!ts) return '--'
+  const d = new Date(ts)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+function downloadJson(name: string, obj: any) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' })
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000)
+}
+function exportAll() {
+  if (!sessions.value.length) return ElMessage.warning('暂无历史会话')
+  downloadJson(`dsh-sessions-${Date.now()}.json`, sessions.value)
+  ElMessage.success(`已导出 ${sessions.value.length} 个会话`)
+}
+function exportOne(s: any) {
+  let turns: any[] = []
+  try { turns = JSON.parse(localStorage.getItem(`dsh-turns:${s.scope}:${s.key}`) || '[]') } catch { turns = [] }
+  downloadJson(`dsh-${s.key}.json`, { ...s, turns })
+  ElMessage.success(`已导出 ${s.key}`)
+}
+async function clearAll() {
+  if (!sessions.value.length) return ElMessage.warning('暂无历史会话')
+  try {
+    await ElMessageBox.confirm(`清空全部 ${sessions.value.length} 个会话？本地聊天记录一起删。`, '清空会话历史', { type: 'warning', confirmButtonText: '清空', cancelButtonText: '取消' })
+  } catch { return }
+  if (loading.value) stop()
+  for (const s of [...sessions.value]) {
+    try { await api.dshDeleteSession(s.scope, s.key) } catch {}
+    try { localStorage.removeItem(`dsh-turns:${s.scope}:${s.key}`) } catch {}
+  }
+  sessions.value = []
+  curKey.value = ''
+  curSid.value = ''
+  turns.value = []
+  saveLocal()
+  ElMessage.success('已清空')
+}
 const turns = ref<Turn[]>([])
 const loading = ref(false)
 const loadingList = ref(false)
@@ -206,31 +279,32 @@ function scrollBottom() {
   })
 }
 
-// 接受并填充中央：像批准diff一样，一键把Agent落盘结果拉到中央工作区
-function extractEpisodes(t: Turn): string[] {
-  const txt = `${t.q || ''}\n${t.a || ''}`
-  const m = txt.match(/EP-[A-Za-z0-9\u4e00-\u9fa5_-]+/g) || []
-  // 占位写法（EP-xxx 之类）不算落盘引用
-  return [...new Set(m.filter(x => !/x{2,}/i.test(x)))]
+// 接受并填充中央：唯一开关是 LLM 自己打的落盘标记 `APPLY: EP-xxx`（见 AGENTS.md 落盘标记节）。
+// 前端不再猜关键词（已删硬编码词表），没标记一律不给入口；点了还会验盘，空盘拦下。
+const APPLY_RE = /(?:^|\n)\s*(?:APPLY|FILL|填充)\s*[:：]\s*(EP-[A-Za-z0-9\u4e00-\u9fa5_-]+)/i
+function extractApplyMark(t: Turn): string {
+  const m = (t.a || '').match(APPLY_RE)
+  return m ? m[1] : ''
+}
+function displayAnswer(t: Turn): string {
+  // 展示时藏掉标记行（单独一行 APPLY: EP-xxx），复制/引用也用藏后的
+  return (t.a || '').replace(/^\s*(?:APPLY|FILL|填充)\s*[:：]\s*EP-[^\s]+\s*$/gim, '').replace(/\n{3,}/g, '\n\n').trim()
 }
 function extractShots(t: Turn): string[] {
   const m = (t.a || '').match(/SHOT-[A-Za-z0-9_-]+/g)
   return m ? [...new Set(m)] : []
 }
 function detectTargetEpisode(t: Turn): string {
+  const mark = extractApplyMark(t)
+  if (mark) return mark
   if (/^EP-/.test(curKey.value)) return curKey.value
-  const eps = extractEpisodes(t)
-  if (eps.length) return eps[0]
-  if (curKey.value && /^EP-/.test(curKey.value)) return curKey.value
   return store.episodeId
 }
 function canApply(t: Turn) {
   if (!t.a) return false
   if (t.applied) return false
-  if (/^(❌|⏹)/.test(t.a.trim())) return false
-  // 只有提到真实集号/镜号（即有落盘内容可拉）才给填充入口，纯问答不挂按钮
-  if (!extractEpisodes(t).length && !extractShots(t).length) return false
-  return true
+  if (/^(\[失败\]|\[已停止\])/.test(t.a.trim())) return false
+  return !!extractApplyMark(t)
 }
 function applyHint(t: Turn) {
   const target = detectTargetEpisode(t)
@@ -241,7 +315,7 @@ function applyHint(t: Turn) {
 }
 function probeText(p: any) {
   const same = p.target === store.episodeId
-  return `磁盘 ${p.target}：${p.rows.length}镜${p.oChars ? `＋大纲${p.oChars}字` : ''}${p.imgNote}${same ? ' → 刷新中央' : ` → 中央将从 ${store.episodeId} 切换`}`
+  return `磁盘 ${p.target}：${p.rows.length}镜${p.oChars ? `＋大纲${p.oChars}字` : ''}${p.sChars ? `＋底稿${p.sChars}字` : ''}${p.imgNote}${same ? ' → 刷新中央' : ` → 中央将从 ${store.episodeId} 切换`}`
 }
 function cancelProbe(i: number) { probe.value[i] = null }
 // 第一步：验盘——把目标集的落盘现状摆出来批（diff 预览），空盘直接拦下
@@ -250,19 +324,21 @@ async function probeCentral(t: Turn, i: number) {
   if (!target) return ElMessage.warning('找不到目标集号')
   probingIdx.value = i
   try {
-    const [sR, oR] = await Promise.all([
+    const [sR, oR, scR] = await Promise.all([
       api.listShots(target),
       api.getOutline(target).catch(() => null),
+      api.getScreenplay(target).catch(() => null),
     ])
     const rows = ((sR as any)?.data ?? sR ?? []) as any[]
     const oChars = ((((oR as any)?.data?.outline_md) || '') as string).length
-    if (!rows.length && !oChars) {
-      ElMessage.warning(`目标 ${target} 暂无落盘内容（无镜、无大纲）`)
+    const sChars = ((((scR as any)?.data?.screenplay_md) || '') as string).length
+    if (!rows.length && !oChars && !sChars) {
+      ElMessage.warning(`目标 ${target} 暂无落盘内容（无镜、无大纲、无底稿）`)
       return
     }
     const oImg = ((((oR as any)?.data?.outline_image) || '') as string)
     const firstImg = (rows[0] as any)?.images?.[0]?.name || ''
-    probe.value[i] = { target, rows, oChars, imgNote: (oImg || firstImg) ? ` · 首帧 ${oImg || firstImg}` : '' }
+    probe.value[i] = { target, rows, oChars, sChars, imgNote: (oImg || firstImg) ? ` · 首帧 ${oImg || firstImg}` : '' }
     scrollBottom()
   } catch {
     ElMessage.error('读取落盘失败，后端未起？')
@@ -382,7 +458,7 @@ function pick(s: any) {
 }
 function pickAndClose(s: any) {
   pick(s)
-  open.value = false
+  histOpen.value = false
 }
 
 function delCurrent() {
@@ -429,15 +505,17 @@ function delTurn(i: number) {
   saveLocal()
 }
 
-// 行内改名：不经弹窗，直接在表头改（弹窗层在此页曾无响应）
+// 抽屉内行内改名：不经弹窗，直接在行内改
 const renaming = ref(false)
 const renameText = ref('')
+const renameTarget = ref('')
 const renameInput = ref<any>(null)
-function startRename() {
-  const s = findSession(curScope.value, curKey.value)
-  if (!s) return ElMessage.warning('无可改名会话')
+function startRename(s?: any) {
+  const t = s || findSession(curScope.value, curKey.value)
+  if (!t) return ElMessage.warning('无可改名会话')
   renaming.value = true
-  renameText.value = s.key
+  renameTarget.value = `${t.scope}:${t.key}`
+  renameText.value = t.key
   nextTick(() => {
     const el = renameInput.value as any
     const inp = el?.$el?.querySelector?.('input') || el
@@ -446,7 +524,9 @@ function startRename() {
   })
 }
 async function doRename() {
-  const s = findSession(curScope.value, curKey.value)
+  const [tScope, ...tRest] = renameTarget.value.split(':')
+  const tKey = tRest.join(':')
+  const s = (tScope && tKey ? findSession(tScope, tKey) : null) || findSession(curScope.value, curKey.value)
   if (!s) { renaming.value = false; return }
   const v = (renameText.value || '').trim()
   if (!v) return ElMessage.warning('名字不能为空')
@@ -471,6 +551,7 @@ async function doRename() {
   curSid.value = (findSession(s.scope, v) || {}).dsh_session_id || ''
   loadLocal()
   renaming.value = false
+  renameTarget.value = ''
   ElMessage.success(`已改名 ${v}`)
 }
 
@@ -545,13 +626,20 @@ async function send() {
   scrollBottom()
   const ac = new AbortController()
   aborter.value = ac
+  const t0 = Date.now()
+  const tick = setInterval(() => {
+    const s = Math.floor((Date.now() - t0) / 1000)
+    if (s >= 8 && !turns.value[idx]?.a) progress.value = `运行中…${s}s（dsh冷启动+首token较慢，超60s可点停止重试）`
+  }, 1000)
   try {
     let done: any = null
     let errMsg = ''
     await api.dshRunStream(
       { scope: curScope.value, key: curKey.value, message: q, session_id: curSid.value || undefined },
       (ev, d) => {
-        if (ev === 'dsh') progress.value = `运行中…事件 ${d.n || ''}`
+        const s = Math.floor((Date.now() - t0) / 1000)
+        if (ev === 'dsh') progress.value = `运行中… 事件 ${d.n || ''} · ${s}s${(d.n || 0) > 200 ? '（事件过多，疑似空转，可点停止）' : ''}`
+        else if (ev === 'retry') progress.value = '检测到拒答，自动重试中…'
         else if (ev === 'done') done = d
         else if (ev === 'error') errMsg = (d as any).msg || '调用失败'
       },
@@ -560,18 +648,20 @@ async function send() {
     if (done) {
       if (done.session_id && done.session_id !== curSid.value) { curSid.value = done.session_id; await reload() }
       fillA(done.answer || '(空回包)')
+      if (done.retried) ElMessage.info('上一轮被拒答，已自动重试并替换结果')
     } else {
-      fillA('❌ ' + (errMsg || '流中断'))
+      fillA('[失败] ' + (errMsg || '流中断'))
       ElMessage.error((errMsg || '流中断').slice(0, 120))
     }
   } catch (e: any) {
     if (ac.signal.aborted) {
-      fillA('⏹ 已停止')
+      fillA('[已停止]')
     } else {
-      fillA('❌ 流连接失败')
-      ElMessage.error('流连接失败')
+      const m = (e?.message || '流连接失败').slice(0, 200)
+      fillA('[失败] ' + m)
+      ElMessage.error(m)
     }
-  } finally { loading.value = false; progress.value = ''; aborter.value = null }
+  } finally { clearInterval(tick); loading.value = false; progress.value = ''; aborter.value = null }
   scrollBottom()
 }
 watch(() => [store.episodeId, store.selectedCharId, route.path], () => {
@@ -586,13 +676,34 @@ async function backToEpisodeSilent() {
 }
 </script>
 <style scoped>
-.right{width:440px;box-sizing:border-box;background:var(--suli-surface);border-left:1px solid var(--suli-border);padding:14px;display:flex;flex-direction:column;height:100vh;max-height:100vh;overflow:hidden;flex-shrink:0}
-.head{display:flex;align-items:center}
+.right{width:440px;box-sizing:border-box;background:var(--suli-surface);border-left:1px solid var(--suli-border);padding:14px;display:flex;flex-direction:column;height:100vh;max-height:100vh;overflow:hidden;flex-shrink:0;position:relative}
+.head{display:flex;align-items:center;gap:4px}
+.agent-sub{display:flex;gap:6px;margin-top:8px;align-items:center}
 .hint{font-size:12px;color:var(--suli-text-2);margin:6px 0}
-.sess-head{display:flex;gap:6px;align-items:center;padding:8px;cursor:pointer}
-.sess-drop{margin-top:6px;display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto}
-.sess-item{padding:8px;cursor:pointer}
-.sess-item.active{border-color:var(--suli-primary)}
+.cur-card{margin-top:8px;padding:10px 12px;cursor:pointer}
+.cur-card:hover{border-color:var(--suli-primary)}
+.cur-title{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--suli-primary);font-weight:700}
+.cur-ico{font-size:14px}
+.cur-count{margin-left:auto;font-weight:400;color:var(--suli-text-3);font-size:11px}
+.cur-key{margin-top:2px;font-size:14px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 会话历史抽屉：盖住右侧面板，照参考（标题左＋三按钮右，空态居中） */
+.hist-mask{position:absolute;inset:0;background:rgba(0,0,0,.35);z-index:40}
+.hist-drawer{position:absolute;top:0;right:0;bottom:0;width:min(360px,100%);background:var(--suli-surface);border-left:1px solid var(--suli-border);box-shadow:var(--suli-shadow);z-index:41;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .22s ease}
+.hist-drawer.open{transform:translateX(0)}
+.hist-head{display:flex;gap:2px;align-items:center;padding:12px 12px 8px;font-size:15px}
+.hist-tools{display:flex;gap:8px;align-items:center;padding:0 12px 8px}
+.hist-list{flex:1;overflow-y:auto;padding:4px 12px 12px;display:flex;flex-direction:column;gap:8px}
+.hist-empty{text-align:center;color:var(--suli-text-3);font-size:13px;margin-top:48px}
+.hist-item{padding:10px 12px;cursor:pointer}
+.hist-item:hover{border-color:var(--suli-primary)}
+.hist-item.active{border-color:var(--suli-primary)}
+.hist-top{display:flex;gap:4px;align-items:center;min-width:0}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot.on{background:var(--suli-success,#2da44e)}
+.dot.off{background:var(--suli-text-3,#a3a3a3)}
+.hist-key{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px}
+.hist-meta{margin-top:4px;font-size:11px;color:var(--suli-text-2)}
+.hist-rename{display:flex;gap:6px;align-items:center}
 .turns{flex:1;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin-top:8px;display:flex;flex-direction:column;gap:8px;min-height:0}
 .turn{display:flex;flex-direction:column;gap:8px}
 .bubble-row{display:block}

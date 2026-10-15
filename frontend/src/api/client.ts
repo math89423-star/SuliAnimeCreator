@@ -8,6 +8,7 @@ import { boardApi } from './board'
 import { directorApi } from './director'
 import { dshApi } from './dsh'
 import { systemApi } from './system'
+import { trafficApi } from './traffic'
 
 export { http, DIMS }
 export const api = {
@@ -17,5 +18,6 @@ export const api = {
   ...boardApi,
   ...directorApi,
   ...dshApi,
+  ...trafficApi,
 }
 export type Api = typeof api

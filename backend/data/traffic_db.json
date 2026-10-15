@@ -1,0 +1,725 @@
+{
+  "packages": {
+    "PKG-TRAFFIC-EP-DEMO01-1015": {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "mother_id": "EP-DEMO01",
+      "created_at": 1792036102722,
+      "lib_source": "episode",
+      "library": [
+        {
+          "id": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "id": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "id": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场"
+        }
+      ],
+      "tasks": [
+        {
+          "desc": "引导点击红包广告：星璃登场",
+          "mode": "lib",
+          "category": "红包点击",
+          "count": 15,
+          "refVideo": ""
+        }
+      ],
+      "highlights": [
+        {
+          "id": "H001",
+          "variant_id": "T1-V01",
+          "source": "library",
+          "ref": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "duration_s": 4
+        },
+        {
+          "id": "H002",
+          "variant_id": "T1-V02",
+          "source": "library",
+          "ref": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默",
+          "duration_s": 4
+        },
+        {
+          "id": "H003",
+          "variant_id": "T1-V03",
+          "source": "library",
+          "ref": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场",
+          "duration_s": 4
+        },
+        {
+          "id": "H004",
+          "variant_id": "T1-V04",
+          "source": "library",
+          "ref": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "duration_s": 4
+        },
+        {
+          "id": "H005",
+          "variant_id": "T1-V05",
+          "source": "library",
+          "ref": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默",
+          "duration_s": 4
+        },
+        {
+          "id": "H006",
+          "variant_id": "T1-V06",
+          "source": "library",
+          "ref": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场",
+          "duration_s": 4
+        },
+        {
+          "id": "H007",
+          "variant_id": "T1-V07",
+          "source": "library",
+          "ref": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "duration_s": 4
+        },
+        {
+          "id": "H008",
+          "variant_id": "T1-V08",
+          "source": "library",
+          "ref": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默",
+          "duration_s": 4
+        },
+        {
+          "id": "H009",
+          "variant_id": "T1-V09",
+          "source": "library",
+          "ref": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场",
+          "duration_s": 4
+        },
+        {
+          "id": "H010",
+          "variant_id": "T1-V10",
+          "source": "library",
+          "ref": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "duration_s": 4
+        },
+        {
+          "id": "H011",
+          "variant_id": "T1-V11",
+          "source": "library",
+          "ref": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默",
+          "duration_s": 4
+        },
+        {
+          "id": "H012",
+          "variant_id": "T1-V12",
+          "source": "library",
+          "ref": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场",
+          "duration_s": 4
+        },
+        {
+          "id": "H013",
+          "variant_id": "T1-V13",
+          "source": "library",
+          "ref": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "duration_s": 4
+        },
+        {
+          "id": "H014",
+          "variant_id": "T1-V14",
+          "source": "library",
+          "ref": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默",
+          "duration_s": 4
+        },
+        {
+          "id": "H015",
+          "variant_id": "T1-V15",
+          "source": "library",
+          "ref": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场",
+          "duration_s": 4
+        }
+      ],
+      "copy_draft": [
+        {
+          "variant_id": "T1-V01",
+          "hypothesis": "测试冲突直给开场测衣牌对峙能否提升红包点击",
+          "hook": "冲突直给｜沈禾夜入洗衣房对峙取衣牌｜「还我衣牌否则别想走」",
+          "title": "星璃登场红包来了",
+          "cta": "点击红包看反转"
+        },
+        {
+          "variant_id": "T1-V02",
+          "hypothesis": "测试悬念提问测骤停静默悬念能否提升点击留存",
+          "hook": "悬念提问｜烘干机骤停全场静默｜「烘干机停了藏着啥」",
+          "title": "烘干机骤停有秘密",
+          "cta": "点红包揭开真相"
+        },
+        {
+          "variant_id": "T1-V03",
+          "hypothesis": "测试反差萌测洗衣房与红包雨反差能否促点击",
+          "hook": "反差｜蒋姨亮证据反转离场｜「洗衣房竟藏红包雨」",
+          "title": "星璃空降发红包",
+          "cta": "点击领取星璃包"
+        },
+        {
+          "variant_id": "T1-V04",
+          "hypothesis": "测试台词爆点测星璃宣言台词能否带动点击",
+          "hook": "台词爆点｜沈禾夜入洗衣房对峙取衣牌｜「这衣牌我替星璃收」",
+          "title": "一句台词全场炸了",
+          "cta": "点红包看星璃来"
+        },
+        {
+          "variant_id": "T1-V05",
+          "hypothesis": "测试动作奇观测撕牌奇观动作能否提升点击",
+          "hook": "动作奇观｜烘干机骤停全场静默｜「她撕碎衣牌扔烘干机」",
+          "title": "星璃霸气登场时刻",
+          "cta": "点击见证登场"
+        },
+        {
+          "variant_id": "T1-V06",
+          "hypothesis": "测试冲突直给测蒋姨反转离场冲突能否促点击",
+          "hook": "冲突直给｜蒋姨亮证据反转离场｜「蒋姨亮证据别跑」",
+          "title": "蒋姨反转星璃现身",
+          "cta": "点击红包看离场"
+        },
+        {
+          "variant_id": "T1-V07",
+          "hypothesis": "测试悬念提问测衣牌失踪疑问能否提升好奇点击",
+          "hook": "悬念提问｜沈禾夜入洗衣房对峙取衣牌｜「谁动了星璃的衣牌」",
+          "title": "衣牌失踪真相是",
+          "cta": "点红包查真相"
+        },
+        {
+          "variant_id": "T1-V08",
+          "hypothesis": "测试反差感测洗衣小事与大红包反差能否拉点击",
+          "hook": "反差｜烘干机骤停全场静默｜「洗衣服洗出大红包」",
+          "title": "洗衣房变红包雨",
+          "cta": "点击抢星璃包"
+        },
+        {
+          "variant_id": "T1-V09",
+          "hypothesis": "测试台词爆点测星璃登场宣言能否刺激点击",
+          "hook": "台词爆点｜蒋姨亮证据反转离场｜「星璃到红包就到」",
+          "title": "星璃一句话封神",
+          "cta": "点击听爆点台词"
+        },
+        {
+          "variant_id": "T1-V10",
+          "hypothesis": "测试动作奇观测烘干机奇观特效能否带动点击",
+          "hook": "动作奇观｜沈禾夜入洗衣房对峙取衣牌｜「烘干机炸出红包雨」",
+          "title": "红包雨空降洗衣房",
+          "cta": "点击抢红包雨"
+        },
+        {
+          "variant_id": "T1-V11",
+          "hypothesis": "测试冲突直给测沈禾夜入对峙能否提升点击欲",
+          "hook": "冲突直给｜烘干机骤停全场静默｜「夜闯洗衣房为星璃」",
+          "title": "沈禾硬刚为星璃",
+          "cta": "点击看星璃登场"
+        },
+        {
+          "variant_id": "T1-V12",
+          "hypothesis": "测试悬念提问测离场悬念能否延长停留促点击",
+          "hook": "悬念提问｜蒋姨亮证据反转离场｜「蒋姨离场前说了啥」",
+          "title": "离场前一句藏玄机",
+          "cta": "点红包看结局"
+        },
+        {
+          "variant_id": "T1-V13",
+          "hypothesis": "测试反差策略测穷富反差能否激发红包点击",
+          "hook": "反差｜沈禾夜入洗衣房对峙取衣牌｜「最穷洗衣房最豪包」",
+          "title": "反差星璃发大包",
+          "cta": "点击领豪华包"
+        },
+        {
+          "variant_id": "T1-V14",
+          "hypothesis": "测试台词爆点测加倍补偿台词能否提高点击",
+          "hook": "台词爆点｜烘干机骤停全场静默｜「我来迟红包加倍」",
+          "title": "星璃登场红包翻倍",
+          "cta": "点击翻倍领取"
+        },
+        {
+          "variant_id": "T1-V15",
+          "hypothesis": "测试动作奇观测星璃登场奇观能否引爆点击",
+          "hook": "动作奇观｜蒋姨亮证据反转离场｜「星璃踏光走出雾气」",
+          "title": "星璃登场全场静默",
+          "cta": "点击迎接星璃"
+        }
+      ],
+      "splice_plan": [
+        {
+          "order": 1,
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "沈禾夜入洗衣房对峙取衣牌",
+          "cta": "点击红包看反转"
+        },
+        {
+          "order": 2,
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "烘干机骤停全场静默",
+          "cta": "点红包揭开真相"
+        },
+        {
+          "order": 3,
+          "variant_id": "T1-V03",
+          "highlight_id": "H003",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "反差",
+          "body": "蒋姨亮证据反转离场",
+          "cta": "点击领取星璃包"
+        },
+        {
+          "order": 4,
+          "variant_id": "T1-V04",
+          "highlight_id": "H004",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "台词爆点",
+          "body": "沈禾夜入洗衣房对峙取衣牌",
+          "cta": "点红包看星璃来"
+        },
+        {
+          "order": 5,
+          "variant_id": "T1-V05",
+          "highlight_id": "H005",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "动作奇观",
+          "body": "烘干机骤停全场静默",
+          "cta": "点击见证登场"
+        },
+        {
+          "order": 6,
+          "variant_id": "T1-V06",
+          "highlight_id": "H006",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "蒋姨亮证据反转离场",
+          "cta": "点击红包看离场"
+        },
+        {
+          "order": 7,
+          "variant_id": "T1-V07",
+          "highlight_id": "H007",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "沈禾夜入洗衣房对峙取衣牌",
+          "cta": "点红包查真相"
+        },
+        {
+          "order": 8,
+          "variant_id": "T1-V08",
+          "highlight_id": "H008",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "反差",
+          "body": "烘干机骤停全场静默",
+          "cta": "点击抢星璃包"
+        },
+        {
+          "order": 9,
+          "variant_id": "T1-V09",
+          "highlight_id": "H009",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "台词爆点",
+          "body": "蒋姨亮证据反转离场",
+          "cta": "点击听爆点台词"
+        },
+        {
+          "order": 10,
+          "variant_id": "T1-V10",
+          "highlight_id": "H010",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "动作奇观",
+          "body": "沈禾夜入洗衣房对峙取衣牌",
+          "cta": "点击抢红包雨"
+        },
+        {
+          "order": 11,
+          "variant_id": "T1-V11",
+          "highlight_id": "H011",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "烘干机骤停全场静默",
+          "cta": "点击看星璃登场"
+        },
+        {
+          "order": 12,
+          "variant_id": "T1-V12",
+          "highlight_id": "H012",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "蒋姨亮证据反转离场",
+          "cta": "点红包看结局"
+        },
+        {
+          "order": 13,
+          "variant_id": "T1-V13",
+          "highlight_id": "H013",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "反差",
+          "body": "沈禾夜入洗衣房对峙取衣牌",
+          "cta": "点击领豪华包"
+        },
+        {
+          "order": 14,
+          "variant_id": "T1-V14",
+          "highlight_id": "H014",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "台词爆点",
+          "body": "烘干机骤停全场静默",
+          "cta": "点击翻倍领取"
+        },
+        {
+          "order": 15,
+          "variant_id": "T1-V15",
+          "highlight_id": "H015",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "动作奇观",
+          "body": "蒋姨亮证据反转离场",
+          "cta": "点击迎接星璃"
+        }
+      ],
+      "materials": [
+        {
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "ref": "SHOT-MO01-M001",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4",
+          "source": "library",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "ref": "SHOT-MO01-M002",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4",
+          "source": "library",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "variant_id": "T1-V03",
+          "highlight_id": "H003",
+          "ref": "SHOT-MO01-M003",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V03_H003_1080x1920.mp4",
+          "source": "library",
+          "desc": "蒋姨亮证据反转离场"
+        },
+        {
+          "variant_id": "T1-V04",
+          "highlight_id": "H004",
+          "ref": "SHOT-MO01-M001",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V04_H004_1080x1920.mp4",
+          "source": "library",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "variant_id": "T1-V05",
+          "highlight_id": "H005",
+          "ref": "SHOT-MO01-M002",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V05_H005_1080x1920.mp4",
+          "source": "library",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "variant_id": "T1-V06",
+          "highlight_id": "H006",
+          "ref": "SHOT-MO01-M003",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V06_H006_1080x1920.mp4",
+          "source": "library",
+          "desc": "蒋姨亮证据反转离场"
+        },
+        {
+          "variant_id": "T1-V07",
+          "highlight_id": "H007",
+          "ref": "SHOT-MO01-M001",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V07_H007_1080x1920.mp4",
+          "source": "library",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "variant_id": "T1-V08",
+          "highlight_id": "H008",
+          "ref": "SHOT-MO01-M002",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V08_H008_1080x1920.mp4",
+          "source": "library",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "variant_id": "T1-V09",
+          "highlight_id": "H009",
+          "ref": "SHOT-MO01-M003",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V09_H009_1080x1920.mp4",
+          "source": "library",
+          "desc": "蒋姨亮证据反转离场"
+        },
+        {
+          "variant_id": "T1-V10",
+          "highlight_id": "H010",
+          "ref": "SHOT-MO01-M001",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V10_H010_1080x1920.mp4",
+          "source": "library",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "variant_id": "T1-V11",
+          "highlight_id": "H011",
+          "ref": "SHOT-MO01-M002",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V11_H011_1080x1920.mp4",
+          "source": "library",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "variant_id": "T1-V12",
+          "highlight_id": "H012",
+          "ref": "SHOT-MO01-M003",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V12_H012_1080x1920.mp4",
+          "source": "library",
+          "desc": "蒋姨亮证据反转离场"
+        },
+        {
+          "variant_id": "T1-V13",
+          "highlight_id": "H013",
+          "ref": "SHOT-MO01-M001",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V13_H013_1080x1920.mp4",
+          "source": "library",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "variant_id": "T1-V14",
+          "highlight_id": "H014",
+          "ref": "SHOT-MO01-M002",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V14_H014_1080x1920.mp4",
+          "source": "library",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "variant_id": "T1-V15",
+          "highlight_id": "H015",
+          "ref": "SHOT-MO01-M003",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V15_H015_1080x1920.mp4",
+          "source": "library",
+          "desc": "蒋姨亮证据反转离场"
+        }
+      ],
+      "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
+      "checks": {
+        "skill": "skills/traffic/traffic-batch/SKILL.md",
+        "skill_version": 1791970824673516390,
+        "engine": "llm",
+        "lib_source": "episode",
+        "testable": true,
+        "deduped": true,
+        "executable": true,
+        "naming_ok": true,
+        "materials_ok": true
+      },
+      "variants": [
+        {
+          "variant_id": "T1-V01",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给开场测衣牌对峙能否提升红包点击",
+          "hook_text": "冲突直给｜沈禾夜入洗衣房对峙取衣牌｜「还我衣牌否则别想走」",
+          "hl_id": "H001",
+          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
+          "title": "星璃登场红包来了",
+          "cta_text": "点击红包看反转",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问测骤停静默悬念能否提升点击留存",
+          "hook_text": "悬念提问｜烘干机骤停全场静默｜「烘干机停了藏着啥」",
+          "hl_id": "H002",
+          "hl_desc": "烘干机骤停全场静默",
+          "title": "烘干机骤停有秘密",
+          "cta_text": "点红包揭开真相",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V03",
+          "task_id": 1,
+          "hypothesis": "测试反差萌测洗衣房与红包雨反差能否促点击",
+          "hook_text": "反差｜蒋姨亮证据反转离场｜「洗衣房竟藏红包雨」",
+          "hl_id": "H003",
+          "hl_desc": "蒋姨亮证据反转离场",
+          "title": "星璃空降发红包",
+          "cta_text": "点击领取星璃包",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V03_H003_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V04",
+          "task_id": 1,
+          "hypothesis": "测试台词爆点测星璃宣言台词能否带动点击",
+          "hook_text": "台词爆点｜沈禾夜入洗衣房对峙取衣牌｜「这衣牌我替星璃收」",
+          "hl_id": "H004",
+          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
+          "title": "一句台词全场炸了",
+          "cta_text": "点红包看星璃来",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V04_H004_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V05",
+          "task_id": 1,
+          "hypothesis": "测试动作奇观测撕牌奇观动作能否提升点击",
+          "hook_text": "动作奇观｜烘干机骤停全场静默｜「她撕碎衣牌扔烘干机」",
+          "hl_id": "H005",
+          "hl_desc": "烘干机骤停全场静默",
+          "title": "星璃霸气登场时刻",
+          "cta_text": "点击见证登场",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V05_H005_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V06",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给测蒋姨反转离场冲突能否促点击",
+          "hook_text": "冲突直给｜蒋姨亮证据反转离场｜「蒋姨亮证据别跑」",
+          "hl_id": "H006",
+          "hl_desc": "蒋姨亮证据反转离场",
+          "title": "蒋姨反转星璃现身",
+          "cta_text": "点击红包看离场",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V06_H006_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V07",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问测衣牌失踪疑问能否提升好奇点击",
+          "hook_text": "悬念提问｜沈禾夜入洗衣房对峙取衣牌｜「谁动了星璃的衣牌」",
+          "hl_id": "H007",
+          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
+          "title": "衣牌失踪真相是",
+          "cta_text": "点红包查真相",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V07_H007_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V08",
+          "task_id": 1,
+          "hypothesis": "测试反差感测洗衣小事与大红包反差能否拉点击",
+          "hook_text": "反差｜烘干机骤停全场静默｜「洗衣服洗出大红包」",
+          "hl_id": "H008",
+          "hl_desc": "烘干机骤停全场静默",
+          "title": "洗衣房变红包雨",
+          "cta_text": "点击抢星璃包",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V08_H008_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V09",
+          "task_id": 1,
+          "hypothesis": "测试台词爆点测星璃登场宣言能否刺激点击",
+          "hook_text": "台词爆点｜蒋姨亮证据反转离场｜「星璃到红包就到」",
+          "hl_id": "H009",
+          "hl_desc": "蒋姨亮证据反转离场",
+          "title": "星璃一句话封神",
+          "cta_text": "点击听爆点台词",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V09_H009_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V10",
+          "task_id": 1,
+          "hypothesis": "测试动作奇观测烘干机奇观特效能否带动点击",
+          "hook_text": "动作奇观｜沈禾夜入洗衣房对峙取衣牌｜「烘干机炸出红包雨」",
+          "hl_id": "H010",
+          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
+          "title": "红包雨空降洗衣房",
+          "cta_text": "点击抢红包雨",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V10_H010_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V11",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给测沈禾夜入对峙能否提升点击欲",
+          "hook_text": "冲突直给｜烘干机骤停全场静默｜「夜闯洗衣房为星璃」",
+          "hl_id": "H011",
+          "hl_desc": "烘干机骤停全场静默",
+          "title": "沈禾硬刚为星璃",
+          "cta_text": "点击看星璃登场",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V11_H011_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V12",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问测离场悬念能否延长停留促点击",
+          "hook_text": "悬念提问｜蒋姨亮证据反转离场｜「蒋姨离场前说了啥」",
+          "hl_id": "H012",
+          "hl_desc": "蒋姨亮证据反转离场",
+          "title": "离场前一句藏玄机",
+          "cta_text": "点红包看结局",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V12_H012_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V13",
+          "task_id": 1,
+          "hypothesis": "测试反差策略测穷富反差能否激发红包点击",
+          "hook_text": "反差｜沈禾夜入洗衣房对峙取衣牌｜「最穷洗衣房最豪包」",
+          "hl_id": "H013",
+          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
+          "title": "反差星璃发大包",
+          "cta_text": "点击领豪华包",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V13_H013_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V14",
+          "task_id": 1,
+          "hypothesis": "测试台词爆点测加倍补偿台词能否提高点击",
+          "hook_text": "台词爆点｜烘干机骤停全场静默｜「我来迟红包加倍」",
+          "hl_id": "H014",
+          "hl_desc": "烘干机骤停全场静默",
+          "title": "星璃登场红包翻倍",
+          "cta_text": "点击翻倍领取",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V14_H014_1080x1920.mp4"
+        },
+        {
+          "variant_id": "T1-V15",
+          "task_id": 1,
+          "hypothesis": "测试动作奇观测星璃登场奇观能否引爆点击",
+          "hook_text": "动作奇观｜蒋姨亮证据反转离场｜「星璃踏光走出雾气」",
+          "hl_id": "H015",
+          "hl_desc": "蒋姨亮证据反转离场",
+          "title": "星璃登场全场静默",
+          "cta_text": "点击迎接星璃",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V15_H015_1080x1920.mp4"
+        }
+      ]
+    }
+  },
+  "feedbacks": [
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "variant_id": "T1-V01",
+      "ctr": 0.12,
+      "keep3s": 0.45,
+      "cvr": 0.0,
+      "created_at": 1792035932719
+    }
+  ]
+}

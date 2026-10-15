@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 /** 分集域：当前集 + 分镜 + 右侧Agent回填信号 */
 export const useEpisodeStore = defineStore('episode', () => {
-  const episodeId = ref('EP-DEMO01')
+  const EP_KEY = 'suli.episodeId'
+  const episodeId = ref(localStorage.getItem(EP_KEY) || 'EP-DEMO01')
+  watch(episodeId, v => { try { localStorage.setItem(EP_KEY, v || '') } catch {} })
   const shots = ref<any[]>([])
   const lastSavedAt = ref(0)
   function touchSaved() { lastSavedAt.value = Date.now() }

@@ -9,11 +9,21 @@ export const dshApi = {
   dshRename: (scope: string, key: string, new_key: string) => http.put('/v1/dsh/sessions/rename', { scope, key, new_key }).then(r => r.data),
   dshRun: (p: { scope: string; key: string; message: string; session_id?: string }) => http.post('/v1/dsh/run', p, { timeout: 200000 }).then(r => r.data),
   dshRunStream: async (p: { scope: string; key: string; message: string; session_id?: string }, onEvent: (ev: string, data: any) => void, signal?: AbortSignal) => {
-    const res = await fetch('/api/v1/dsh/stream', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(p), signal,
-    })
-    if (!res.ok || !res.body) throw new Error('stream HTTP ' + res.status)
+    let res: Response
+    try {
+      res = await fetch('/api/v1/dsh/stream', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(p), signal,
+      })
+    } catch (e: any) {
+      // 直连失败：后端没起 / vite 代理断 / 端口不对（5173/5174/5175 多开时易踩）
+      throw new Error('stream fetch failed: ' + (e?.message || e))
+    }
+    if (!res.ok || !res.body) {
+      let body = ''
+      try { body = await res.text() } catch {}
+      throw new Error('stream HTTP ' + res.status + (body ? ' ' + body.slice(0, 200) : ''))
+    }
     const reader = res.body.getReader()
     const dec = new TextDecoder()
     let buf = ''

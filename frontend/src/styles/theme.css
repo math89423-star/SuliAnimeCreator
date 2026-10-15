@@ -54,10 +54,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 .page-title { font-size: 22px; font-weight: 800; letter-spacing: 0.01em; margin: 0 0 4px; }
-.page-desc { font-size: 13px; color: var(--suli-text-2); margin-bottom: 10px; }
-.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; color: var(--suli-primary); font-family: var(--suli-kana); }
 .kana { font-family: var(--suli-kana); letter-spacing: 0.2em; }
 .tnum { font-family: var(--suli-mono); font-variant-numeric: tabular-nums; }
+/* 工具卡片详情弹窗：挂 body，宽 880，体部独立滚动 */
+.tool-dialog{--el-dialog-border-radius:16px}
+.tool-dialog .el-dialog__header{padding-bottom:0;margin-right:0}
+.tool-dialog .el-dialog__body{padding:8px 16px 16px;max-height:72vh;overflow:auto}
+.tool-dialog .detail-block{margin-top:0;border-top:none}
+.tool-dialog .dlg-cover img,.tool-dialog .dlg-img{max-height:52vh;object-fit:contain}
 /* kun式页面骨架：7xl居中 + radial 底 */
 .kun-page{max-width:96rem;margin:0 auto}
 .bg-radial{background-image:radial-gradient(ellipse 60% 40% at 50% 0%,#e4e4e7 0%,transparent 70%)}
@@ -106,3 +110,6 @@ pre.suli-pre { background: var(--suli-bg-2); border: 1px solid var(--suli-border
 *::-webkit-scrollbar-track { background: transparent; }
 :focus-visible { outline: 2px solid var(--suli-primary); outline-offset: 2px; border-radius: 6px; }
 @keyframes twinkle { 0%, 100% { transform: scale(0.7) rotate(0deg); opacity: 0.4; } 50% { transform: scale(1.15) rotate(20deg); opacity: 1; } }
+/* 等待遮罩（局部加载）：父容器加 .rel，遮罩 div.v-if 挂里面 */
+.rel { position: relative; }
+.wait-veil { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(255,255,255,0.72); backdrop-filter: blur(1px); border-radius: 12px; font-size: 13px; color: var(--suli-text-2, #909399); }

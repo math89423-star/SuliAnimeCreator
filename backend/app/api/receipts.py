@@ -36,6 +36,7 @@ def create():
         "provider": b.get("provider", ""), "media_url": b.get("media_url", ""),
         "status": b["status"], "log_tail": (b.get("log_tail") or "")[:2000],
         "deviations": b.get("deviations") or [],
+        "form": (b.get("form") or b.get("ref_mode") or "").strip(),
         "created_at": int(time.time() * 1000),
     }
     _STORE.setdefault("items", []).append(row)

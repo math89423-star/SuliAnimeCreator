@@ -2,6 +2,7 @@
   <div
     ref="wrapRef"
     class="zoom-wrap"
+    :style="{ aspectRatio: aspect }"
     @mousemove="onMove"
     @mouseenter="onEnter"
     @mouseleave="onLeave"
@@ -10,7 +11,7 @@
   >
     <img v-if="src" :src="src" class="zoom-img" draggable="false" alt="" @load="onImgLoad" />
     <div v-else class="zoom-empty" @click="$emit('upload')">
-      <span>无图 · 3:4框</span>
+      <span>无图</span>
       <el-button type="primary" @click.stop="$emit('upload')">点击传图</el-button>
     </div>
     <div
@@ -28,7 +29,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 defineEmits(['upload'])
-const props = withDefaults(defineProps<{ src?: string; lensSize?: number }>(), { src: '', lensSize: 150 })
+const props = withDefaults(defineProps<{ src?: string; lensSize?: number; aspect?: string }>(), { src: '', lensSize: 150, aspect: '3/4' })
 const wrapRef = ref<HTMLElement | null>(null)
 const showLens = ref(false)
 const viewerVisible = ref(false)

@@ -1,90 +1,81 @@
 <template>
   <div class="suli-card kun-page" style="padding:14px">
-    <h3>剧本分镜 · 手工画布</h3>
-    <el-input v-model="script" type="textarea" :rows="4" placeholder="剧本（手工排镜的底稿，只存不拆）" />
+    <h3 class="script-title">{{ store.episodeId }} 故事剧本</h3>
+    <el-input v-model="script" type="textarea" :rows="4" />
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <el-button @click="() => save()" :loading="saving">保存剧本</el-button>
-      <el-button type="primary" @click="genOutline" :loading="agentLoading">生成大纲·轻</el-button>
-      <el-button @click="genOutlineExpert" :loading="agentLoading">专家dsh</el-button>
+      <el-button type="primary" @click="genOutlineByMode" :loading="agentLoading">生成</el-button>
       <el-button v-if="agentLoading" size="small" @click="agentAborter?.abort()">停止</el-button>
       <span v-if="agentProgress" class="suli-muted" style="font-size:12px">{{ agentProgress }}</span>
       <el-tag v-if="scriptDirty" size="small" type="warning">未存*</el-tag>
 
       <el-button type="primary" @click="addShot" :disabled="!canAdd">添加新镜</el-button>
+      <el-button size="small" type="warning" @click="doReview">审查</el-button>
+      <span v-if="qaMsg" class="suli-muted" style="font-size:12px">{{ qaMsg }}</span>
       <span style="flex:1" />
       <el-tag size="small" class="tnum">{{ stat.shots }}镜</el-tag>
       <el-tag size="small" class="tnum">{{ stat.total_s }}s</el-tag>
-      <el-tag size="small" :type="stat.verdict === 'PASS' ? 'success' : stat.verdict === 'BLOCK' ? 'danger' : 'info'">{{ stat.verdict }}</el-tag>
+      <el-tag size="small" :type="stat.verdict === 'PASS' ? 'success' : stat.verdict === 'BLOCK' ? 'danger' : stat.verdict === 'REVISE' ? 'warning' : 'info'">{{ stat.verdict }}</el-tag>
     </div>
     <div v-if="loading && !rows.length" class="shot-flow">
       <div v-for="i in 3" :key="i" class="suli-card" style="padding:14px"><div class="skeleton" style="height:20px;width:40%" /><div class="skeleton" style="height:14px;margin-top:8px" /><div class="skeleton" style="height:60px;margin-top:8px" /></div>
     </div>
-    <el-empty v-else-if="!rows.length" description="无分镜，从下面待添加行逐行加" :image-size="64" />
-    <div v-else class="shot-flow">
-      <div v-for="(r, i) in rows" :key="r.id" class="suli-card shot-card">
-        <div class="shot-head">
-          <span class="shot-no tnum">{{ i + 1 }}</span>
-          <span class="shot-sid">{{ r.id }}</span>
-          <el-select v-model="r.camera.crop" style="width:130px" @change="saveRow(r, true)">
-            <el-option v-for="c in crops" :key="c.value" :label="c.label" :value="c.value" />
-          </el-select>
-          <el-select v-model="r.camera.movement" style="width:110px" placeholder="运镜" @change="saveRow(r, true)">
-            <el-option v-for="m in movements" :key="m" :label="m" :value="m" />
-          </el-select>
-          <el-input-number v-model="r.duration_s" style="width:140px" :min="0.5" :max="30" :step="0.5" @change="saveRow(r)" />
-          <span class="suli-muted" style="font-size:13px">秒</span>
-          <el-select v-model="r.tier" style="width:104px" placeholder="分级" @change="saveRow(r, true)">
-            <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
-          </el-select>
-          <span style="flex:1" />
-          <el-button link @click="move(i, -1)" :disabled="i === 0">↑</el-button>
-          <el-button link @click="move(i, 1)" :disabled="i === rows.length - 1">↓</el-button>
-          <el-button link type="primary" @click="saveRow(r)">存</el-button>
+    <el-empty v-else-if="!rows.length" description="暂无分镜" :image-size="64">
+      <el-button size="small" type="primary" @click="addRows">添加 {{ addCount }} 行</el-button>
+    </el-empty>
+    <div v-else class="seg-table">
+      <div class="seg-row seg-head">
+        <div class="c-check"><el-checkbox v-model="allChecked" /></div>
+        <div class="c-outline">大纲</div>
+        <div class="c-desc">分镜描述</div>
+        <div class="c-clip">已拍摄片段</div>
+        <div class="c-line">台词文案</div>
+        <div class="c-note">备注</div>
+      </div>
+      <div v-for="(r, i) in rows" :key="r.id" class="seg-row seg-body">
+        <div class="c-check">
+          <el-checkbox :model-value="selected.includes(r.id)" @change="() => toggleOne(r.id)" />
+          <span class="seg-no tnum">{{ String(i + 1).padStart(2, '0') }}</span>
+          <span class="seg-move">
+            <el-button link size="small" @click="move(i, -1)" :disabled="i === 0">↑</el-button>
+            <el-button link size="small" @click="move(i, 1)" :disabled="i === rows.length - 1">↓</el-button>
+          </span>
+        </div>
+        <div class="c-outline">
+          <div class="seg-label">seg{{ i + 1 }}</div>
+          <div class="seg-meta tnum">{{ r.camera?.movement || '固定' }} · {{ r.duration_s }}s</div>
+          <div class="seg-tags">
+            <el-tag v-if="r.draft" size="small" type="warning">草案</el-tag>
+            <el-tag v-if="r.tier" size="small" :type="r.tier === 'nsfw' ? 'danger' : 'info'">{{ r.tier }}</el-tag>
+          </div>
+          <div class="seg-id">{{ r.id }}</div>
           <el-popconfirm title="删掉该镜？" confirm-button-text="删" cancel-button-text="留" @confirm="removeShot(r.id)">
-            <template #reference><el-button link type="danger">删</el-button></template>
+            <template #reference><el-button link type="danger" size="small">删</el-button></template>
           </el-popconfirm>
         </div>
-        <el-input v-model="r.duty" placeholder="画面内容：一句话写清这镜拍什么" @blur="saveRow(r)" />
-        <el-input v-model="r.duty_en" type="textarea" :rows="2" resize="none" placeholder="英文正文" @blur="saveRow(r)" />
-        <el-input v-model="r.sound" placeholder="口播/台词/字幕" @blur="saveRow(r)" />
-        <div class="shot-pics">
-          <div class="shot-pic">
-            <span class="shot-kind">首帧</span>
-            <el-image v-if="shotByKind(r, 'first')" :src="imgUrl(shotByKind(r, 'first').name)" :preview-src-list="[imgUrl(shotByKind(r, 'first').name)]" fit="cover" class="shot-thumb lg" preview-teleported />
-            <el-button v-else link type="primary" @click="pickShotFile(r, 'first')">+首帧</el-button>
-            <el-button v-if="shotByKind(r, 'first')" link type="danger" @click="delShotImg(r, shotByKind(r, 'first').name)">删</el-button>
-          </div>
-          <div class="shot-pic">
-            <span class="shot-kind">尾帧</span>
-            <el-image v-if="shotByKind(r, 'last')" :src="imgUrl(shotByKind(r, 'last').name)" :preview-src-list="[imgUrl(shotByKind(r, 'last').name)]" fit="cover" class="shot-thumb lg" preview-teleported />
-            <el-button v-else link type="primary" @click="pickShotFile(r, 'last')">+尾帧</el-button>
-            <el-button v-if="shotByKind(r, 'last')" link type="danger" @click="delShotImg(r, shotByKind(r, 'last').name)">删</el-button>
-          </div>
-          <div class="shot-pic">
-            <span class="shot-kind">参考</span>
-            <span v-for="im in shotRefImgs(r)" :key="im.name" class="shot-refwrap">
-              <el-image :src="imgUrl(im.name)" :preview-src-list="[imgUrl(im.name)]" fit="cover" class="shot-thumb sm" preview-teleported />
-              <el-button link type="danger" @click="delShotImg(r, im.name)">×</el-button>
-            </span>
-            <el-button link type="primary" @click="pickShotFile(r, 'ref')">+参考</el-button>
-          </div>
+        <div class="c-desc">
+          <el-input v-model="r.duty" type="textarea" :rows="3" placeholder="点击输入内容" @blur="saveRow(r)" />
+          <el-input v-model="r.duty_en" type="textarea" :rows="2" resize="none" placeholder="英文正文" @blur="saveRow(r)" />
+        </div>
+        <div class="c-clip">
+          <div v-if="uploading[r.id]" class="clip-loading">转码中…</div>
+          <el-image v-else-if="shotByKind(r, 'first')" :src="imgUrl(shotByKind(r, 'first').name)" :preview-src-list="[imgUrl(shotByKind(r, 'first').name)]" fit="cover" class="clip-thumb" preview-teleported />
+          <button v-else class="clip-add" @click="pickShotFile(r, 'first')"><span class="clip-plus">+</span><span>添加拍摄片段</span></button>
+          <el-button v-if="shotByKind(r, 'first') && !uploading[r.id]" link type="danger" size="small" @click="delShotImg(r, shotByKind(r, 'first').name)">删</el-button>
+        </div>
+        <div class="c-line">
+          <el-input v-model="r.sound" type="textarea" :rows="3" placeholder="点击输入台词" @blur="saveRow(r)" />
+        </div>
+        <div class="c-note">
+          <el-input v-model="r.note" type="textarea" :rows="3" placeholder="点击输入内容" @blur="saveRow(r)" />
         </div>
         <input :ref="(el: any) => { if (el) shotRefs[r.id] = el }" type="file" accept="image/*" hidden @change="(e: any) => onShotImg(r, e)" />
       </div>
     </div>
-    <div class="suli-card" style="margin-top:10px;padding:10px;border-style:dashed">
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <el-select v-model="draft.crop" size="small" style="width:120px">
-          <el-option v-for="c in crops" :key="c.value" :label="c.label" :value="c.value" />
-        </el-select>
-        <el-select v-model="draft.movement" size="small" style="width:100px">
-          <el-option v-for="m in movements" :key="m" :label="m" :value="m" />
-        </el-select>
-        <el-input v-model="draft.duty" size="small" placeholder="职责/内容" style="flex:2;min-width:160px" @keyup.enter="addShot" />
-        <el-input v-model="draft.sound" size="small" placeholder="台词/声音" style="flex:2;min-width:140px" @keyup.enter="addShot" />
-        <el-input-number v-model="draft.duration" size="small" :min="0.5" :max="30" :step="0.5" />
-        <el-button type="primary" size="small" @click="addShot" :disabled="!canAdd">添加新镜</el-button>
-      </div>
+    <div class="seg-foot">
+      <el-input-number v-model="addCount" size="small" :min="1" :max="10" :step="1" />
+      <el-button class="seg-add" type="primary" @click="addRows">+ 添加 {{ addCount }} 行</el-button>
+      <el-button v-if="selected.length" size="small" type="danger" @click="delSelected">删除所选({{ selected.length }})</el-button>
     </div>
   </div>
 </template>
@@ -93,7 +84,9 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
+import { useSettingsStore } from '../stores/settings'
 const store = useAppStore()
+const settings = useSettingsStore()
 const script = ref('## EP001-SC001 内·洗衣房·夜\n沈禾：取衣牌呢？\n蒋姨：烘干机停了。')
 const rows = computed(() => store.shots)
 const crops = [
@@ -147,7 +140,7 @@ async function loadScript() {
     savedScript.value = script.value
   } catch {} finally { suspendScriptWatch = false }
 }
-async function loadShots() { loading.value = true; try { const r = await api.listShots(store.episodeId); store.shots = r.data; await loadStat() } finally { loading.value = false } }
+async function loadShots() { loading.value = true; try { const r = await api.listShots(store.episodeId); store.shots = r.data; selected.value = selected.value.filter(id => (store.shots as any[]).some(s => s.id === id)); await loadStat() } finally { loading.value = false } }
 const stat = ref<any>({ verdict: 'draft', shots: 0, total_s: 0 })
 async function loadStat() { try { const r = await api.reviewStat(store.episodeId); stat.value = r.data } catch {} }
 async function addShot() {
@@ -158,9 +151,35 @@ async function addShot() {
   await loadShots()
 }
 async function saveRow(r: any, silent = false) {
-  await api.updateShot(r.id, { duty: r.duty, duty_en: r.duty_en || '', duration_s: r.duration_s, sound: r.sound, tier: r.tier || '', camera: { crop: r.camera?.crop || 'medium', movement: r.camera?.movement || '固定' } })
+  await api.updateShot(r.id, { duty: r.duty, duty_en: r.duty_en || '', duration_s: r.duration_s, sound: r.sound, note: r.note || '', tier: r.tier || '', camera: { crop: r.camera?.crop || 'medium', movement: r.camera?.movement || '固定' } })
   if (!silent) ElMessage.success('已保存')
   await loadStat()
+}
+// 剪映式表格：选择 + 批量加行 + 上传态
+const selected = ref<string[]>([])
+const addCount = ref(3)
+const uploading = ref<Record<string, boolean>>({})
+const allChecked = computed({
+  get: () => rows.value.length > 0 && selected.value.length === rows.value.length,
+  set: (v: boolean) => { selected.value = v ? (rows.value as any[]).map(r => r.id) : [] },
+})
+function toggleOne(id: string) {
+  selected.value = selected.value.includes(id) ? selected.value.filter(x => x !== id) : [...selected.value, id]
+}
+async function addRows() {
+  const n = Math.max(1, Math.min(10, Number(addCount.value) || 3))
+  for (let k = 0; k < n; k++) {
+    await api.createShot({ episode_id: store.episodeId, duty: '', sound: '', duration_s: 3, camera: { crop: 'medium', movement: '固定' } })
+  }
+  ElMessage.success(`已添加 ${n} 行`)
+  await loadShots()
+}
+async function delSelected() {
+  const n = selected.value.length
+  for (const id of [...selected.value]) await api.deleteShot(id)
+  selected.value = []
+  ElMessage.success(`已删 ${n} 行`)
+  await loadShots()
 }
 // 生成大纲：复用右侧工作区 Agent（episode 会话），图用本集现成首帧；结果存大纲，去导演页看
 const agentLoading = ref(false)
@@ -173,6 +192,10 @@ function episodeFirstImage(): string {
     if (hit?.name) return hit.name
   }
   return ''
+}
+async function genOutlineByMode() {
+  if (settings.settings.outlineMode === 'expert') return genOutlineExpert()
+  return genOutline()
 }
 async function genOutline() {
   // 轻链默认：不走 dsh，直接调 outline/generate 落盘
@@ -220,6 +243,7 @@ async function genOutlineExpert() {
       { scope: 'episode', key: store.episodeId, message: brief },
       (ev, d) => {
         if (ev === 'dsh') agentProgress.value = `Agent出大纲中…事件 ${d.n || ''}`
+        else if (ev === 'retry') agentProgress.value = '检测到拒答，自动重试中…'
         else if (ev === 'done') done = d
         else if (ev === 'error') errMsg = (d as any).msg || '调用失败'
       },
@@ -230,12 +254,24 @@ async function genOutlineExpert() {
       ElMessage.success('大纲已存，去导演页·大纲页签查看')
     } else {
       agentProgress.value = ''
-      ElMessage.error('❌ ' + (errMsg || '流中断'))
+      ElMessage.error('[失败] ' + (errMsg || '流中断'))
     }
   } finally {
     agentLoading.value = false
     agentAborter.value = null
   }
+}
+const qaMsg = ref('')
+async function doReview() {
+  try {
+    await save(true)
+    const r: any = await api.reviewRun(store.episodeId)
+    const d = r?.data ?? r
+    await loadStat()
+    const f = (d?.findings || []) as any[]
+    qaMsg.value = `${d?.verdict ?? ''} ${f.length}项` + (f[0] ? '：' + f[0].fix : '')
+    ElMessage[d?.verdict === 'BLOCK' ? 'error' : d?.verdict === 'REVISE' ? 'warning' : 'success'](qaMsg.value || '审查完成')
+  } catch { ElMessage.error('审查失败') }
 }
 async function move(i: number, dir: number) {
   const a = rows.value[i]
@@ -252,8 +288,13 @@ async function onShotImg(r: any, e: any) {
   e.target.value = ''
   if (!f) return
   const kind = shotKind.value[r.id] || 'ref'
-  await api.uploadShotImage(r.id, f, kind)
-  ElMessage.success(kind === 'ref' ? '参考图已上传' : (kind === 'first' ? '首帧已上传' : '尾帧已上传'))
+  uploading.value[r.id] = true
+  try {
+    await api.uploadShotImage(r.id, f, kind)
+    ElMessage.success(kind === 'ref' ? '参考图已上传' : (kind === 'first' ? '首帧已上传' : '尾帧已上传'))
+  } finally {
+    uploading.value[r.id] = false
+  }
   await loadShots()
 }
 function pickShotFile(r: any, kind: string) { shotKind.value[r.id] = kind; shotRefs.value[r.id]?.click() }
@@ -276,6 +317,7 @@ onMounted(async () => {
 })
 </script>
 <style scoped>
+.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .shot-flow { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .shot-card { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .shot-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -289,4 +331,27 @@ onMounted(async () => {
 .shot-thumb.sm { width: 96px; aspect-ratio: 3 / 4; }
 .shot-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shot-refwrap { display: inline-flex; gap: 4px; align-items: center; }
+.script-title { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
+.seg-table { border: 1px solid var(--suli-border); border-radius: 10px; overflow-x: auto; background: #fff; margin-top: 10px; }
+.seg-row { display: grid; grid-template-columns: 52px 1.1fr 1.2fr 160px 1fr 1fr; min-width: 960px; }
+.seg-head { background: var(--suli-bg-2); font-size: 13px; color: var(--suli-text-2); }
+.seg-head > div { padding: 10px 12px; }
+.seg-body { border-top: 1px dotted var(--el-border-color); }
+.seg-body > div { padding: 10px 12px; border-left: 1px dotted var(--el-border-color); min-width: 0; }
+.seg-body > div:first-child { border-left: none; }
+.c-check { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.seg-no { font-size: 12px; color: var(--suli-text-2); }
+.seg-move { display: flex; }
+.seg-label { font-weight: 700; font-size: 13px; }
+.seg-meta { font-size: 12px; color: var(--suli-text-2); margin: 4px 0; }
+.seg-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.seg-id { font-family: var(--suli-mono); font-size: 11px; color: var(--suli-text-3); margin: 4px 0; }
+.clip-thumb { width: 136px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; cursor: zoom-in; }
+.clip-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
+.clip-add { width: 136px; aspect-ratio: 16 / 9; border: 1px dashed var(--el-border-color); border-radius: 6px; background: #fafafa; color: var(--suli-text-3); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.clip-add:hover { border-color: var(--suli-primary); color: var(--suli-primary); }
+.clip-plus { font-size: 18px; line-height: 1; }
+.clip-loading { width: 136px; aspect-ratio: 16 / 9; border-radius: 6px; background: #2b2b2b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.seg-foot { display: flex; justify-content: center; gap: 10px; align-items: center; margin: 14px 0 4px; }
+.seg-add { background: #14b8a6; border: none; }
 </style>

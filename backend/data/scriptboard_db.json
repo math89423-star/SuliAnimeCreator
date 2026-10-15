@@ -19,9 +19,93 @@
       "verdict": "draft"
     },
     "EP-DEMO01": {
-      "verdict": "PASS",
-      "screenplay_md": "## EP001-SC001 内·洗衣房·夜\n沈禾：取衣牌呢？\n蒋姨：烘干机停了。",
-      "segs": []
+      "verdict": "REVISE",
+      "screenplay_md": "# EP-DEMO01 灰水村血税牢，星璃登场：隐喻替换版\n\n## EP-DEMO01-SC001 内·主场景·夜\n\n沈禾：灰水村血税牢，星璃登场：第1拍推进——起。\n[SFX] 铁门低鸣\n蒋姨：收到，冲突顶满再收。\n\n沈禾：灰水村血税牢，星璃登场：第2拍推进——转。\n[SFX] 烘干机骤停\n蒋姨：别松，证据马上到。\n\n沈禾：灰水村血税牢，星璃登场：第3拍推进——落。\n[SFX] 脚步逼近\n蒋姨：顶上去，一句定生死。\n\n[连续性] 取衣牌在沈禾手中；烘干机停转。\n[转场] 硬切下场。\n\n<!-- beats:起 / 转 / 落 -->\n<!-- generated:2026-10-15T11:47:03 template:p pick_to_screenplay -->\n",
+      "segs": [],
+      "ref_images": [
+        {
+          "name": "4d00c0b1e9d64ef696fcd1503ba8c901.jpg",
+          "role": "",
+          "desc": ""
+        }
+      ],
+      "review_at": 1792035890.0786057,
+      "versions": [
+        {
+          "vno": 1,
+          "created_at": 1792035890083,
+          "screenplay_md": "# EP-DEMO01 星璃登场\n\n## EP-DEMO01-SC001 内·主场景·夜\n\n沈禾：星璃登场第1拍推进——起。\n[SFX] 环境底声延续\n蒋姨：收到，冲突顶满再收。\n\n沈禾：星璃登场第2拍推进——转。\n[SFX] 环境底声延续\n蒋姨：收到，冲突顶满再收。\n\n沈禾：星璃登场第3拍推进——落。\n[SFX] 环境底声延续\n蒋姨：收到，冲突顶满再收。\n\n[连续性] 取衣牌在沈禾手中；烘干机停转。\n[转场] 硬切下场。\n\n<!-- beats:起 / 转 / 落 -->\n<!-- generated:2026-10-15T11:44:50 template:p pick_to_screenplay -->\n",
+          "outline_md": "",
+          "shots": 1,
+          "verdict": "REVISE"
+        }
+      ],
+      "outline_md": "# EP-DEMO01-SC001 方案大纲：灰水村血税牢·星璃登场（隐喻替换版）\n\n## 一、方向一句话\n以「深夜洗衣房」隐喻替换血税牢，三拍起/转/落完成星璃的压迫式登场。\n\n## 二、基调与档位\n* **基调：** 内·夜 / 阴冷潮湿 / 工业洗衣房隐喻牢狱，铁锈+蒸汽+冷白灯，压抑、不见血而有刑感\n* **隐喻对应：** 取衣牌=血税牌 / 烘干机滚筒=刑具 / 铁门低鸣=牢门开\n* **引擎档位：** pixai · 常规档（标准画质/24fps/不提质感词，按3镜连续性生成，人物一致性优先）\n* **节奏：** 起建氛围 → 转给冲突 → 落定人物，硬切出\n\n## 三、分镜大纲表\n| 镜号 | 内容一句话 | 预计时长 | 运镜方向 | 备注 |\n|---|---|---|---|---|\n| M01 起 | 夜洗衣房铁门低鸣缓开，沈禾手中攥紧取衣牌入牢口。 | 5秒 | 门外固定 → 缓推至手部特写 | SFX：铁门低鸣；立隐喻+取衣牌连续性起点 |\n| M02 转 | 烘干机骤停蒸汽炸开，滚筒倒影中星璃双眼首次显现。 | 5秒 | 横移扫过滚筒 → 环绕半圈收至倒影 | SFX：烘干机骤停；冲突顶满，星璃只露眼不露全脸 |\n| M03 落 | 脚步逼近灯闪，星璃正面落定与持牌沈禾对峙。 | 5秒 | 低角度前推急停定格 | SFX：脚步逼近；[连续性]烘干机停转 / [转场]硬切下场 |\n\n## 四、合计时长\n**约15秒（5+5+5），共3镜，单镜均在3-8秒区间，符合pixai常规档一次性成片。**",
+      "review_findings": [
+        {
+          "level": "major",
+          "rule": "SHT-04",
+          "fix": "全集无首帧，至少给首镜挂1张",
+          "pos": "首帧"
+        }
+      ]
+    },
+    "EP-TEST-OL": {
+      "id": "EP-TEST-OL",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "outline_md": "",
+      "outline_image": ""
+    },
+    "EP-81695F": {
+      "id": "EP-81695F",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "outline_md": "",
+      "outline_image": "",
+      "ref_images": [
+        {
+          "name": "9df84c99b86145ac990ec5da1cc5c783.png",
+          "role": "",
+          "desc": ""
+        }
+      ]
+    },
+    "EP-5S01": {
+      "id": "EP-5S01",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "outline_md": "",
+      "outline_image": "",
+      "ref_images": []
+    },
+    "EP-T": {
+      "id": "EP-T",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "ref_images": [],
+      "outline_md": "",
+      "outline_image": ""
+    },
+    "EP-TEST01": {
+      "id": "EP-TEST01",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "outline_md": "",
+      "outline_image": ""
+    },
+    "EP-VERIFY": {
+      "id": "EP-VERIFY",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "outline_md": "",
+      "outline_image": ""
     }
   },
   "shots": {
@@ -35,7 +119,8 @@
         "height": "eye"
       },
       "sound": "甲：你好。",
-      "key_text_en": "甲 speaking, dialogue beat"
+      "key_text_en": "甲 speaking, dialogue beat",
+      "ord": 3
     },
     "SHOT-P-D1-001-1": {
       "id": "SHOT-P-D1-001-1",
@@ -47,32 +132,79 @@
         "height": "eye"
       },
       "sound": "沈禾：取衣牌呢？",
-      "key_text_en": "沈禾 speaking, dialogue beat"
+      "key_text_en": "沈禾 speaking, dialogue beat",
+      "ord": 2
     },
     "SHOT-MO01-M001": {
       "id": "SHOT-MO01-M001",
       "episode_id": "EP-DEMO01",
       "ord": 0,
-      "duty": "",
-      "duration_s": 3,
+      "duty": "沈禾夜入洗衣房对峙取衣牌",
+      "duty_en": "",
+      "duration_s": 5,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "推"
+      },
+      "sound": "沈禾：取衣牌呢？",
+      "key_text_en": "",
+      "tier": "",
+      "draft": false,
+      "images": []
+    },
+    "SHOT-MO01-M002": {
+      "id": "SHOT-MO01-M002",
+      "episode_id": "EP-DEMO01",
+      "ord": 1,
+      "duty": "烘干机骤停全场静默",
+      "duty_en": "",
+      "duration_s": 5,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "固定"
+      },
+      "sound": "[SFX] 烘干机停转",
+      "key_text_en": "",
+      "tier": "",
+      "draft": false,
+      "images": []
+    },
+    "SHOT-MO01-M003": {
+      "id": "SHOT-MO01-M003",
+      "episode_id": "EP-DEMO01",
+      "ord": 2,
+      "duty": "蒋姨亮证据反转离场",
+      "duty_en": "",
+      "duration_s": 5,
       "camera": {
         "crop": "medium",
         "height": "eye",
         "movement": "拉"
       },
+      "sound": "蒋姨：证据在这。",
+      "key_text_en": "",
+      "tier": "",
+      "draft": false,
+      "images": []
+    },
+    "SHOT-695F-M001": {
+      "id": "SHOT-695F-M001",
+      "episode_id": "EP-81695F",
+      "ord": 0,
+      "duty": "",
+      "duty_en": "",
+      "duration_s": 3,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "固定"
+      },
       "sound": "",
       "key_text_en": "",
-      "images": [
-        {
-          "name": "2217033815af446bbfbb7450421fe7fc.png",
-          "kind": "last"
-        },
-        {
-          "name": "163973da95eb46ef9ccf873b942d9183.webp",
-          "kind": "first"
-        }
-      ],
-      "image": ""
+      "tier": "",
+      "draft": false
     }
   }
 }

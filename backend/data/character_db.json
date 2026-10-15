@@ -37,7 +37,9 @@
     }
   },
   "slot_prompts": {
-    "CHAR-233A04|head_dressed|front": "high-quality 2D anime character design sheet, head_dressed front view,  , clean line, flat color, front/side/back consistent, masterpiece"
+    "CHAR-233A04|head_dressed|front": "high-quality 2D anime character design sheet, head_dressed front view,  , clean line, flat color, front/side/back consistent, masterpiece",
+    "CHAR-233A04|look|front": "角色设定图（front）：一位成年女性角色，发型按设定，身穿设定服装；站在纯色背景前，正面、侧面与背面姿态一致、比例协调；中景，镜头平视，浅景深；柔和均匀的顶光与正面补光，阴影干净；动漫插画，干净线稿、平涂上色。",
+    "CHAR-233A04|head|side_cn": "角色设定图（侧面）：一位成年女性角色，发型按设定，身穿设定服装；站在纯色背景前，正面、侧面与背面姿态一致、比例协调；中景，镜头平视，浅景深；柔和均匀的顶光与正面补光，阴影干净；动漫插画，干净线稿、平涂上色。"
   },
   "slot_svgs": {},
   "outfits": {},

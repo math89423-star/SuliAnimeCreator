@@ -157,3 +157,214 @@ def split_outline_to_shots(outline_md, episode_id, total_s=15, tier=""):
                        "movement": MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
         })
     return out, "template"
+
+
+# ---- 精品剧本链：screenplay 正文 / 校验 / 估时 / beats / 审查 ----
+
+def pick_to_screenplay_md(pick, episode_id=""):
+    """confirm 落底稿：pick{dir,logline,beats} -> 规范剧本 md。纯规则，可直接落盘。"""
+    import datetime as _dt
+    pick = pick or {}
+    logline = str(pick.get("logline") or "未命名方向").strip()[:200]
+    beats = pick.get("beats") or ["起", "转", "落"]
+    beats = [str(b)[:60] for b in beats][:6] or ["起", "转", "落"]
+    eid = (episode_id or "EP-DEMO01").strip() or "EP-DEMO01"
+    L = ["# %s %s" % (eid, logline), "",
+         "## %s-SC001 内·主场景·夜" % eid, ""]
+    sfx = ["[SFX] 铁门低鸣", "[SFX] 烘干机骤停", "[SFX] 脚步逼近", "[SFX] 证据拍桌", "[SFX] 静默一拍", "[SFX] 低频鼓点起"]
+    replies = ["蒋姨：收到，冲突顶满再收。", "蒋姨：别松，证据马上到。", "蒋姨：顶上去，一句定生死。",
+               "蒋姨：稳住，钩子已经埋好。", "蒋姨：好，收束留白。", "蒋姨：成了，转场。"]
+    for i, b in enumerate(beats, 1):
+        L.append("沈禾：%s第%d拍推进——%s。" % (logline[:12], i, b))
+        L.append(sfx[(i - 1) % len(sfx)])
+        L.append(replies[(i - 1) % len(replies)])
+        L.append("")
+    L.append("[连续性] 取衣牌在沈禾手中；烘干机停转。")
+    L.append("[转场] 硬切下场。")
+    L.append("")
+    L.append("<!-- beats:%s -->" % " / ".join(beats))
+    L.append("<!-- generated:%s template:p pick_to_screenplay -->" % _dt.datetime.now().isoformat(timespec="seconds"))
+    return "\n".join(L).strip() + "\n"
+
+
+def _screenplay_template(idea, logline, beats, target_s, episode_id):
+    eid = (episode_id or "EP-DEMO01").strip() or "EP-DEMO01"
+    base = (logline or idea or "单集矛盾").strip()[:120] or "单集矛盾"
+    beats = beats or ["起", "转", "落"]
+    n_sc = 3 if target_s <= 20 else 4
+    L = ["# %s %s" % (eid, base), ""]
+    for i in range(n_sc):
+        b = str(beats[i % len(beats)])[:40]
+        L += ["## %s-SC%03d 内·主场景·夜" % (eid, i + 1), "",
+              "动作：%s推进，镜头随人物走位给冲突。" % b,
+              "沈禾：%s，第%d场顶上去。" % (base[:16], i + 1),
+              "[SFX] 脚步+环境底声",
+              "蒋姨：别松，证据马上到。",
+              ""]
+    L += ["[连续性] 关键道具状态已交代；人物关系推进。", "[转场] 硬切收束。", ""]
+    return "\n".join(L).strip() + "\n"
+
+
+def build_screenplay_md(idea="", logline="", beats=None, target_s=30, episode_id=""):
+    """剧本正文生成：LLM 优先，失败回模板。永远返回 (md, engine_tag)。"""
+    idea = (idea or "").strip()[:500]
+    logline = (logline or "").strip()[:200]
+    beats = beats or []
+    try:
+        target_s = max(10, min(90, int(target_s or 30)))
+    except (ValueError, TypeError):
+        target_s = 30
+    try:
+        from .llm_opencode import llm_cfg, _post
+        cfg = llm_cfg()
+        if cfg.get("provider") == "opencode" and cfg.get("key") and cfg.get("model"):
+            model_id = re.sub(r"^opencode-go/", "", cfg["model"])
+            prompt = ("写一集中文短剧剧本 Markdown，必须含：首行‘# EP集名 标题’；"
+                      "2-4 个‘## EP-SCxxx 内·地点·时间’场景；每场有动作行+‘角色：台词’对白"
+                      "（至少沈禾/蒋姨两人）+ [SFX]/[连续性]/[转场]标签；"
+                      "总时长约%d秒。只输出剧本正文。背景：%s / %s / 节拍%s"
+                      % (target_s, idea[:400], logline[:200], "/".join(beats[:4])[:120]))
+            import json as _json  # noqa: F401 (keep import parity)
+            txt = _post(cfg["base"], cfg["key"], model_id, prompt,
+                        effort=cfg.get("effort", ""))
+            txt = (txt or "").strip()
+            if txt.count("##") >= 1 and ("：" in txt or ":" in txt) and len(txt) >= 120:
+                return txt.strip() + "\n", "llm"
+    except Exception:
+        pass
+    return _screenplay_template(idea, logline or idea, beats or ["起", "转", "落"], target_s, episode_id), "template"
+
+
+def validate_screenplay(md):
+    """剧本结构校验：返回 findings[{level,rule,fix,pos}]。纯规则，演示稳定。"""
+    text = (md or "")
+    lines = text.splitlines()
+    findings = []
+    if not text.strip():
+        return [{"level": "blocker", "rule": "SCR-00", "fix": "剧本为空，先生成或粘贴正文", "pos": "全文"}]
+    if not re.search(r"^#\s+\S+", text, re.M):
+        findings.append({"level": "blocker", "rule": "SCR-01", "fix": "缺首行‘# EP集名 标题’", "pos": "首行"})
+    sc = re.findall(r"^##\s+\S+", text, re.M)
+    if not sc:
+        findings.append({"level": "blocker", "rule": "SCR-02", "fix": "缺‘## EP-SCxxx 内·地点·时间’场景标题，至少1场", "pos": "场景"})
+    elif len(sc) > 6:
+        findings.append({"level": "major", "rule": "SCR-02b", "fix": "场景%d场偏多，精品集建议2-4场" % len(sc), "pos": "场景数"})
+    dlg = [l for l in lines if re.match(r"^\s*[^#\[>\s][^：:]{1,12}[：:].+", l.strip())]
+    if len(dlg) < 2:
+        findings.append({"level": "blocker", "rule": "SCR-03", "fix": "对白不足2句，用‘角色：台词’写", "pos": "对白"})
+    tags = ("[SFX]", "[VO]", "[OS]", "[连续性]", "[转场]", "[画面文字]")
+    if not any(t in text for t in tags):
+        findings.append({"level": "major", "rule": "SCR-04", "fix": "缺生产标签，至少加1个 [SFX]/[连续性]/[转场]", "pos": "标签"})
+    # 模板感：连续重复句
+    seen = {}
+    for l in lines:
+        s = l.strip()
+        if len(s) >= 6 and not s.startswith("#"):
+            seen[s] = seen.get(s, 0) + 1
+    dups = [k for k, v in seen.items() if v >= 3]
+    if dups:
+        findings.append({"level": "major", "rule": "SCR-05", "fix": "模板感：同句出现≥3次‘%s’，改写其中2处" % dups[0][:16], "pos": "去重"})
+    if len(text) < 200:
+        findings.append({"level": "major", "rule": "SCR-06", "fix": "正文偏短（%d字），精品集建议400字+" % len(text), "pos": "篇幅"})
+    return findings
+
+
+def normalize_screenplay(md, episode_id=""):
+    """规范化：补 H1/SC 编号/去多余空行，不改作者台词。返回 (md, changes[])。"""
+    text = (md or "").strip().replace("\r\n", "\n")
+    changes = []
+    eid = (episode_id or "EP-DEMO01").strip() or "EP-DEMO01"
+    if not re.search(r"^#\s+\S+", text, re.M):
+        first = next((l.strip() for l in text.splitlines() if l.strip()), "未命名单集")
+        text = "# %s %s\n\n" % (eid, first[:40]) + text
+        changes.append("补首行H1")
+    lines = []
+    sc_n = 0
+    for ln in text.splitlines():
+        s = ln.rstrip()
+        if re.match(r"^##\s*(SC)?\d*", s.strip()) and "·" not in s:
+            sc_n += 1
+            s = "## %s-SC%03d 内·主场景·夜" % (eid, sc_n)
+            changes.append("补场景标题%d" % sc_n)
+        elif re.match(r"^##\s+\S+", s.strip()):
+            sc_n += 1
+        lines.append(s)
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text).strip() + "\n"
+    if "SC" not in text:
+        changes.append("未检出场景（保留原文待人工补）")
+    return text, changes
+
+
+def estimate_screenplay(md):
+    """时长估算：字数/对白/场景 -> 秒数。纯规则，供演示‘可拍性’证据。"""
+    import re as _re
+    text = (md or "")
+    chars = len(text)
+    # 手写标点剔除（无 regex 库依赖）
+    punct = set(" \\t\\n\\r，。！？、；：:\"“”‘’（）()[\\]【】…—·—-…「」『』.·/、|")
+    speak_chars = sum(1 for c in text if c not in punct)
+    scenes = len(_re.findall(r"^##\s+\S+", text, _re.M))
+    dialogues = sum(1 for l in text.splitlines()
+                    if _re.match(r"^\s*[^#\[>\s][^：:]{1,12}[：:].+", l.strip()))
+    # 口播 4.2字/s + 动作场均6s + 标签切换2s
+    est = round(dialogues * 8 / 4.2 + max(scenes, 1) * 4 + 2, 1) if (dialogues or scenes) else 0.0
+    est = max(5.0, min(90.0, est))
+    return {"chars": chars, "speak_chars": speak_chars, "scenes": scenes,
+            "dialogues": dialogues, "est_s": est,
+            "in_range_10_30": 10 <= est <= 30}
+
+
+def parse_beats_from_screenplay(md, episode_id=""):
+    """从剧本 md 解析 beats：优先场景标题，其次对白句。供 export-bundle 用。"""
+    text = (md or "").strip()
+    beats = []
+    for ln in text.splitlines():
+        s = ln.strip()
+        if s.startswith("##") and len(beats) < 8:
+            title = s.lstrip("#").strip()[:40]
+            if title and "方案大纲" not in title:
+                beats.append({"beat_id": "B%02d" % (len(beats) + 1),
+                              "function": title, "text_cn": ""})
+    if len(beats) < 2:
+        for ln in text.splitlines():
+            s = ln.strip()
+            if re.match(r"^\s*[^#\[>\s][^：:]{1,12}[：:].+", s) and len(beats) < 8:
+                beats.append({"beat_id": "B%02d" % (len(beats) + 1),
+                              "function": s[:40], "text_cn": ""})
+    return beats
+
+
+def build_review(screenplay_md, shots, total_s=0):
+    """真审查门：剧本结构 + 分镜覆盖 + 时长 + 模板感。返回 (verdict, findings)。"""
+    findings = []
+    for f in validate_screenplay(screenplay_md or ""):
+        findings.append({"level": f["level"], "rule": f["rule"], "fix": f["fix"], "pos": f.get("pos", "")})
+    if not shots:
+        findings.append({"level": "blocker", "rule": "SHT-01", "fix": "无SHOT覆盖，先转草案", "pos": "分镜"})
+    else:
+        for s in shots:
+            if not (s.get("duty") or "").strip():
+                findings.append({"level": "major", "rule": "SHT-02", "fix": "%s缺duty一句话" % s.get("id", "?"), "pos": s.get("id", "")})
+                break
+        nodur = [s.get("id") for s in shots if not float(s.get("duration_s") or 0)]
+        if nodur:
+            findings.append({"level": "major", "rule": "SHT-03", "fix": "%s缺时长" % nodur[0], "pos": nodur[0]})
+        nofirst = not any(((s.get("images") or []) and any(x.get("kind") == "first" for x in (s.get("images") or []))) for s in shots)
+        if nofirst:
+            findings.append({"level": "major", "rule": "SHT-04", "fix": "全集无首帧，至少给首镜挂1张", "pos": "首帧"})
+    try:
+        tot = float(total_s or sum(float(s.get("duration_s") or 0) for s in (shots or [])))
+    except Exception:
+        tot = 0
+    if shots and not (10 <= tot <= 30):
+        findings.append({"level": "major", "rule": "DUR-01", "fix": "合计%.1fs越界，精品段要求10-30s" % tot, "pos": "时长"})
+    blockers = [f for f in findings if f["level"] == "blocker"]
+    majors = [f for f in findings if f["level"] == "major"]
+    if blockers:
+        verdict = "BLOCK"
+    elif majors:
+        verdict = "REVISE"
+    else:
+        verdict = "PASS"
+    return verdict, findings

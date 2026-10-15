@@ -1,16 +1,16 @@
 <template>
-  <div class="gallery kun-page" @pointermove="onGridGlow">
+  <div class="gallery suli-card kun-page" style="padding:14px" @pointermove="onGridGlow">
     <div class="cursor-glow" :style="glowStyle" />
+    <h3>展览</h3>
     <!-- 精选大卡（学 Animiz hero：最新更新的角色做特写） -->
     <div v-if="featured" class="suli-card feature">
-      <span class="sparkle" style="top:16px;left:30%">✦</span>
-      <span class="sparkle" style="top:60px;right:24%;animation-delay:1.1s">✧</span>
+      <el-icon class="sparkle" style="top:16px;left:30%"><Star /></el-icon>
+      <el-icon class="sparkle" style="top:60px;right:24%;animation-delay:1.1s"><Star /></el-icon>
       <div class="feature-art">
         <img v-if="featured.avatar_url" :src="featured.avatar_url" />
         <span v-else class="kana">{{ featured.name.slice(0, 1) }}</span>
       </div>
       <div class="feature-body">
-        <div class="eyebrow kana">今週のピックアップ WEEKLY PICKUP</div>
         <h2 class="page-title">{{ featured.name }}</h2>
         <div class="suli-muted" style="font-size:13px">{{ featured.identity || featured.hairstyle || '设定待补' }}</div>
         <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
@@ -69,13 +69,11 @@
       </div>
     </div>
     <div v-if="!filtered.length && cards.length" style="margin-top:12px"><el-empty description="无命中" :image-size="64" /></div>
-    <footer class="kun-footer suli-muted">
-      <span>SuliAnimeCreator · 原创漫剧工作台</span>
-    </footer>
   </div>
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { Star } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
@@ -148,7 +146,6 @@ onMounted(load)
 </script>
 <style scoped>
 .gallery{position:relative}
-.kun-page{max-width:80rem;margin:0 auto}
 .section-head{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
 .section-head h2{font-size:20px;font-weight:800;margin:0}
 .feature{padding:18px;display:flex;gap:18px;align-items:center;overflow:hidden;position:relative;background:linear-gradient(135deg,#f4f4f5,#fafafa 70%);border-width:2px}
@@ -169,7 +166,6 @@ onMounted(load)
 @keyframes sheen{to{transform:translateX(120%)}}
 .grid-glow{position:relative}
 .cursor-glow{position:fixed;top:-140px;left:-140px;width:280px;height:280px;border-radius:50%;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(0,0,0,.05),transparent 65%);transition:opacity .25s}
-.kun-footer{display:flex;gap:10px;align-items:center;margin-top:22px;padding:12px 4px;border-top:1.5px solid var(--suli-border);font-size:12px;flex-wrap:wrap;position:sticky;bottom:0;background:var(--suli-bg);z-index:1}
 @media (prefers-reduced-motion: reduce) {
   .enter,.char-card{animation:none !important;transition:none !important}
   .cursor-glow{display:none}

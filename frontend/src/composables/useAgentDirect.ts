@@ -52,6 +52,7 @@ export function useAgentDirect(getEpisodeId: () => string, afterShots: () => Pro
         { scope: 'episode', key: getEpisodeId(), message: brief },
         (ev, d) => {
           if (ev === 'dsh') agentProgress.value = `${progressing}事件 ${d.n || ''}`
+          else if (ev === 'retry') agentProgress.value = '检测到拒答，自动重试中…'
           else if (ev === 'done') done = d
           else if (ev === 'error') errMsg = (d as any).msg || '调用失败'
         },
@@ -62,7 +63,7 @@ export function useAgentDirect(getEpisodeId: () => string, afterShots: () => Pro
         agentProgress.value = doneHint
         if (after) await after()
       } else {
-        agentAnswer.value = '❌ ' + (errMsg || '流中断')
+        agentAnswer.value = '[失败] ' + (errMsg || '流中断')
         agentProgress.value = ''
       }
     } finally {

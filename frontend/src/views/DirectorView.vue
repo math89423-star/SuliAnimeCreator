@@ -3,12 +3,21 @@
     <div class="dir-head">
       <h3 style="margin:0">导演 · 动画</h3>
       <el-tag size="small" class="tnum">{{ store.episodeId }}</el-tag>
-      <el-tag size="small" class="tnum">{{ store.shots.length }}镜</el-tag>
-      <el-tag size="small" class="tnum">{{ totalS }}s</el-tag>
       <span style="flex:1" />
+      <el-input v-model="epInput" size="small" style="width:130px" placeholder="EP-xxx" @keyup.enter="switchEpisode" />
+      <el-button size="small" @click="switchEpisode" :loading="switching">切换</el-button>
+      <el-dropdown trigger="click" @command="handleClear">
+        <el-button size="small" type="danger" :loading="clearing || clearingScript || clearingOutline">清理<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="shots">清空草案（仅分镜）</el-dropdown-item>
+            <el-dropdown-item command="outline">清空大纲（含草案）</el-dropdown-item>
+            <el-dropdown-item command="script">清空剧本（含大纲+草案）</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
       <el-button size="small" @click="refresh">刷新</el-button>
     </div>
-
     <el-tabs v-model="dtab" class="dir-tabs">
       <el-tab-pane label="剧本" name="script">
         <div class="script-refs top">
@@ -30,12 +39,11 @@
           <el-button link type="primary" @click="scriptFileEl?.click()">+参考图</el-button>
         </div>
         <input ref="scriptFileEl" type="file" accept="image/*" hidden @change="onScriptRef" />
-        <el-input v-model="script" type="textarea" :rows="22" placeholder="剧本底稿（与分镜页同一份，只存不拆）" />
+        <el-input v-model="script" type="textarea" :rows="22" />
         <div class="script-foot">
           <div class="foot-actions">
             <el-button size="small" @click="() => saveScript()" :loading="scriptSaving">保存剧本</el-button>
-            <el-button size="small" type="primary" @click="genOutlineLite" :loading="agentLoading">生成大纲·轻</el-button>
-            <el-button size="small" @click="genOutlineHere" :loading="agentLoading">专家dsh</el-button>
+            <el-button size="small" type="primary" @click="genOutline" :loading="agentLoading">生成</el-button>
             <el-popconfirm title="清空剧本，并连带清理大纲和全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearScript">
               <template #reference><el-button size="small" type="danger" text :loading="clearingScript">清空</el-button></template>
             </el-popconfirm>
@@ -50,11 +58,19 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="大纲" name="outline">
-    <el-empty v-if="!outline.md" description="暂无大纲，先去剧本页签生成" :image-size="64">
+    <el-empty v-if="!outline.md" description="暂无大纲" :image-size="64">
       <el-button size="small" type="primary" @click="dtab = 'script'">去剧本</el-button>
     </el-empty>
     <div v-if="outline.md" class="suli-card outline-card">
-      <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-button size="small" type="primary" @click="buildDraftShotsLite" :loading="agentLoading">② 转草案·轻</el-button><el-button size="small" @click="buildDraftShots" :loading="agentLoading">专家转草案</el-button><el-popconfirm title="清空大纲，并连带清理全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearOutline"><template #reference><el-button size="small" type="danger" text :loading="clearingOutline">清空</el-button></template></el-popconfirm></div>
+      <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-dropdown trigger="click" @command="onDraftMode">
+          <el-button size="small" type="primary" :loading="agentLoading || draftLiteLoading">② 生成草案<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="lite"><el-icon style="margin-right:4px"><Lightning /></el-icon><b>快速模式</b></el-dropdown-item>
+              <el-dropdown-item command="expert"><el-icon style="margin-right:4px"><MagicStick /></el-icon><b>专家模式</b></el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown><el-popconfirm title="清空大纲，并连带清理全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearOutline"><template #reference><el-button size="small" type="danger" text :loading="clearingOutline">清空</el-button></template></el-popconfirm></div>
       <div v-show="!outlineFolded" class="outline-main">
         <el-image v-if="outline.image" :src="`/api/images/${outline.image}`" class="outline-thumb" fit="cover" :preview-src-list="[`/api/images/${outline.image}`]" preview-teleported />
         <div v-if="!outlineEditing" class="outline-textwrap">
@@ -62,7 +78,7 @@
           <div class="outline-rz" title="上下拖动调整高度，双击恢复默认" @mousedown="startOutlineResize" @dblclick="resetOutlineMaxH" />
         </div>
         <div v-else class="outline-editwrap">
-          <el-input v-model="outlineDraft" type="textarea" :rows="16" placeholder="markdown 源码，保存后即进预览" />
+          <el-input v-model="outlineDraft" type="textarea" :rows="16" />
           <div style="display:flex;gap:8px;align-items:center">
             <el-tag v-if="outlineDirty" size="small" type="warning">未存*</el-tag>
             <span style="flex:1" />
@@ -99,16 +115,39 @@
       </div>
     </div>
 
-    <el-empty v-if="!store.shots.length" description="本集暂无分镜，先去分镜页加镜" :image-size="64" />
+    <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
+      <div class="draft-guide">
+        <div class="guide-btns">
+          <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页 ② 生成草案</el-button>
+          <el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成大纲</el-button>
+        </div>
+      </div>
+    </el-empty>
+    <!-- 时间线：按秒数定宽，一眼看时长分布 -->
+    <template v-else>
+    <div class="timeline">
+      <div
+        v-for="(s, i) in store.shots" :key="'tl' + s.id"
+        class="tl-seg" :title="s.id + ' ' + s.duration_s + 's'"
+        :style="{ flexGrow: Number(s.duration_s) || 1 }"
+      >
+        <span class="tnum">{{ i + 1 }} · {{ s.duration_s }}s</span>
+      </div>
+      <span class="suli-muted tnum tl-total">{{ totalS }}s</span>
+    </div>
 
     <!-- 逐镜卡 -->
-    <div v-else class="dir-flow">
+    <div class="dir-flow">
       <ShotCard
         v-for="(s, i) in store.shots" :key="s.id"
         :shot="s" :index="i" :tier-label="tierLabel"
       />
     </div>
+    </template>
     <!-- 8-block 静帧：折叠面板，默认收起，不占版面 -->
+      </el-tab-pane>
+      <el-tab-pane label="回执" name="receipt">
+        <ReceiptPanel :episode-id="store.episodeId" />
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -118,12 +157,16 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
+import { useSettingsStore } from '../stores/settings'
 import { useAgentDirect } from '../composables/useAgentDirect'
 import ShotCard from '../components/director/ShotCard.vue'
+import ReceiptPanel from '../components/director/ReceiptPanel.vue'
+import { ArrowDown, Lightning, MagicStick } from '@element-plus/icons-vue'
 import MarkdownView from '../components/MarkdownView.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 
 const store = useAppStore()
+const settings = useSettingsStore()
 
 // 分级四档（真源在后端 /director/tiers）：'' = 按镜设置
 const tierOpts = ref<{ key: string; label: string }[]>([{ key: '', label: '不分级' }])
@@ -229,6 +272,34 @@ async function refresh() {
   try { const r = await api.listShots(store.episodeId); store.shots = (r as any).data } catch {}
 }
 
+// 顶部切换 + 清理（演示快捷入口，复用各页签已有逻辑）
+const epInput = ref('')
+const switching = ref(false)
+async function switchEpisode() {
+  const v = (epInput.value || '').trim() || store.episodeId
+  if (!v) return ElMessage.warning('先填集号，如 EP-DEMO01')
+  if (v === store.episodeId) {
+    await reloadAll()
+    return
+  }
+  switching.value = true
+  try {
+    store.episodeId = v
+    await reloadAll()
+    ElMessage.success('已切换到 ' + v)
+  } finally { switching.value = false }
+}
+async function reloadAll() {
+  await loadScript()
+  await refresh()
+  await loadOutline()
+}
+function handleClear(cmd: string) {
+  if (cmd === 'script') clearScript()
+  else if (cmd === 'outline') clearOutline()
+  else clearShots()
+}
+
 // 草案文档：方向草案交接件（大纲全文 + 草案表 + 逐镜提示词），落一个 .md
 const docLoading = ref(false)
 const clearing = ref(false)
@@ -295,6 +366,10 @@ async function runOutlineBrief(imgName: string) {
   ].filter(Boolean).join('\n')
   await runBrief(brief, 'Agent看图出大纲中…', '大纲已存，确认后点 ② 转草案', loadOutline)
 }
+async function genOutline() {
+  if (settings.settings.outlineMode === 'expert') return genOutlineHere()
+  return genOutlineLite()
+}
 async function genOutlineHere() {
   if (agentLoading.value) return
   const img = pickOutlineImage()
@@ -316,16 +391,21 @@ async function genOutlineLite() {
       image: img,
     })
     await loadOutline()
-    ElMessage.success('大纲已存（轻），确认后点 ② 转草案·轻')
+    ElMessage.success('大纲已存（轻），确认后点 ② 生成草案')
   } catch { ElMessage.error('轻大纲失败，后端未起？') }
 }
 async function regenOutline() {
   if (agentLoading.value) return
+  if (settings.settings.outlineMode !== 'expert') {
+    dtab.value = 'outline'
+    return genOutlineLite()
+  }
   const img = pickOutlineImage()
   if (!img) return ElMessage.warning('还没有参考图，先传一张图')
   await runOutlineBrief(img)
 }
 
+function onDraftMode(cmd: string) { if (cmd === 'expert') buildDraftShots(); else buildDraftShotsLite() }
 async function buildDraftShots() {
   if (agentLoading.value || !outline.value.md) return
   const brief = [
@@ -337,9 +417,12 @@ async function buildDraftShots() {
   ].join('\n')
   await runBrief(brief, 'Agent按大纲建草案分镜中…', '草案已写库，下方分镜已刷新，逐镜检查后点组装', refresh)
 }
+const draftLiteLoading = ref(false)
 async function buildDraftShotsLite() {
   // 轻转草案：不走 dsh，直接调 draft/from-outline 落盘
-  if (agentLoading.value || !outline.value.md) return ElMessage.warning('先有大纲再转草案')
+  if (draftLiteLoading.value || agentLoading.value) return
+  if (!outline.value.md) return ElMessage.warning('先有大纲再转草案')
+  draftLiteLoading.value = true
   try {
     const r = await api.draftFromOutline(store.episodeId, {
       total_s: Math.round(totalS.value) || 15,
@@ -350,6 +433,8 @@ async function buildDraftShotsLite() {
     ElMessage.success(`草案已写库（轻）：${created.length}镜，逐镜检查后点组装`)
   } catch (e: any) {
     ElMessage.error((e?.response?.data?.msg || '轻转草案失败').slice(0, 120))
+  } finally {
+    draftLiteLoading.value = false
   }
 }
 
@@ -417,11 +502,14 @@ watch(() => store.centralApplySeq, async (seq, prev) => {
   if (!seq || seq === prev) return
   const target = (store as any).centralApplyEpisode || store.episodeId
   if (target && target !== store.episodeId) store.episodeId = target
+  epInput.value = store.episodeId
   await loadScript()
   await refresh()
   await loadOutline()
 })
+watch(() => store.episodeId, v => { if (v && v !== epInput.value) epInput.value = v })
 onMounted(async () => {
+  epInput.value = store.episodeId
   try {
     const e = await api.directorEngines()
     const erows = ((e as any)?.data || e || []) as any[]
@@ -443,6 +531,11 @@ onMounted(async () => {
 </script>
 <style scoped>
 .director.kun-page { max-width: none; margin: 0; }
+.timeline { display: flex; gap: 4px; align-items: stretch; margin-top: 10px; }
+.tl-seg { min-width: 54px; padding: 6px 8px; border-radius: 8px; background: var(--suli-bg-2); border: 1px solid var(--suli-border); font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; }
+.tl-total { align-self: center; font-size: 12px; margin-left: 4px; }
+.draft-guide { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.guide-btns { display: flex; gap: 8px; }
 .director { padding: 12px !important; }
 .dir-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .dir-tabs { margin-top: 8px; }

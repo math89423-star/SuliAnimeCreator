@@ -2,7 +2,7 @@
 import re
 from .images import first_image, img_url, collect_refs, REF_ROLE_PHRASE, MAX_REFS
 from .text import DIALOG, strip_prefix, pixai_preformatted
-from .tiers import TIERS
+from .tiers import TIERS, normalize_tier
 
 PIXAI_CAM = {
     "固定": "fixed shot, the camera holds still",
@@ -18,17 +18,13 @@ PIXAI_CAM = {
 }
 
 PIXAI_SFX = {
-    "explicit": "close breathing — fabric drag against the sheet — a faint creak from the bed frame",
-    "closeup": "damp skin contact — uneven breathing — a faint creak from the bed frame",
-    "tease": "quiet room tone — a slow breath — soft fabric shift",
-    "undress": "quiet room tone — a slow breath — fabric sliding against skin",
+    "nsfw": "close breathing — fabric drag against the sheet — a faint creak from the bed frame",
+    "sfw": "quiet room tone — a slow breath — soft fabric shift",
 }
 PIXAI_SFX_DEFAULT = "soft room tone — light fabric movement"
 PIXAI_TONE = {
-    "explicit": "breathy, quiet, unsteady",
-    "closeup": "breathy, close to the mic, unsteady",
-    "tease": "soft, hushed",
-    "undress": "soft, a little unsteady",
+    "nsfw": "breathy, quiet, unsteady",
+    "sfw": "clear, calm",
 }
 
 
@@ -86,10 +82,8 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     character = character or {}
     locks = locks or []
     style = (style_bible or "").strip() or "2D anime illustration"
-    tier = (tier or shot.get("tier") or "").strip()
+    tier = normalize_tier(tier or shot.get("tier") or "")
     tcfg = TIERS.get(tier)
-    if not tcfg:
-        tier = ""
     raw_duty = strip_prefix(shot.get("duty_en") or shot.get("duty")) or "holds position"
     pre = pixai_preformatted(raw_duty)
     duty = raw_duty if (pre or raw_duty.endswith((".", "!", "?"))) else raw_duty + "."
@@ -140,7 +134,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             lines.insert(0, "@image1 (from the attached first frame) is the identity and composition anchor.")
         tail = f"{style}, anime image-to-video"
         if tcfg and "adult" not in duty.lower():
-            tail += f", {tcfg['anchor']}"
+            tail = tail + (f", {tcfg['anchor']}" if tcfg.get("anchor") else "")
         prompt_out = re.sub(r"\n{3,}", "\n\n", "\n\n".join(lines + ["", tail + "."]))
         prompt_out, applied_deltas = apply_pixai_model_deltas(prompt_out, vcfg, duration)
         locks_hit = [l.get("id") for l in locks
@@ -219,7 +213,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     lines.append("")
     tail = f"{style}, anime image-to-video"
     if tcfg and "adult" not in duty_l:
-        tail += f", {tcfg['anchor']}"
+        tail = tail + (f", {tcfg['anchor']}" if tcfg.get("anchor") else "")
     lines.append(tail + ".")
 
     prompt = "\n".join(lines).strip()

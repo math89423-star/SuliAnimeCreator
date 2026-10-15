@@ -40,7 +40,7 @@
       </div>
       <div class="tray-row">
         <span class="tray-label">组合</span>
-        <span v-if="tray.length === 0" class="suli-muted">暂无，点卡片详情「加组合」添加</span>
+        <span v-if="tray.length === 0" class="suli-muted">暂无</span>
         <el-tag
           v-for="t in tray"
           :key="t.tag"
@@ -50,14 +50,7 @@
           @close="removeFromTray(t.tag)"
         >{{ t.zh }}</el-tag>
       </div>
-      <div class="suli-muted hint">点卡片看全字段详情 · 详情里点色块取色值 · 点 tag 与花语行复制</div>
       </template>
-    </div>
-
-    <div class="intro suli-muted">
-      角色设计用花卉参考：<strong>花语（中/日系/西式）· booru tag（已逐条核对）· 学名 · 花色色值 · 季节 · 用法与避雷</strong>。
-      顶部筛选气质/季节或搜索 → 点卡片进详情「加组合」攒花束 → 「复制组合prompt」得
-      <code>cherry blossoms, wisteria, floating petals</code> 式组合句。花语跨文化有雷区，出图前先看底部「文化避雷」。
     </div>
 
     <!-- 统一过滤网格：单花一卡，整卡点击就地展开 -->
@@ -90,7 +83,8 @@
           <span class="suli-muted season">{{ f.season }}</span>
         </div>
         <div class="suli-muted ellipsis" :title="f.mCN">{{ f.mCN }}</div>
-        <div v-if="isOpen(f.tag)" class="detail-block" @click.stop>
+        <el-dialog append-to-body :model-value="isOpen(f.tag)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+          <div class="detail-block" @click.stop>
           <div class="detail-cols">
             <div class="dlg-cover">
               <img
@@ -145,6 +139,7 @@
           </div>
           <div class="suli-muted dlg-cap">{{ f.latin }}（{{ visibleFlowers.findIndex((x) => x.tag === f.tag) + 1 }} / {{ visibleFlowers.length }}）</div>
         </div>
+        </el-dialog>
       </div>
     </div>
 
@@ -153,7 +148,6 @@
     <!-- 通用组合词 -->
     <section>
       <h3>Prompt 组合通用词 <span class="suli-muted">Generic Flower Tags</span></h3>
-      <p class="suli-muted tip">与单花 tag 搭配的场景词；点击 tag 复制。带 (*) 的为常用但建议出图前 autocomplete 复查。</p>
       <table class="gentable">
         <tr><th>用途</th><th>tag 组合</th><th>说明</th></tr>
         <tr v-for="(g, i) in genericTags" :key="i">
@@ -191,8 +185,6 @@
         <li><b>玫瑰色系</b>：黄玫瑰＝友情/嫉妒（日系），告白别送黄。</li>
       </ul>
     </section>
-
-    <p class="suli-muted foot">花语素材库 · 数据来源：通用花语/花言葉/floriography 常识整理 + Danbooru tag 逐条核对 · 实物图：Wikimedia Commons（CC/公有领域，仅供本地参考）· 配色联动配色工具 · 命名联动取名工具。</p>
   </div>
 </template>
 
@@ -584,15 +576,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 }
 .chip { cursor: pointer; }
 .search-input { flex: 1; min-width: 160px; max-width: 300px; }
-.hint { font-size: 12px; }
-.intro { margin: 12px 2px; }
-.intro code {
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 12px;
-  background: #f4f4f5;
-  padding: 1px 6px;
-  border-radius: 4px;
-}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -682,7 +665,6 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 .dlg-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
 .dlg-tagrow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; width: 100%; }
 section { margin-top: 20px; }
-.tip { margin: 2px 0 8px; }
 .gentable {
   width: 100%;
   border-collapse: collapse;
@@ -710,7 +692,6 @@ ul.plain {
 }
 .count { font-size: 12px; white-space: nowrap; }
 ul.plain li::before { content: "- "; color: #FB7299; }
-.foot { margin: 20px 2px 4px; font-size: 12px; }
 .empty { padding: 16px 4px; }
 .tool-card.open { grid-column: span 2; border-color: var(--suli-primary,#FB7299); }
 .detail-block { margin-top: 10px; border-top: 1px dashed var(--suli-border); padding-top: 10px; }

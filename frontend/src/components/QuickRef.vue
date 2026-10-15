@@ -1,7 +1,7 @@
 <template>
   <div v-if="store.quickRef.open" ref="panelRef" class="qr-panel" :style="panelStyle">
     <div class="qr-head" @mousedown="onDragStart">
-      <span class="qr-title">📖 速查</span>
+      <span class="qr-title"><el-icon style="vertical-align:-2px;margin-right:4px"><Notebook /></el-icon>速查</span>
       <span class="qr-tool">{{ toolName }}</span>
       <span style="flex:1" />
       <el-button size="small" text @click="store.minimizeQuickRef()" title="收起">－</el-button>
@@ -16,7 +16,6 @@
       <component :is="TOOL_COMPONENTS[store.quickRef.tool]" :key="store.quickRef.tool" />
     </div>
     <div class="qr-rz qr-rz-l" title="向左/右拖动缩放宽度" @mousedown="startResize($event, 'l')" />
-    <div class="qr-rz qr-rz-r" title="向左/右拖动缩放宽度" @mousedown="startResize($event, 'r')" />
     <div class="qr-rz qr-rz-b" title="拖动缩放高度" @mousedown="startResize($event, 'b')" />
     <div class="qr-rz qr-rz-br" title="拖动缩放宽高" @mousedown="startResize($event, 'br')" />
     <div class="qr-rz qr-rz-bl" title="拖动缩放宽高" @mousedown="startResize($event, 'bl')" />
@@ -25,6 +24,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '../stores/app'
+import { Notebook } from '@element-plus/icons-vue'
 import { TOOL_TABS, TOOL_COMPONENTS } from './tools/index'
 const store = useAppStore()
 const panelRef = ref<HTMLElement | null>(null)
@@ -167,10 +167,9 @@ onUnmounted(() => { window.removeEventListener('mouseup', onUp) })
 }
 /* 自定义边缘缩放把手：原生 resize 只有右下角，左右边拖不动 */
 .qr-rz { position: absolute; z-index: 5; touch-action: none; }
-.qr-rz-l, .qr-rz-r { top: 0; bottom: 0; width: 8px; cursor: ew-resize; }
+.qr-rz-l { top: 0; bottom: 0; width: 6px; cursor: ew-resize; }
 .qr-rz-l { left: 0; }
-.qr-rz-r { right: 0; }
-.qr-rz-b { left: 8px; right: 8px; bottom: 0; height: 8px; cursor: ns-resize; }
+.qr-rz-b { left: 6px; right: 0; bottom: 0; height: 8px; cursor: ns-resize; }
 .qr-rz-br, .qr-rz-bl { bottom: 0; width: 14px; height: 14px; }
 .qr-rz-br { right: 0; cursor: nwse-resize; }
 .qr-rz-bl { left: 0; cursor: nesw-resize; }
@@ -179,7 +178,7 @@ onUnmounted(() => { window.removeEventListener('mouseup', onUp) })
 .qr-title { font-weight: 800; font-size: 13px; }
 .qr-tool { font-size: 12px; color: var(--suli-text-2); }
 .qr-chips { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 8px; border-bottom: 1px solid var(--suli-border); flex-shrink: 0; }
-.qr-body { flex: 1; min-height: 0; overflow: auto; background: #fff; container-type: inline-size; }
+.qr-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; background: #fff; container-type: inline-size; scrollbar-gutter: stable; }
 @media (max-width: 700px) {
   .qr-panel { left: 8px !important; right: 8px !important; top: 64px !important; bottom: 8px !important; width: auto !important; height: auto !important; }
   .qr-rz { display: none; }

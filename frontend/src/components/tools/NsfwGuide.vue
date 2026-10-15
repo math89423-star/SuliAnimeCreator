@@ -2,17 +2,9 @@
   <div class="nsfw-guide">
     <div class="suli-card intro">
       <h2 class="t">分级创作指南 · 成人向插画提示词九槽公式</h2>
-      <p class="suli-muted">
-        面向 Pony / Illustrious / SDXL 写实 / Flux 四条线，只讲结构、质量、解剖修复与合规。
-        与 STEP1-6、构图、服装、配色工具联动。
-      </p>
       <p class="iron">
         <b>18+ 与合规铁律（每次必查）：</b>只画成年虚构角色；prompt 首槽与 negative 双锚定成年；
         不画真人可识别长相、不画未成年或幼态外观、不写非自愿叙事。
-      </p>
-      <p class="suli-muted small">
-        结论已按“短 negative 优于长 negative、模型分流、权重节制”收敛；模板只给结构与质量词，
-        把 [姿态] / [服装] / [场景] 换成自己的成年虚构设定即可，年龄与安全词不要删。
       </p>
     </div>
 
@@ -34,7 +26,6 @@
           @click="active = c"
         >{{ c }}</el-tag>
       </div>
-      <div class="tray-row hint suli-muted">点卡片展开全文 + 复制模板；分组只作角标与筛选，不分页。</div>
       </template>
     </div>
 
@@ -52,7 +43,8 @@
           <el-tag v-for="t in c.tags" :key="t" size="small">{{ t }}</el-tag>
         </div>
         <div class="sum">{{ c.summary }}</div>
-        <div v-if="isOpen(c.id)" class="detail-block">
+        <el-dialog append-to-body :model-value="isOpen(c.id)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+          <div class="detail-block">
           <div class="detail-cols">
             <div class="detail-main">
               <div class="dlg-sub"><span class="en">{{ c.en }}</span><el-tag size="small">{{ c.cat }}</el-tag></div>
@@ -106,16 +98,10 @@
             </div>
           </div>
         </div>
+        </el-dialog>
       </div>
     </div>
     <div v-if="filtered.length === 0" class="suli-muted empty">无匹配，换关键词或点清空。</div>
-
-    <p class="suli-muted small foot">
-      参考资料（2026-09-21 检索）：Pony V6 官方模型卡 score / rating 说明；Pony tag 解析；
-      score / source / rating 辨析与 V7 弱化结论；Pony 九槽指南；NSFW prompt 通用指南；
-      分模型 token / 权重表；SD3.5 四段式与光位写法；短 negative 主张；
-      Illustrious 指南与模型卡 negative 默认值。
-    </p>
   </div>
 </template>
 
@@ -462,7 +448,6 @@ pre.suli-pre {
   font-size: 13px;
   background: #fff;
 }
-.small { font-size: 12px; }
 .tray {
   position: sticky;
   top: 0;
@@ -478,7 +463,6 @@ pre.suli-pre {
 .search { flex: 1; min-width: 200px; }
 .count { font-size: 12px; white-space: nowrap; }
 .chips .chip { cursor: pointer; }
-.hint { font-size: 12px; }
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -571,7 +555,6 @@ pre.suli-pre {
   padding: 1px 6px;
   word-break: break-word;
 }
-.foot { margin-top: 4px; }
 
 @container (max-width: 620px) {
   .grid { grid-template-columns: repeat(2, 1fr); }

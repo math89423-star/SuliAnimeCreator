@@ -23,7 +23,7 @@
       <div class="picked-row">
         <span class="tray-label">运镜句组合（点卡片加入）:</span>
         <div class="chips">
-          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无，先点下面的卡片</span>
+          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无</span>
           <span v-for="(p, i) in picked" :key="p" class="chip">
             <b>{{ shortChip(p) }}</b>
             <span class="chip-x" @click.stop="removeAt(i)">&#215;</span>
@@ -32,18 +32,6 @@
       </div>
       </template>
     </div>
-
-    <div class="intro suli-card">
-      <h1>高级镜头语法库 Shot Grammar</h1>
-      <p>
-        SVG只是路径示意，<strong>真实效果看每卡的真片例+直跳链接</strong>（只收官方教程点名的片子，没点名的卡如实标“官方未点名”，不编）。点卡片看详情，可复制
-        <strong>H3 可粘贴英文整句</strong> + 加入顶部组合栏；点卡内链接只跳页面不复制。<br />
-        来源只收 <strong>官方教程 + 社区经验</strong>，每卡带 <code>出处</code> + <code>置信度</code>：<strong>已验证</strong>=官方原文/H3导出的原句；<strong>待复测</strong>=单源社区；<strong>未实测</strong>=多源收敛但没跑过。<br />
-        H3 铁律：<code>一镜一运镜</code> + <code>运镜写成自然英语动作句、不堆标签</code> + <code>必带落幅（reveal/ending on）</code>。中幅/常速省略不写。
-      </p>
-    </div>
-
-    <div class="tip suli-muted">点卡片看详情，可复制英文整句或加入顶部组合栏；详情含完整视频prompt（5s可投喂整句）。</div>
 
     <div v-if="filtered.length > 0" class="grid">
       <article v-for="d in filtered" :key="d.zh" class="suli-card tool-card" :class="{ open: isOpen(d.zh) }" @click="toggleDetail(d.zh)">
@@ -59,7 +47,8 @@
             <el-tag size="small" :type="confType(d.conf)" effect="light">{{ d.conf }}</el-tag>
           </div>
           <p class="summary suli-muted">{{ d.cn }}</p>
-          <div v-if="isOpen(d.zh)" class="detail-block">
+          <el-dialog append-to-body :model-value="isOpen(d.zh)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+            <div class="detail-block">
             <div class="detail-cols">
               <div class="dlg-cover" v-html="demo(d.dk)"></div>
               <div class="dlg-main">
@@ -89,21 +78,11 @@
               <el-button size="small" @click.stop="openKey = null">收起</el-button>
             </div>
           </div>
+        </el-dialog>
         </div>
       </article>
     </div>
     <p v-else class="suli-muted empty">无匹配卡片，换关键词或点清空重试。</p>
-
-    <p class="foot suli-muted">
-      用法：先按动因（揭示/逼近/释放/跟随/审视）选运镜，再点卡拼 H3 四段式：运镜+速度 → 主体动作 → 揭示什么 → 情绪。切镜类卡片一次只用一条。<br />
-      来源：
-      <a href="https://huggingface.co/MiniMaxAI/MiniMax-H3/blob/main/docs/VIDEO_PROMPT_WRITING_GUIDE_base_en.md" target="_blank" rel="noopener">H3 官方 base-en §4.3（20运镜词表·幅度速度·三例句）</a> ·
-      <a href="https://www.studiobinder.com/blog/different-types-of-camera-movements-in-film/" target="_blank" rel="noopener">StudioBinder 运镜全表</a> ·
-      <a href="https://kling.ai/blog/kling-ai-camera-control-video-guide" target="_blank" rel="noopener">Kling 3.0 相机控制官方指南</a> ·
-      <a href="https://www.seedance.tv/blog/seedance-2-0-camera-movement-prompts" target="_blank" rel="noopener">Seedance 2.0 运镜8式</a> ·
-      <a href="https://www.youtube.com/watch?v=TKkg-8P7jTM" target="_blank" rel="noopener">Kling 3.0 Masterclass（tilt/dolly/tracking/crane/crash/whip/orbit）</a><br />
-      跑图后若某句不出效果，把结论告诉我，我改该卡的置信度与措辞。
-    </p>
   </div>
 </template>
 
@@ -634,28 +613,6 @@ function clearAll(): void {
 .chip-x:hover {
   color: var(--suli-text);
 }
-.intro {
-  padding: 18px 20px;
-  margin-bottom: 12px;
-}
-.intro h1 {
-  font-size: 22px;
-  color: var(--suli-text);
-  margin: 0 0 8px;
-}
-.intro p {
-  margin: 0;
-  color: var(--suli-text);
-  font-size: 13.5px;
-  line-height: 1.8;
-}
-.intro code {
-  background: #f4f4f6;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 12.5px;
-  font-family: Consolas, monospace;
-}
 .search {
   min-width: 180px;
   max-width: 300px;
@@ -682,10 +639,6 @@ function clearAll(): void {
   margin-top: 8px;
   flex-wrap: wrap;
 }
-.tip {
-  font-size: 13px;
-  margin-bottom: 12px;
-}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -703,7 +656,6 @@ function clearAll(): void {
   border-color: var(--suli-primary, #FB7299);
 }
 .tool-card.open {
-  grid-column: span 2;
   border-color: var(--suli-primary, #FB7299);
 }
 .detail-block {
@@ -849,11 +801,6 @@ function clearAll(): void {
   color: var(--suli-text-2);
   margin-top: 6px;
   line-height: 1.65;
-}
-.foot {
-  font-size: 12.5px;
-  line-height: 1.9;
-  padding: 16px 4px 0;
 }
 @media (max-width: 720px) {
   .detail-cols {

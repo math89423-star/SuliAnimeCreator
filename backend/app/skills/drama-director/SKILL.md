@@ -110,7 +110,8 @@ Each panel is clearly separated with gutters. Consistent character appearance ac
 **一次调用**，生成一张九宫格：
 
 ```bash
-python3 ~/.claude/skills/drama-director/scripts/generate_image.py \
+# 生成脚本不在本仓库（Atlas 执行侧持有），本项目只借导演判断、不执行生成：不要在磁盘上搜索该脚本
+python3 <Atlas侧>/scripts/generate_image.py \
   --prompt "<full 9-panel image_prompt>" \
   --aspect "1:1" \
   --out /tmp/drama_output/storyboard_9grid.json
@@ -215,7 +216,8 @@ photorealistic digital character figures, backlit.
 拿 Step 3 的 `image_url` + 上面写好的 motion_prompt，**一次调用**跑 15 秒视频：
 
 ```bash
-python3 ~/.claude/skills/drama-director/scripts/generate_video.py \
+# 生成脚本不在本仓库（Atlas 执行侧持有），本项目只借导演判断、不执行生成：不要在磁盘上搜索该脚本
+python3 <Atlas侧>/scripts/generate_video.py \
   --image "<image_url from Step 3>" \
   --prompt "<motion_prompt EN — 按 4.2 结构，遵守 4.3-4.5 约束>" \
   --duration 15 \

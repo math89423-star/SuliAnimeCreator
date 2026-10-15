@@ -42,6 +42,123 @@ def get_screenplay(eid):
     return ok({"episode_id": eid, "screenplay_md": ep.get("screenplay_md", ""),
                "ref_images": ep.get("ref_images", [])})
 
+
+@bp.post("/screenplay/validate")
+@bp.post("/screenplay/validate/<eid>")
+def validate_screenplay_ep(eid=""):
+    """剧本结构校验：body {screenplay_md?} 为空则读库。返回 findings。"""
+    from ..services.draft import validate_screenplay
+    b = request.get_json(force=True, silent=True) or {}
+    md = b.get("screenplay_md")
+    if md is None and eid:
+        md = _EPS.get(eid, {}).get("screenplay_md", "")
+    findings = validate_screenplay(md or "")
+    blockers = sum(1 for f in findings if f["level"] == "blocker")
+    return ok({"episode_id": eid, "findings": findings,
+               "blockers": blockers, "passed": blockers == 0, "count": len(findings)})
+
+
+@bp.post("/screenplay/normalize/<eid>")
+def normalize_screenplay_ep(eid):
+    """规范化：补 H1/SC 编号/压空行，不改台词。body {screenplay_md?, save?=true}。"""
+    from ..services.draft import normalize_screenplay
+    b = request.get_json(force=True, silent=True) or {}
+    md = b.get("screenplay_md")
+    if md is None:
+        md = _EPS.get(eid, {}).get("screenplay_md", "")
+    normed, changes = normalize_screenplay(md or "", eid)
+    if b.get("save", True):
+        ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+        ep["screenplay_md"] = normed
+        ep["segs"] = []
+        _persist()
+    return ok({"episode_id": eid, "screenplay_md": normed, "changes": changes,
+               "chars": len(normed)})
+
+
+@bp.post("/screenplay/estimate")
+@bp.post("/screenplay/estimate/<eid>")
+def estimate_screenplay_ep(eid=""):
+    """时长估算：body {screenplay_md?} 为空则读库。返回 chars/est_s/是否10-30s。"""
+    from ..services.draft import estimate_screenplay
+    b = request.get_json(force=True, silent=True) or {}
+    md = b.get("screenplay_md")
+    if md is None and eid:
+        md = _EPS.get(eid, {}).get("screenplay_md", "")
+    return ok({"episode_id": eid, **estimate_screenplay(md or "")})
+
+
+@bp.get("/beats/<eid>")
+def beats_from_screenplay(eid):
+    """beats 解析：从 screenplay_md 提场景/对白，供 export-bundle 与投流母本用。"""
+    from ..services.draft import parse_beats_from_screenplay
+    ep = _EPS.get(eid, {})
+    beats = parse_beats_from_screenplay(ep.get("screenplay_md", ""), eid)
+    return ok({"episode_id": eid, "beats": beats, "count": len(beats)})
+
+
+@bp.post("/screenplay/revise/<eid>")
+def revise_screenplay(eid):
+    """定点修订：body {instruction}。LLM优先改写，失败回退追加修订段。不抛500。"""
+    b = request.get_json(force=True, silent=True) or {}
+    ins = (b.get("instruction") or "").strip()[:500]
+    if not ins:
+        return jsonify({"code": 4001, "msg": "缺少 instruction"}), 400
+    ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    cur = ep.get("screenplay_md", "") or ""
+    new_md, engine = cur, "noop"
+    try:
+        from ..services.llm_opencode import llm_cfg, _post
+        cfg = llm_cfg()
+        if cfg.get("provider") == "opencode" and cfg.get("key") and cfg.get("model"):
+            import re as _re
+            model_id = _re.sub(r"^opencode-go/", "", cfg["model"])
+            prompt = ("你是短剧剧本修订助手。保留作者原文，只做用户点名的定点修订，"
+                      "不要整篇重写，不要加无关机关。对白保持‘角色：台词’，场景标题保持‘## EP-SC’。"
+                      "修订要求：%s\n\n剧本原文：\n%s" % (ins, cur[:4000]))
+            txt = _post(cfg["base"], cfg["key"], model_id, prompt, effort=cfg.get("effort", ""))
+            if (txt or "").strip() and len((txt or "").strip()) >= 60:
+                new_md, engine = txt.strip() + "\n", "llm"
+    except Exception:
+        pass
+    if engine == "noop":
+        new_md = (cur.rstrip() + "\n\n[修订 %s] %s\n" % (__import__("datetime").datetime.now().strftime("%m%d%H%M"), ins)).strip() + "\n"
+        engine = "template"
+    ep["screenplay_md"] = new_md
+    ep["segs"] = []
+    _persist()
+    return ok({"episode_id": eid, "screenplay_md": new_md, "engine": engine,
+               "chars": len(new_md)})
+
+
+@bp.post("/episode/<eid>/freeze")
+def freeze_episode(eid):
+    """冻结版本：快照 screenplay/outline/shots只数，供精品迭代对比。"""
+    import time as _time
+    ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    vers = ep.setdefault("versions", [])
+    shots_n = sum(1 for s in _SHOTS.values() if s.get("episode_id") == eid)
+    vno = (max([v.get("vno", 0) for v in vers] + [0]) + 1)
+    snap = {"vno": vno, "created_at": int(_time.time() * 1000),
+            "screenplay_md": ep.get("screenplay_md", ""), "outline_md": ep.get("outline_md", ""),
+            "shots": shots_n, "verdict": ep.get("verdict", "draft")}
+    vers.append(snap)
+    # 只保留最近20版
+    ep["versions"] = vers[-20:]
+    _persist()
+    return ok({"episode_id": eid, "vno": vno, "shots": shots_n})
+
+
+@bp.get("/episode/<eid>/versions")
+def list_versions(eid):
+    ep = _EPS.get(eid, {})
+    vers = ep.get("versions", []) or []
+    lite = [{"vno": v.get("vno"), "created_at": v.get("created_at"),
+             "shots": v.get("shots"), "verdict": v.get("verdict"),
+             "screenplay_chars": len(v.get("screenplay_md", "") or ""),
+             "outline_chars": len(v.get("outline_md", "") or "")} for v in vers]
+    return ok({"episode_id": eid, "versions": lite, "count": len(lite)})
+
 @bp.post("/episode/<eid>/image")
 def upload_episode_image(eid):
     """剧本参考图：落盘 data/uploads，记到本集 ref_images。取图走 /api/images/<name>。"""
@@ -78,6 +195,66 @@ def get_outline(eid):
     return ok({"episode_id": eid, "outline_md": ep.get("outline_md", ""),
                "outline_image": ep.get("outline_image", "")})
 
+def _sync_screenplay_from_outline(ep, eid):
+    """大纲落盘后同步底稿：仅当 screenplay 为空且 outline 非空时写，不覆盖人工底稿。
+    内容=方向一句话 + 分镜表转写 + 合计行；解析失败则回退全文前 800 字。返回是否同步。"""
+    try:
+        if ((ep.get("screenplay_md") or "").strip()):
+            return False
+        md = (ep.get("outline_md") or "").strip()
+        if not md:
+            return False
+        lines = md.splitlines()
+        direction = ""
+        in_dir = False
+        for ln in lines:
+            s = ln.strip()
+            if s.startswith("##") and "方向一句话" in s:
+                in_dir = True
+                continue
+            if in_dir:
+                if not s:
+                    continue
+                if s.startswith("#"):
+                    break
+                direction = s
+                break
+        beats = []
+        for ln in lines:
+            s = ln.strip()
+            if not s.startswith("|"):
+                continue
+            cells = [c.strip() for c in s.strip("|").split("|")]
+            if len(cells) < 3:
+                continue
+            if any("镜号" in c or "---" in c for c in cells):
+                continue
+            mid, content, dur, move = (cells + ["", "", "", ""])[:4]
+            if not content or len(beats) >= 8:
+                continue
+            tail = f"（{dur}，{move}）" if (dur or move) else ""
+            beats.append(f"{mid or '镜'+str(len(beats)+1)}：{content}{tail}")
+        total = ""
+        for ln in lines:
+            if "合计" in ln and ("镜" in ln or "秒" in ln):
+                total = ln.strip().lstrip("# ").strip()
+                break
+        parts = [f"# {eid} 剧本底稿（大纲同步，可改）", ""]
+        if direction:
+            parts += [direction, ""]
+        if beats:
+            parts += beats + [""]
+        if total:
+            parts += [total, ""]
+        if not direction and not beats:
+            parts += [md[:800]]
+        ep["screenplay_md"] = "\n".join(parts).strip() + "\n"
+        ep["segs"] = []
+        return True
+    except Exception:
+        return False
+
+
 @bp.put("/outline/<eid>")
 def save_outline(eid):
     b = request.get_json(force=True) or {}
@@ -87,8 +264,10 @@ def save_outline(eid):
     if "outline_image" in b:
         from pathlib import Path as _P
         ep["outline_image"] = _P(b.get("outline_image") or "").name
+    synced = _sync_screenplay_from_outline(ep, eid)
     _persist()
-    return ok({"episode_id": eid, "chars": len(ep.get("outline_md", ""))})
+    return ok({"episode_id": eid, "chars": len(ep.get("outline_md", "")),
+               "screenplay_synced": synced, "screenplay_chars": len(ep.get("screenplay_md", ""))})
 
 @bp.post("/outline/generate/<eid>")
 def outline_generate(eid):
@@ -106,9 +285,11 @@ def outline_generate(eid):
     ep["outline_md"] = md
     if image:
         ep["outline_image"] = image
+    synced = _sync_screenplay_from_outline(ep, eid)
     _persist()
     return ok({"episode_id": eid, "outline_md": md, "outline_image": ep.get("outline_image", ""),
-               "engine": tag, "chars": len(md)})
+               "engine": tag, "chars": len(md),
+               "screenplay_synced": synced, "screenplay_chars": len(ep.get("screenplay_md", ""))})
 
 @bp.post("/draft/from-outline/<eid>")
 def draft_from_outline(eid):
@@ -123,6 +304,9 @@ def draft_from_outline(eid):
     if not outline_md:
         return jsonify({"code": 4001, "msg": "本集暂无大纲，先生成大纲"}), 400
     specs, tag = split_outline_to_shots(outline_md, eid, total_s, tier or "")
+    # 幂等：先清本集旧草案（draft=True），保留已定稿镜，防止重复点击堆出 3+3+3…
+    for sid in [sid for sid, s in _SHOTS.items() if s.get("episode_id") == eid and s.get("draft")]:
+        _SHOTS.pop(sid, None)
     own = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
     n = 1
     used = {s.get("id", "") for s in own}
@@ -242,6 +426,7 @@ def create_shot():
            "camera": {"crop": cam.get("crop", "medium"), "height": cam.get("height", "eye"),
                       "movement": cam.get("movement", "固定")},
            "sound": b.get("sound", ""), "key_text_en": b.get("key_text_en", ""),
+           "note": str(b.get("note", ""))[:500],
            "tier": _norm_tier(b.get("tier")), "draft": bool(b.get("draft", False))}
     _SHOTS[sid] = row
     _persist()
@@ -256,6 +441,8 @@ def update_shot(sid):
     for k in ("duty", "duty_en", "duration_s", "sound", "key_text_en", "ord", "image"):
         if k in b:
             s[k] = b[k]
+    if "note" in b:
+        s["note"] = str(b.get("note") or "")[:500]
     if "draft" in b:
         s["draft"] = bool(b.get("draft"))
     if "tier" in b:
@@ -433,18 +620,24 @@ def clear_episode(eid):
 
 @bp.post("/review/run/<eid>")
 def review_run(eid):
+    from ..services.draft import build_review
     shots = [s for s in _SHOTS.values() if s["episode_id"] == eid]
-    findings = []
-    if not shots:
-        findings.append({"level": "blocker", "rule": "SHT-01", "fix": "无SHOT覆盖"})
-    verdict = "BLOCK" if findings else "PASS"
-    _EPS.setdefault(eid, {}).update({"verdict": verdict})
+    ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    total = round(sum(float(s.get("duration_s") or 0) for s in shots), 1)
+    verdict, findings = build_review(ep.get("screenplay_md", ""), shots, total)
+    ep["verdict"] = verdict
+    ep["review_findings"] = findings
+    ep["review_at"] = __import__("time").time()
     _persist()
-    return ok({"verdict": verdict, "findings": findings})
+    return ok({"episode_id": eid, "verdict": verdict, "findings": findings,
+               "shots": len(shots), "total_s": total})
+
 
 @bp.get("/review/<eid>")
 def review_latest(eid):
     ep = _EPS.get(eid, {})
     shots = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
     total = round(sum(float(s.get("duration_s") or 0) for s in shots), 1)
-    return ok({"verdict": ep.get("verdict", "draft"), "shots": len(shots), "total_s": total})
+    return ok({"episode_id": eid, "verdict": ep.get("verdict", "draft"),
+               "shots": len(shots), "total_s": total,
+               "findings": ep.get("review_findings", [])})

@@ -21,7 +21,7 @@
       <div class="tray-row combo">
         <span class="tray-label">组合:</span>
         <div class="picked">
-          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无，点卡片详情「加入组合」</span>
+          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无</span>
           <span v-for="(c, i) in picked" :key="c.en" class="chip">
             <i :style="{ background: c.hex }" />
             <b>{{ c.en }}</b>
@@ -32,11 +32,6 @@
         <el-button size="small" @click="clearAll">清空组合</el-button>
       </div>
       </template>
-    </div>
-
-    <div class="intro suli-muted">
-      配色提示词表 Palette：点卡片看详情，主色 2-3 个 + 点缀 1 个后点「复制组合prompt」即得
-      <code>red, blue and gold color palette</code> 式配色句。共 {{ totalColors }} 色，色值为屏幕示意近似值，以英文词为准。
     </div>
 
     <div class="grid">
@@ -55,7 +50,8 @@
           <div class="pills"><span class="mono pill">{{ c.hex }}</span><span class="pill ghost">{{ c.familyEn }}</span></div>
           <div class="sum suli-muted">{{ c.tip }}</div>
         </div>
-        <div v-if="isOpen(c.en)" class="detail-block">
+        <el-dialog append-to-body :model-value="isOpen(c.en)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+          <div class="detail-block">
           <div class="detail-cols">
             <div class="dlg-sw" :style="{ background: c.hex }" />
             <div class="dlg-rows">
@@ -74,12 +70,11 @@
             <el-button size="small" @click.stop="openKey = null">收起</el-button>
           </div>
         </div>
+        </el-dialog>
       </div>
     </div>
 
     <p v-if="filtered.length === 0" class="suli-muted empty">没有匹配的颜色，换个关键词或点「清空」放宽筛选。</p>
-
-    <p class="foot suli-muted">用法：STEP 4A 定色彩时，先在这里定主色 + 点缀，再写进 prompt 的 [Lighting / Color] 位。</p>
   </div>
 </template>
 
@@ -317,18 +312,6 @@ pre.suli-pre {
 .chip-x:hover {
   color: #18181b;
 }
-.intro {
-  font-size: 13.5px;
-  line-height: 1.8;
-  margin-bottom: 12px;
-  padding: 0 4px;
-}
-.intro code {
-  background: #f4f4f6;
-  padding: 1px 6px;
-  border-radius: 4px;
-  font-size: 13px;
-}
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -345,7 +328,6 @@ pre.suli-pre {
   border-color: var(--suli-primary);
 }
 .tool-card.open {
-  grid-column: span 2;
   border-color: var(--suli-primary,#FB7299);
 }
 .detail-block {
@@ -443,12 +425,6 @@ pre.suli-pre {
   gap: 8px;
   margin-top: 12px;
   flex-wrap: wrap;
-}
-.foot {
-  font-size: 12.5px;
-  line-height: 1.8;
-  padding: 0 4px;
-  margin-top: 16px;
 }
 @media (max-width: 560px) {
   .grid {

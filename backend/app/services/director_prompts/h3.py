@@ -1,7 +1,7 @@
 """H3 单图动画（I2VA / T2VA-fallback）：对齐行 + 三字段。纯函数，无 Flask、无跨蓝图导入。"""
 from .images import first_image, img_url
 from .text import DIALOG, CJK, PRONOUN_EN, looks_full, strip_prefix, strip_pixai_scaffold, pixai_preformatted
-from .tiers import TIERS
+from .tiers import TIERS, normalize_tier
 import re
 
 I2VA_ALIGN = ("For the target video, at 0.00 seconds into the target video, "
@@ -33,14 +33,12 @@ CROP_EN = {
 def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=""):
     """单镜 I2VA：有首帧出 H3 全文（对齐行+三字段），无首帧回退 T2VA（无对齐行）。
     每段视频独立单镜，不跨镜拼切，时长即 shot.duration_s（H3 建议 4-15s）。
-    tier 走成人向四档（tease/undress/explicit/closeup），非成人向留空即原行为。"""
+    tier 只两档 sfw/nsfw，留空即原行为（无档位子句）。"""
     character = character or {}
     locks = locks or []
     style = (style_bible or "").strip() or "2D-animated"
-    tier = (tier or shot.get("tier") or "").strip()
+    tier = normalize_tier(tier or shot.get("tier") or "")
     tcfg = TIERS.get(tier)
-    if not tcfg:
-        tier = ""
     raw = strip_prefix(shot.get("duty_en") or shot.get("duty"))
     pre_dlg = ""
     pre_fmt = pixai_preformatted(raw)
@@ -112,8 +110,8 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
 
     duty_l = duty.lower()
     tier_clause = f" {tcfg['clause']}" if (tcfg and not full) else ""
-    anchor_dup = tcfg and tcfg["anchor"].split(",")[0].strip().lower() in duty_l
-    head = f"{style}, {tcfg['anchor']}" if (tcfg and not anchor_dup) else style
+    anchor_dup = bool(tcfg and tcfg.get("anchor")) and tcfg["anchor"].split(",")[0].strip().lower() in duty_l
+    head = f"{style}, {tcfg['anchor']}" if (tcfg and tcfg.get("anchor") and not anchor_dup) else style
     cam_clause = "" if pre_fmt else f"The camera {move_en}. "
     if full:
         body = duty if duty.endswith((".", "!", "?")) else duty + "."
@@ -127,10 +125,10 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
 
     if snd_hint:
         soundscape = snd_hint
-    elif tier in ("explicit", "closeup"):
+    elif tier == "nsfw":
         soundscape = ("Close breathing overlaps in a slow rhythm, joined by fabric drag against the sheet "
                       "and a faint creak from the bed frame.")
-    elif tier in ("tease", "undress"):
+    elif tier == "sfw":
         soundscape = ("Quiet room tone continues under a slow breath, with the soft drag of fabric "
                       "against skin and a faint rustle of the sheet.")
     elif dlg_clause:
@@ -138,7 +136,7 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
     else:
         soundscape = ("Soft ambient tone continues with faint fabric movement and "
                       "subtle action sounds matching the visible motion.")
-    if dlg_clause and not snd_hint and tier in ("explicit", "closeup", "tease", "undress"):
+    if dlg_clause and not snd_hint and tier == "nsfw":
         soundscape += " The spoken line stays close and breathy just above it."
     music_txt = (music or "").strip() or "N/A"
 

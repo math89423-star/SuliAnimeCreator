@@ -12,7 +12,7 @@
       <div class="tray-inner">
         <span class="tray-label">镜头句组合（点卡片看详情）：</span>
         <div class="chips">
-          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无，先点下面的卡片</span>
+          <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无</span>
           <el-tag
             v-for="(p, i) in picked"
             :key="p"
@@ -52,21 +52,10 @@
 
     <div class="intro suli-card">
       <h1>构图镜头手册 Composition &amp; Camera</h1>
-      <p>
-        点任意卡片 = 复制该条的<strong>英文提示词</strong>（可直接贴进 prompt）+ 自动加入顶部组合栏；
-        攒好机位 + 景别 + 构图后点「复制组合句」，即得
-        <code>from above, high angle looking down ~30°, dutch angle ~15°, bust shot cropped at mid-torso</code>
-        式镜头句。<br />
-        配图为<strong>示意小图</strong>（一眼看懂“相机在哪、画面变成什么样”）；度数（15°/30°）为建议区间，
-        可按效果加减。覆盖 STEP2 机位 / 构图 / 姿态 / 神态 / 细节 / 体型 + STEP5 光影参考；
-        默认二次元女生视角（约 95% 创作场景）；背景 / 道具 / 最终色调不在此页。
-      </p>
-      <div class="intro-tip suli-muted">整卡可点开详情大图；详情里复制英文或加入组合。分类 chips 只过滤下面全部词条网格，附表小节各自走全局搜索。</div>
     </div>
 
     <section class="suli-card block">
       <h2>全部词条 <small>{{ filteredSecs.length }} 卡</small></h2>
-      <div class="tip suli-muted">SECTIONS 拍平：整卡可点开大图与全部字段；详情里复制英文或加入组合。角标为原分组，顶部 chips 可按分组过滤。</div>
       <div class="card-grid">
         <div
           v-for="it in filteredSecs"
@@ -75,17 +64,18 @@
           :class="{ open: isOpen('sec:' + it.secId + ':' + it.en) }"
           @click="toggleDetail('sec:' + it.secId + ':' + it.en, () => openSec(it))"
         >
-          <div class="cover" v-html="it.dia" />
+          <div class="cover" v-html="it.dia"></div>
           <div class="body">
             <div class="t-zh">{{ it.zh }}</div>
             <div class="t-en mono">{{ it.en }}</div>
             <div class="pills"><el-tag size="small" effect="plain">{{ it.secTitle }}</el-tag></div>
             <div class="t-note">{{ it.note }}</div>
           </div>
-          <div v-if="isOpen('sec:' + it.secId + ':' + it.en)" class="detail-block" @click.stop>
+          <el-dialog append-to-body :model-value="isOpen('sec:' + it.secId + ':' + it.en)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+            <div class="detail-block" @click.stop>
             <div v-if="detail" class="dlg">
               <div class="detail-cols">
-                <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                 <div class="detail-main">
                   <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                   <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -121,16 +111,16 @@
               </div>
             </div>
           </div>
-        </div>
+        </el-dialog>
       </div>
-      <p v-if="filteredSecs.length === 0" class="suli-muted">没有命中，换个关键词或分类试试。</p>
+      </div>
+      <p v-if<p v-if="filteredSecs.length === 0" class="suli-muted">没有命中，换个关键词或分类试试。</p>
     </section>
 
     <!-- flattened: SECTIONS 已拍平为顶部全部词条网格 -->
 
       <section class="suli-card block">
         <h3>自然语言描述法 <small>Describe It in Words {{ filteredNlways.length }} 卡</small></h3>
-        <div class="tip suli-muted">词表是零件，自然语言是成品句。整卡可点开详情复制。</div>
         <div class="card-grid">
           <div
             v-for="w in filteredNlways"
@@ -145,10 +135,11 @@
               <div class="pills"><el-tag size="small" effect="plain">自然语言法</el-tag></div>
               <div class="t-note">{{ w.cn }}</div>
             </div>
-            <div v-if="isOpen('nlway:' + w.name)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('nlway:' + w.name)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -184,14 +175,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredNlways.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredNlways.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>活感工作台 <small>Dead Prompt to Alive {{ filteredPairs.length }} 卡</small></h3>
-        <div class="tip suli-muted">公式：动作瞬间 + 一个残响 + 一次环境接触 + 一个画外指向 + 情绪词≤1。整卡可点开详情复制活句。</div>
         <div class="card-grid">
           <div
             v-for="(p, i) in filteredPairs"
@@ -206,10 +197,11 @@
               <div class="pills"><el-tag size="small" effect="plain">活感工作台</el-tag></div>
               <div class="t-note">{{ p[3] }}</div>
             </div>
-            <div v-if="isOpen('pair:' + i)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('pair:' + i)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -245,14 +237,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredPairs.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredPairs.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>组合实战 <small>Worked Examples {{ filteredCombos.length }} 卡</small></h3>
-        <div class="tip suli-muted">机位句公式：[垂直角] + [斜切] + [水平角] + [景别] + [构图x2] + [防裁切]。整卡可点开大图、拆解与自然语言段落。</div>
         <div class="card-grid">
           <div
             v-for="c in filteredCombos"
@@ -261,17 +253,18 @@
             :class="{ open: isOpen('combo:' + c.en) }"
             @click="toggleDetail('combo:' + c.en, () => openCombo(c, '组合实战'))"
           >
-            <div class="cover" v-html="c.dia" />
+            <div class="cover" v-html="c.dia"></div>
             <div class="body">
               <div class="t-zh">{{ c.zh }}</div>
               <div class="t-en mono">{{ c.en }}</div>
               <div class="pills"><el-tag size="small" effect="plain">组合实战</el-tag></div>
               <div class="t-note">{{ c.note }}</div>
             </div>
-            <div v-if="isOpen('combo:' + c.en)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('combo:' + c.en)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -307,14 +300,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredCombos.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredCombos.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>高级镜头感 <small>Advanced Cinematic {{ filteredProcombos.length }} 卡</small></h3>
-        <div class="tip suli-muted">高级感 = 层次 + 光分离 + 收束 + 节奏。整卡可点开大图与成品段落。</div>
         <div class="card-grid">
           <div
             v-for="c in filteredProcombos"
@@ -323,17 +316,18 @@
             :class="{ open: isOpen('procombo:' + c.en) }"
             @click="toggleDetail('procombo:' + c.en, () => openCombo(c, '高级镜头'))"
           >
-            <div class="cover" v-html="c.dia" />
+            <div class="cover" v-html="c.dia"></div>
             <div class="body">
               <div class="t-zh">{{ c.zh }}</div>
               <div class="t-en mono">{{ c.en }}</div>
               <div class="pills"><el-tag size="small" effect="plain">高级镜头</el-tag></div>
               <div class="t-note">{{ c.note }}</div>
             </div>
-            <div v-if="isOpen('procombo:' + c.en)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('procombo:' + c.en)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -369,14 +363,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredProcombos.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredProcombos.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>拆解实战 <small>Worked Dissections {{ filteredDissects.length }} 卡</small></h3>
-        <div class="tip suli-muted">把成品段落拆回手册词条。整卡可点开逐段对照表与词表版。</div>
         <div class="card-grid">
           <div
             v-for="d in filteredDissects"
@@ -391,10 +385,11 @@
               <div class="pills"><el-tag size="small" effect="plain">拆解实战</el-tag></div>
               <div class="t-note">{{ d.cn }}</div>
             </div>
-            <div v-if="isOpen('dissect:' + d.zh)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('dissect:' + d.zh)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -430,14 +425,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredDissects.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredDissects.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>速查表 <small>Quick Reference {{ filteredQuick.length + filteredPosecam.length }} 卡</small></h3>
-        <div class="tip suli-muted">先想心理效果 / 姿势，再按表拼机位。整卡可点开详情复制机位组合。</div>
         <h4 class="subh">情绪 → 机位</h4>
         <div class="card-grid">
           <div
@@ -453,10 +448,11 @@
               <div class="pills"><el-tag size="small" effect="plain">情绪速查</el-tag></div>
               <div class="t-note">{{ r[2] }}</div>
             </div>
-            <div v-if="isOpen('quick:q' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('quick:q' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -492,9 +488,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredQuick.length === 0" class="suli-muted">情绪速查无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredQuick.length === 0" class="suli-muted">情绪速查无命中。</p>
         <h4 class="subh">姿态 → 机位</h4>
         <div class="card-grid">
           <div
@@ -510,10 +507,11 @@
               <div class="pills"><el-tag size="small" effect="plain">姿态速查</el-tag></div>
               <div class="t-note">{{ r[2] }}</div>
             </div>
-            <div v-if="isOpen('posecam:p' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('posecam:p' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -549,14 +547,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredPosecam.length === 0" class="suli-muted">姿态速查无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredPosecam.length === 0" class="suli-muted">姿态速查无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>易混辨析 <small>Confusable Terms {{ filteredConfused.length }} 卡</small></h3>
-        <div class="tip suli-muted">最常写错的词组对照。整卡可点开区别与选用。</div>
         <div class="card-grid">
           <div
             v-for="(r, ri) in filteredConfused"
@@ -571,10 +569,11 @@
               <div class="pills"><el-tag size="small" effect="plain">易混辨析</el-tag></div>
               <div class="t-note">{{ r[3] }}</div>
             </div>
-            <div v-if="isOpen('confused:' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('confused:' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -610,14 +609,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredConfused.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredConfused.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>避雷清单 <small>Prompt Pitfalls {{ filteredPitfalls.length }} 卡</small></h3>
-        <div class="tip suli-muted">出图前 30 秒自检。整卡可点开正确做法。</div>
         <div class="card-grid">
           <div
             v-for="(r, ri) in filteredPitfalls"
@@ -632,10 +631,11 @@
               <div class="pills"><el-tag size="small" effect="plain">避雷清单</el-tag></div>
               <div class="t-note">{{ r[2] }}</div>
             </div>
-            <div v-if="isOpen('pitfall:' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('pitfall:' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -671,14 +671,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredPitfalls.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredPitfalls.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>黑话焚诀 <small>Community Cheat Codes</small></h3>
-        <div class="tip suli-muted">社区黑话与实战数据。整卡可点开详情复制。</div>
         <h4 class="subh">黑话 → 手册对照 {{ filteredJargon.length }} 卡</h4>
         <div class="card-grid">
           <div
@@ -694,10 +694,11 @@
               <div class="pills"><el-tag size="small" effect="plain">黑话对照</el-tag></div>
               <div class="t-note">{{ r[2] }}</div>
             </div>
-            <div v-if="isOpen('jargon:j' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('jargon:j' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -733,9 +734,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredJargon.length === 0" class="suli-muted">黑话对照无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredJargon.length === 0" class="suli-muted">黑话对照无命中。</p>
         <h4 class="subh">社区词频榜 {{ filteredFreq.length }} 卡</h4>
         <div class="card-grid">
           <div
@@ -751,10 +753,11 @@
               <div class="pills"><el-tag size="small" effect="plain">词频榜</el-tag></div>
               <div class="t-note">{{ r[2] }}</div>
             </div>
-            <div v-if="isOpen('freq:f' + ri)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('freq:f' + ri)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -790,9 +793,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredFreq.length === 0" class="suli-muted">词频榜无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredFreq.length === 0" class="suli-muted">词频榜无命中。</p>
         <h4 class="subh">焚诀卡 {{ filteredCheats.length }} 卡</h4>
         <div class="card-grid">
           <div
@@ -808,10 +812,11 @@
               <div class="pills"><el-tag size="small" effect="plain">焚诀卡</el-tag></div>
               <div class="t-note">{{ c.note }}</div>
             </div>
-            <div v-if="isOpen('cheat:' + c.zh)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('cheat:' + c.zh)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -847,9 +852,10 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredCheats.length === 0" class="suli-muted">焚诀卡无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredCheats.length === 0" class="suli-muted">焚诀卡无命中。</p>
         <h4 class="subh">描改模板 {{ filteredTrace.length }} 卡</h4>
         <div class="card-grid">
           <div
@@ -865,10 +871,11 @@
               <div class="pills"><el-tag size="small" effect="plain">描改模板</el-tag></div>
               <div class="t-note">{{ c.note }}</div>
             </div>
-            <div v-if="isOpen('trace:' + c.zh)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('trace:' + c.zh)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -904,14 +911,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredTrace.length === 0" class="suli-muted">描改模板无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredTrace.length === 0" class="suli-muted">描改模板无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>名词案例 <small>Term Examples {{ filteredGloss.length }} 卡</small></h3>
-        <div class="tip suli-muted">词表式与自然语言式对照。整卡可点开详情复制。</div>
         <div class="card-grid">
           <div
             v-for="g in filteredGloss"
@@ -926,10 +933,11 @@
               <div class="pills"><el-tag size="small" effect="plain">名词案例</el-tag></div>
               <div class="t-note">{{ g.cn || g.en }}</div>
             </div>
-            <div v-if="isOpen('gloss:' + g.zh + g.tag)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('gloss:' + g.zh + g.tag)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -965,14 +973,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredGloss.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredGloss.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>工具句 <small>防裁切 · 保险 {{ filteredTools.length }} 卡</small></h3>
-        <div class="tip suli-muted">单独复制使用（不进组合栏），每次出图的安全带。整卡可点开详情复制。</div>
         <div class="card-grid">
           <div
             v-for="(t, ti) in filteredTools"
@@ -987,10 +995,11 @@
               <div class="pills"><el-tag size="small" effect="plain">工具句</el-tag></div>
               <div class="t-note">{{ t[2] }}</div>
             </div>
-            <div v-if="isOpen('tool:' + ti)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('tool:' + ti)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -1026,14 +1035,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredTools.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredTools.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
       <section class="suli-card block">
         <h3>教学资源 <small>External Guides {{ filteredRes.length }} 卡</small></h3>
-        <div class="tip suli-muted">公开教程与外链库。整卡可点开详情，新窗口打开原文。</div>
         <div class="card-grid">
           <div
             v-for="r in filteredRes"
@@ -1048,10 +1057,11 @@
               <div class="pills"><el-tag size="small" effect="plain">{{ r.lang }}</el-tag></div>
               <div class="t-note">{{ r.note }}</div>
             </div>
-            <div v-if="isOpen('res:' + r.url)" class="detail-block" @click.stop>
+            <el-dialog append-to-body :model-value="isOpen('res:' + r.url)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+              <div class="detail-block" @click.stop>
               <div v-if="detail" class="dlg">
                 <div class="detail-cols">
-                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia" />
+                  <div v-if="detail.dia" class="dlg-cover" v-html="detail.dia"></div>
                   <div class="detail-main">
                     <div class="pills"><el-tag size="small" effect="plain">{{ detail.secTitle }}</el-tag></div>
                     <div class="row"><span class="k">英文</span><pre class="suli-pre mono">{{ detail.en }}</pre></div>
@@ -1087,18 +1097,14 @@
                 </div>
               </div>
             </div>
-          </div>
+        </el-dialog>
         </div>
-        <p v-if="filteredRes.length === 0" class="suli-muted">本小节无命中。</p>
+        </div>
+        <p v-if<p v-if="filteredRes.length === 0" class="suli-muted">本小节无命中。</p>
       </section>
 
 
 
-    <p class="foot suli-muted">
-      用法：STEP2 定机位时先按「情绪→机位速查」选组合，再从各分区点卡片拼出镜头句，贴进 prompt 的 camera 段。<br />
-      实战规则（fx 已验证）：平视 + 斜切双叠加脸必歪；俯视 + 斜切 15° 可用；半身必带防裁切正句 + negative 配对；每次至少用 2 个构图法并写清留白里是什么。<br />
-      出图验证后若发现某词不灵 / 偏义，把结论告诉我，我改这里的词条。
-    </p>
   </div>
 </template>
 
@@ -4550,9 +4556,6 @@ async function copyAllLine(): Promise<void> {
   border-radius: 4px;
   font-size: 13px;
   font-family: Consolas, monospace;
-}
-.intro-tip {
-  margin-top: 8px;
 }
 .search {
   max-width: 300px;

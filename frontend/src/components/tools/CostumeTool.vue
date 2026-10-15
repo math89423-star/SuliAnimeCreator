@@ -23,7 +23,7 @@
               @close="removeFromSlot(s.k, i)"
             >{{ c.tag }}</el-tag>
           </template>
-          <span v-if="isEmpty" class="suli-muted tray-empty">—— 还没选，点下面卡片</span>
+          <span v-if="isEmpty" class="suli-muted tray-empty">还没选</span>
         </span>
         <el-button type="primary" size="small" @click="onCopyOutfit">复制成套 prompt</el-button>
         <el-button size="small" @click="onCopyPoint">复制指向句</el-button>
@@ -52,7 +52,6 @@
           size="small"
           class="tray-search"
         />
-        <span class="suli-muted tray-hint">点卡片看详情（说明/搭配/风险），详情里复制 tag 并进槽位</span>
       </div>
       </template>
     </div>
@@ -65,7 +64,21 @@
         :class="{ picked: c.picked, open: isOpen(c.key) }"
         @click="toggleDetail(c.key)"
       >
-        <div class="cover">{{ c.cover }}</div>
+        <div v-if="c.styleIdx >= 0 && styleImgOk[c.styleIdx]" class="style-photo">
+          <img
+            :src="styles[c.styleIdx].img || ''" :alt="c.zh" loading="lazy"
+            @error="styleImgOk[c.styleIdx] = false"
+          />
+        </div>
+        <div v-else-if="itemImg(c) && itemImgOk[c.key] !== false" class="style-photo">
+          <img
+            :src="itemImg(c)" :alt="c.zh" loading="lazy"
+            @error="itemImgOk[c.key] = false"
+          />
+        </div>
+        <div v-else class="cover">
+          <span>{{ c.cover }}</span>
+        </div>
         <div class="zh">{{ c.zh }}</div>
         <div class="en muted">{{ c.en }}</div>
         <div class="tag-list">
@@ -73,9 +86,22 @@
           <el-tag v-if="c.tag" size="small" class="mono-tag">{{ shortTag(c.tag) }}</el-tag>
         </div>
         <div class="suli-muted note">{{ c.summary }}</div>
-        <div v-if="isOpen(c.key)" class="detail-block">
+        <el-dialog append-to-body :model-value="isOpen(c.key)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+          <div class="detail-block">
           <div class="detail-cols">
-            <div class="dlg-cover">{{ c.cover }}</div>
+            <div class="dlg-cover">
+              <img
+                v-if="c.styleIdx >= 0 && styleImgOk[c.styleIdx]"
+                :src="styles[c.styleIdx].img || ''" :alt="c.zh" loading="lazy"
+                @error="styleImgOk[c.styleIdx] = false"
+              />
+              <img
+                v-else-if="itemImg(c) && itemImgOk[c.key] !== false"
+                :src="itemImg(c)" :alt="c.zh" loading="lazy"
+                @error="itemImgOk[c.key] = false"
+              />
+              <span v-else>{{ c.cover }}</span>
+            </div>
             <div>
               <div class="suli-muted">{{ c.en }} ｜ {{ c.cat }}</div>
               <div v-if="c.tag" class="dlg-tags">
@@ -100,16 +126,15 @@
             </div>
           </div>
         </div>
+        </el-dialog>
       </div>
     </div>
     <p v-if="!filtered.length" class="suli-muted empty">无匹配，换关键词或清空筛选。</p>
-
-    <p class="suli-muted intro-line">风格包定「像什么」，单品定「穿什么」；S1-3b 先出选型单再定样。配色查配色工具，构图查构图工具。</p>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { copyText } from '../../utils/clipboard'
@@ -121,6 +146,7 @@ interface StylePack {
   desc: string
   pair: string
   risk: string
+  img?: string
 }
 
 interface CostumeItem {
@@ -188,6 +214,216 @@ const styles: StylePack[] = [
   { zh: '魔法幻想', en: 'fantasy', tags: ['witch hat', 'cape', 'staff', 'floating', 'magic'], desc: '女巫法师：斗篷尖帽杖，神秘感', pair: '斗篷定剪影，帽子定职业；配饰留一件魔法物', risk: '魔法特效留给光影阶段，服装阶段不写' },
   { zh: '中式', en: 'chinese clothes', tags: ['china dress', 'hanfu', 'wide sleeves', 'tassel', 'hair ornament'], desc: '旗袍或汉服，立领盘扣流苏', pair: '旗袍走窄轮廓、汉服走大袖；配发簪', risk: '刺绣细纹易崩，写大图案或素面' },
 ]
+// 流派配图：public/tools/costume/<idx>.jpg（Safebooru solo 示例，脚本补全，缺图自动回退首字）
+styles.forEach((s, i) => { s.img = `/tools/costume/${i}.jpg` })
+const styleImgOk: Ref<boolean[]> = ref(styles.map(() => true))
+
+// 单品配图：public/tools/costume/items/<file>.jpg（Safebooru solo 示例，脚本补全，缺图自动回退首字）
+// 键 = CardItem.key（'item-'+group+'-'+zh+'-'+tag），198 件全量已补
+const ITEM_IMGS: Record<string, string> = {
+  'item-上装 · 外搭-西装外套-blazer': '/tools/costume/items/item_000.jpg',
+  'item-上装 · 外搭-西装马甲-waistcoat': '/tools/costume/items/item_001.jpg',
+  'item-上装 · 外搭-皮夹克-leather jacket': '/tools/costume/items/item_002.jpg',
+  'item-上装 · 外搭-牛仔夹克-denim jacket': '/tools/costume/items/item_003.jpg',
+  'item-上装 · 外搭-飞行员夹克-bomber jacket': '/tools/costume/items/item_004.jpg',
+  'item-上装 · 外搭-军装大衣-peacoat': '/tools/costume/items/item_005.jpg',
+  'item-上装 · 外搭-风衣-trench coat': '/tools/costume/items/item_006.jpg',
+  'item-上装 · 外搭-羊毛大衣-winter coat': '/tools/costume/items/item_007.jpg',
+  'item-上装 · 外搭-斗篷-cape': '/tools/costume/items/item_008.jpg',
+  'item-上装 · 外搭-短披肩-capelet': '/tools/costume/items/item_009.jpg',
+  'item-上装 · 外搭-连帽斗篷-hooded cape': '/tools/costume/items/item_010.jpg',
+  'item-上装 · 外搭-针织披肩-shawl': '/tools/costume/items/item_011.jpg',
+  'item-上装 · 外搭-羽织-haori': '/tools/costume/items/item_012.jpg',
+  'item-上装 · 外搭-实验室白袍-labcoat': '/tools/costume/items/item_013.jpg',
+  'item-上装 · 外搭-双排扣西装-double-breasted jacket': '/tools/costume/items/item_014.jpg',
+  'item-上装 · 内搭-白衬衫-white shirt': '/tools/costume/items/item_015.jpg',
+  'item-上装 · 内搭-水手领衬衫-sailor collar, shirt': '/tools/costume/items/item_016.jpg',
+  'item-上装 · 内搭-彼得潘领-peter pan collar': '/tools/costume/items/item_017.jpg',
+  'item-上装 · 内搭-立领衬衫-high collar, shirt': '/tools/costume/items/item_018.jpg',
+  'item-上装 · 内搭-高领衫-turtleneck': '/tools/costume/items/item_019.jpg',
+  'item-上装 · 内搭-V领上衣-v-neck': '/tools/costume/items/item_020.jpg',
+  'item-上装 · 内搭-露肩衬衫-off shoulder, shirt': '/tools/costume/items/item_021.jpg',
+  'item-上装 · 内搭-蕾丝衬衫-lace, shirt': '/tools/costume/items/item_022.jpg',
+  'item-上装 · 内搭-泡泡袖衬衫-puffy sleeves, shirt': '/tools/costume/items/item_023.jpg',
+  'item-上装 · 内搭-荷叶边衬衫-frilled shirt': '/tools/costume/items/item_024.jpg',
+  'item-上装 · 内搭-飘带衬衫-ribbon, shirt': '/tools/costume/items/item_025.jpg',
+  'item-上装 · 内搭-针织衫-sweater': '/tools/costume/items/item_026.jpg',
+  'item-上装 · 内搭-针织开衫-cardigan': '/tools/costume/items/item_027.jpg',
+  'item-上装 · 内搭-针织马甲-sweater vest': '/tools/costume/items/item_028.jpg',
+  'item-上装 · 内搭-卫衣-hoodie': '/tools/costume/items/item_029.jpg',
+  'item-上装 · 内搭-T恤-t-shirt': '/tools/costume/items/item_030.jpg',
+  'item-上装 · 内搭-条纹衫-striped shirt': '/tools/costume/items/item_031.jpg',
+  'item-上装 · 内搭-吊带背心-camisole': '/tools/costume/items/item_032.jpg',
+  'item-上装 · 内搭-无袖背心-tank top': '/tools/costume/items/item_033.jpg',
+  'item-上装 · 内搭-制服衬衫-dress shirt': '/tools/costume/items/item_034.jpg',
+  'item-连衣裙 · 连体-A字连衣裙-a-line dress': '/tools/costume/items/item_035.jpg',
+  'item-连衣裙 · 连体-衬衫裙-long shirt': '/tools/costume/items/item_036.jpg',
+  'item-连衣裙 · 连体-背心裙-suspender skirt': '/tools/costume/items/item_037.jpg',
+  'item-连衣裙 · 连体-针织连衣裙-sweater dress': '/tools/costume/items/item_038.jpg',
+  'item-连衣裙 · 连体-吊带连衣裙-sundress': '/tools/costume/items/item_039.jpg',
+  'item-连衣裙 · 连体-蛋糕裙-frilled dress': '/tools/costume/items/item_040.jpg',
+  'item-连衣裙 · 连体-蓬蓬裙-petticoat': '/tools/costume/items/item_041.jpg',
+  'item-连衣裙 · 连体-洛丽塔裙-lolita fashion, dress': '/tools/costume/items/item_042.jpg',
+  'item-连衣裙 · 连体-JSK 吊带洛丽塔-suspender skirt, lolita fashion': '/tools/costume/items/item_043.jpg',
+  'item-连衣裙 · 连体-晚礼服-evening gown': '/tools/costume/items/item_044.jpg',
+  'item-连衣裙 · 连体-婚纱-wedding dress': '/tools/costume/items/item_045.jpg',
+  'item-连衣裙 · 连体-旗袍-china dress': '/tools/costume/items/item_046.jpg',
+  'item-连衣裙 · 连体-汉服-hanfu, wide sleeves': '/tools/costume/items/item_047.jpg',
+  'item-连衣裙 · 连体-女仆装-maid, apron': '/tools/costume/items/item_048.jpg',
+  'item-连衣裙 · 连体-护士服-nurse, nurse cap': '/tools/costume/items/item_049.jpg',
+  'item-连衣裙 · 连体-巫女服-miko, hakama': '/tools/costume/items/item_050.jpg',
+  'item-和服 · 长袍-和服-kimono': '/tools/costume/items/item_051.jpg',
+  'item-和服 · 长袍-浴衣-yukata': '/tools/costume/items/item_052.jpg',
+  'item-和服 · 长袍-振袖-furisode': '/tools/costume/items/item_053.jpg',
+  'item-和服 · 长袍-羽织袴-hakama, haori': '/tools/costume/items/item_054.jpg',
+  'item-和服 · 长袍-甚平-jinbei': '/tools/costume/items/item_055.jpg',
+  'item-和服 · 长袍-作务衣-japanese clothes': '/tools/costume/items/item_056.jpg',
+  'item-和服 · 长袍-道袍-robe': '/tools/costume/items/item_057.jpg',
+  'item-和服 · 长袍-法袍-robe': '/tools/costume/items/item_058.jpg',
+  'item-下装-百褶裙-pleated skirt': '/tools/costume/items/item_059.jpg',
+  'item-下装-刀褶裙-pleated skirt': '/tools/costume/items/item_060.jpg',
+  'item-下装-迷你裙-miniskirt': '/tools/costume/items/item_061.jpg',
+  'item-下装-背带裙-suspender skirt': '/tools/costume/items/item_062.jpg',
+  'item-下装-鱼尾裙-long skirt': '/tools/costume/items/item_063.jpg',
+  'item-下装-包臀裙-pencil skirt': '/tools/costume/items/item_064.jpg',
+  'item-下装-牛仔短裤-denim shorts': '/tools/costume/items/item_065.jpg',
+  'item-下装-百褶短裤-pleated shorts': '/tools/costume/items/item_066.jpg',
+  'item-下装-工装裤-cargo pants': '/tools/costume/items/item_067.jpg',
+  'item-下装-西装长裤-pants': '/tools/costume/items/item_068.jpg',
+  'item-下装-连体裤-jumpsuit': '/tools/costume/items/item_069.jpg',
+  'item-下装-背带裤-overalls': '/tools/costume/items/item_070.jpg',
+  'item-袜装 · 腿部-短袜-ankle socks': '/tools/costume/items/item_071.jpg',
+  'item-袜装 · 腿部-中筒袜-kneehighs': '/tools/costume/items/item_072.jpg',
+  'item-袜装 · 腿部-过膝袜-over-kneehighs': '/tools/costume/items/item_073.jpg',
+  'item-袜装 · 腿部-大腿袜-thighhighs': '/tools/costume/items/item_074.jpg',
+  'item-袜装 · 腿部-松垮袜-loose socks': '/tools/costume/items/item_075.jpg',
+  'item-袜装 · 腿部-条纹袜-striped socks': '/tools/costume/items/item_076.jpg',
+  'item-袜装 · 腿部-连裤袜-pantyhose': '/tools/costume/items/item_077.jpg',
+  'item-袜装 · 腿部-厚黑丝-black pantyhose': '/tools/costume/items/item_078.jpg',
+  'item-袜装 · 腿部-网袜-fishnet stockings': '/tools/costume/items/item_079.jpg',
+  'item-袜装 · 腿部-吊带袜-garter belt, thighhighs': '/tools/costume/items/item_080.jpg',
+  'item-袜装 · 腿部-腿环-thigh strap': '/tools/costume/items/item_081.jpg',
+  'item-袜装 · 腿部-袜套-leg warmers': '/tools/costume/items/item_082.jpg',
+  'item-袜装 · 腿部-赤足裸腿-bare legs': '/tools/costume/items/item_083.jpg',
+  'item-鞋-乐福鞋-loafers': '/tools/costume/items/item_084.jpg',
+  'item-鞋-玛丽珍-mary janes': '/tools/costume/items/item_085.jpg',
+  'item-鞋-室内鞋-uwabaki': '/tools/costume/items/item_086.jpg',
+  'item-鞋-厚底鞋-platform shoes': '/tools/costume/items/item_087.jpg',
+  'item-鞋-高跟鞋-high heels': '/tools/costume/items/item_088.jpg',
+  'item-鞋-短靴-ankle boots': '/tools/costume/items/item_089.jpg',
+  'item-鞋-长靴-knee boots': '/tools/costume/items/item_090.jpg',
+  'item-鞋-系带长靴-lace-up boots': '/tools/costume/items/item_091.jpg',
+  'item-鞋-运动鞋-sneakers': '/tools/costume/items/item_092.jpg',
+  'item-鞋-凉鞋-sandals': '/tools/costume/items/item_093.jpg',
+  'item-鞋-木屐-geta': '/tools/costume/items/item_094.jpg',
+  'item-鞋-草履-zouri': '/tools/costume/items/item_095.jpg',
+  'item-鞋-足袋-tabi': '/tools/costume/items/item_096.jpg',
+  'item-头部 · 发饰-发带-hairband': '/tools/costume/items/item_097.jpg',
+  'item-头部 · 发饰-丝带发饰-hair ribbon': '/tools/costume/items/item_098.jpg',
+  'item-头部 · 发饰-大蝴蝶结-hair bow': '/tools/costume/items/item_099.jpg',
+  'item-头部 · 发饰-发夹-hairclip': '/tools/costume/items/item_100.jpg',
+  'item-头部 · 发饰-蕾丝发带-lace headband': '/tools/costume/items/item_101.jpg',
+  'item-头部 · 发饰-发圈-scrunchie': '/tools/costume/items/item_102.jpg',
+  'item-头部 · 发饰-花朵发饰-hair flower': '/tools/costume/items/item_103.jpg',
+  'item-头部 · 发饰-发簪-hair stick': '/tools/costume/items/item_104.jpg',
+  'item-头部 · 发饰-兽耳发饰-animal ears, hairband': '/tools/costume/items/item_105.jpg',
+  'item-头部 · 发饰-头纱-veil': '/tools/costume/items/item_106.jpg',
+  'item-头部 · 发饰-贝雷帽-beret': '/tools/costume/items/item_107.jpg',
+  'item-头部 · 发饰-报童帽-newsboy cap': '/tools/costume/items/item_108.jpg',
+  'item-头部 · 发饰-宽檐帽-sun hat': '/tools/costume/items/item_109.jpg',
+  'item-头部 · 发饰-女巫帽-witch hat': '/tools/costume/items/item_110.jpg',
+  'item-头部 · 发饰-护士帽-nurse cap': '/tools/costume/items/item_111.jpg',
+  'item-头部 · 发饰-空乘帽-pillbox hat': '/tools/costume/items/item_112.jpg',
+  'item-面部 · 耳部-眼镜-glasses': '/tools/costume/items/item_113.jpg',
+  'item-面部 · 耳部-墨镜-sunglasses': '/tools/costume/items/item_114.jpg',
+  'item-面部 · 耳部-单片眼镜-monocle': '/tools/costume/items/item_115.jpg',
+  'item-面部 · 耳部-眼罩-eyepatch': '/tools/costume/items/item_116.jpg',
+  'item-面部 · 耳部-耳钉-earrings': '/tools/costume/items/item_117.jpg',
+  'item-面部 · 耳部-耳环-hoop earrings': '/tools/costume/items/item_118.jpg',
+  'item-面部 · 耳部-耳坠-tassel earrings': '/tools/costume/items/item_119.jpg',
+  'item-面部 · 耳部-口罩-mask': '/tools/costume/items/item_120.jpg',
+  'item-面部 · 耳部-唇彩-lipstick': '/tools/costume/items/item_121.jpg',
+  'item-面部 · 耳部-腮红-blush': '/tools/costume/items/item_122.jpg',
+  'item-颈部 · 胸肩-项圈-choker': '/tools/costume/items/item_123.jpg',
+  'item-颈部 · 胸肩-丝带颈饰-ribbon choker': '/tools/costume/items/item_124.jpg',
+  'item-颈部 · 胸肩-十字架项链-cross necklace': '/tools/costume/items/item_125.jpg',
+  'item-颈部 · 胸肩-珍珠项链-pearl necklace': '/tools/costume/items/item_126.jpg',
+  'item-颈部 · 胸肩-领结-bowtie': '/tools/costume/items/item_127.jpg',
+  'item-颈部 · 胸肩-领带-necktie': '/tools/costume/items/item_128.jpg',
+  'item-颈部 · 胸肩-领巾-neckerchief': '/tools/costume/items/item_129.jpg',
+  'item-颈部 · 胸肩-围巾-scarf': '/tools/costume/items/item_130.jpg',
+  'item-颈部 · 胸肩-胸针-brooch': '/tools/costume/items/item_131.jpg',
+  'item-颈部 · 胸肩-肩章-epaulettes': '/tools/costume/items/item_132.jpg',
+  'item-颈部 · 胸肩-肩上搭外套-jacket on shoulders': '/tools/costume/items/item_133.jpg',
+  'item-腰部 · 手部-腰带-belt': '/tools/costume/items/item_134.jpg',
+  'item-腰部 · 手部-腰封-corset': '/tools/costume/items/item_135.jpg',
+  'item-腰部 · 手部-蝴蝶结腰带-belt bow': '/tools/costume/items/item_136.jpg',
+  'item-腰部 · 手部-链条腰带-chain belt': '/tools/costume/items/item_137.jpg',
+  'item-腰部 · 手部-背带-suspenders': '/tools/costume/items/item_138.jpg',
+  'item-腰部 · 手部-绑带腰具-harness': '/tools/costume/items/item_139.jpg',
+  'item-腰部 · 手部-手套-gloves': '/tools/costume/items/item_140.jpg',
+  'item-腰部 · 手部-指虎手套-fingerless gloves': '/tools/costume/items/item_141.jpg',
+  'item-腰部 · 手部-长手套-elbow gloves': '/tools/costume/items/item_142.jpg',
+  'item-腰部 · 手部-袖套-detached sleeves': '/tools/costume/items/item_143.jpg',
+  'item-腰部 · 手部-臂环-armlet': '/tools/costume/items/item_144.jpg',
+  'item-腰部 · 手部-袖口花边-wrist cuffs': '/tools/costume/items/item_145.jpg',
+  'item-腰部 · 手部-手链-bracelet': '/tools/costume/items/item_146.jpg',
+  'item-腰部 · 手部-戒指-ring': '/tools/costume/items/item_147.jpg',
+  'item-布艺 · 装饰-蕾丝-lace': '/tools/costume/items/item_148.jpg',
+  'item-布艺 · 装饰-荷叶边-frills': '/tools/costume/items/item_149.jpg',
+  'item-布艺 · 装饰-荷叶袖-ruffles, sleeves': '/tools/costume/items/item_150.jpg',
+  'item-布艺 · 装饰-缎带-ribbon': '/tools/costume/items/item_151.jpg',
+  'item-布艺 · 装饰-蝴蝶结-bow': '/tools/costume/items/item_152.jpg',
+  'item-布艺 · 装饰-绗缝-quilted clothes': '/tools/costume/items/item_153.jpg',
+  'item-布艺 · 装饰-绒球-pom pom (clothes)': '/tools/costume/items/item_154.jpg',
+  'item-布艺 · 装饰-穗子-tassel': '/tools/costume/items/item_155.jpg',
+  'item-布艺 · 装饰-刺绣-embroidery': '/tools/costume/items/item_156.jpg',
+  'item-布艺 · 装饰-拼接-patchwork': '/tools/costume/items/item_157.jpg',
+  'item-金属 · 宝石-链条-chains': '/tools/costume/items/item_158.jpg',
+  'item-金属 · 宝石-铆钉-studs': '/tools/costume/items/item_159.jpg',
+  'item-金属 · 宝石-宝石-jewelry': '/tools/costume/items/item_160.jpg',
+  'item-金属 · 宝石-珍珠-pearls': '/tools/costume/items/item_161.jpg',
+  'item-金属 · 宝石-金饰-gold, jewelry': '/tools/costume/items/item_162.jpg',
+  'item-金属 · 宝石-银饰-silver, jewelry': '/tools/costume/items/item_163.jpg',
+  'item-幻想 · 战斗-肩甲-pauldrons': '/tools/costume/items/item_164.jpg',
+  'item-幻想 · 战斗-护腕-bracer': '/tools/costume/items/item_165.jpg',
+  'item-幻想 · 战斗-披风-cloak': '/tools/costume/items/item_166.jpg',
+  'item-幻想 · 战斗-腰带包-waist bag': '/tools/costume/items/item_167.jpg',
+  'item-幻想 · 战斗-刀鞘-scabbard': '/tools/costume/items/item_168.jpg',
+  'item-幻想 · 战斗-法杖-staff': '/tools/costume/items/item_169.jpg',
+  'item-幻想 · 战斗-翅膀-wings': '/tools/costume/items/item_170.jpg',
+  'item-幻想 · 战斗-尾巴-tail': '/tools/costume/items/item_171.jpg',
+  'item-幻想 · 战斗-光环-halo': '/tools/costume/items/item_172.jpg',
+  'item-季候 · 功能-书包-school bag': '/tools/costume/items/item_173.jpg',
+  'item-季候 · 功能-单肩包-shoulder bag': '/tools/costume/items/item_174.jpg',
+  'item-季候 · 功能-手提包-handbag': '/tools/costume/items/item_175.jpg',
+  'item-季候 · 功能-雨伞-umbrella': '/tools/costume/items/item_176.jpg',
+  'item-季候 · 功能-耳机-headphones': '/tools/costume/items/item_177.jpg',
+  'item-季候 · 功能-手套围巾组合-mittens': '/tools/costume/items/item_178.jpg',
+  'item-季候 · 功能-圣诞帽-santa hat': '/tools/costume/items/item_179.jpg',
+  'item-季候 · 功能-祭典面具-fox mask': '/tools/costume/items/item_180.jpg',
+  'item-季候 · 功能-眼镜链-eyewear strap': '/tools/costume/items/item_181.jpg',
+  'item-材质 · 纹理-丝绒-velvet': '/tools/costume/items/item_182.jpg',
+  'item-材质 · 纹理-缎面-satin': '/tools/costume/items/item_183.jpg',
+  'item-材质 · 纹理-皮革-leather': '/tools/costume/items/item_184.jpg',
+  'item-材质 · 纹理-牛仔-denim': '/tools/costume/items/item_185.jpg',
+  'item-材质 · 纹理-丝绸-silk': '/tools/costume/items/item_186.jpg',
+  'item-材质 · 纹理-羊毛-wool': '/tools/costume/items/item_187.jpg',
+  'item-材质 · 纹理-网眼-mesh': '/tools/costume/items/item_188.jpg',
+  'item-材质 · 纹理-漆皮-leather': '/tools/costume/items/item_189.jpg',
+  'item-材质 · 纹理-羽绒-down jacket': '/tools/costume/items/item_190.jpg',
+  'item-材质 · 纹理-亮片-sequins': '/tools/costume/items/item_191.jpg',
+  'item-下装-高腰裙-high-waisted skirt': '/tools/costume/items/item_192.jpg',
+  'item-鞋-帆布鞋-canvas shoes': '/tools/costume/items/item_193.jpg',
+  'item-颈部 · 胸肩-吊坠项链-pendant necklace': '/tools/costume/items/item_194.jpg',
+  'item-布艺 · 装饰-褶皱-pleats': '/tools/costume/items/item_195.jpg',
+  'item-金属 · 宝石-金属扣-buckles': '/tools/costume/items/item_196.jpg',
+  'item-金属 · 宝石-别针-safety pins': '/tools/costume/items/item_197.jpg',
+}
+const itemImgOk = reactive<Record<string, boolean>>({})
+function itemImg(c: { key: string }): string {
+  return ITEM_IMGS[c.key] || ''
+}
 
 const groups: CostumeGroup[] = [
   { group: '上装 · 内搭', sub: '衬衫 / 上衣', items: [
@@ -648,9 +884,6 @@ function onClearAll(): void {
   width: 220px;
   max-width: 100%;
 }
-.tray-hint {
-  font-size: 12.5px;
-}
 .tray-empty {
   font-size: 12.5px;
 }
@@ -665,11 +898,6 @@ function onClearAll(): void {
 .count {
   font-size: 12.5px;
   margin-left: auto;
-}
-.intro-line {
-  margin: 12px 2px 0;
-  font-size: 12.5px;
-  line-height: 1.7;
 }
 .grid {
   display: grid;
@@ -692,7 +920,6 @@ function onClearAll(): void {
   box-shadow: 0 0 0 2px rgba(251, 114, 153, 0.35);
 }
 .tool-card.open {
-  grid-column: span 2;
   border-color: var(--suli-primary, #FB7299);
 }
 .detail-block {
@@ -702,8 +929,9 @@ function onClearAll(): void {
 }
 .detail-cols {
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 12px;
+  grid-template-columns: 300px 1fr;
+  gap: 16px;
+  align-items: start;
 }
 @media (max-width: 640px) {
   .detail-cols {
@@ -728,7 +956,12 @@ function onClearAll(): void {
   color: #fff;
   background: linear-gradient(135deg, #FB7299, #f9a8c0);
   margin-bottom: 8px;
+  overflow: hidden;
+  flex: none;
 }
+.cover img { width: 100%; height: 100%; object-fit: cover; }
+.style-photo { margin: -2px -2px 8px; border-radius: 10px; overflow: hidden; aspect-ratio: 16/10; background: var(--suli-bg-2, #f4f4f5); }
+.style-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .en.muted {
   font-size: 12px;
   color: var(--suli-text-2);
@@ -740,18 +973,22 @@ function onClearAll(): void {
   font-size: 13px;
 }
 .dlg-cover {
-  width: 52px;
-  height: 52px;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 54vh;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 64px;
   font-weight: 700;
   color: #fff;
   background: linear-gradient(135deg, #FB7299, #f9a8c0);
   margin-bottom: 10px;
+  overflow: hidden;
+  flex: none;
 }
+.dlg-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .dlg-tags {
   margin: 8px 0;
   display: flex;

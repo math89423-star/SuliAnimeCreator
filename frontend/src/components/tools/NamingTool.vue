@@ -1,9 +1,5 @@
 <template>
   <div class="naming-tool">
-    <p class="suli-muted intro">
-      顶部是随机组合台：勾选气质后一键摇出中文 / 英文候选。下方是字库、名库、词根、音韵、避雷全套素材，点击任意卡片即复制。定名前记得念出来做语音转文字验证。
-    </p>
-
     <!-- 随机组合台 -->
     <div class="suli-card gen-card">
       <div class="suli-muted row-label">气质筛选</div>
@@ -51,7 +47,6 @@
           <span v-if="!tipCands.length" class="suli-muted empty">待摇</span>
         </div>
       </div>
-      <p class="suli-muted hint">点候选复制单个；点下方任意卡片复制对应内容。</p>
     </div>
 
     <!-- 素材搜索托盘 -->
@@ -66,7 +61,6 @@
       <div class="chips">
         <el-tag v-for="c in cats" :key="c" :effect="active === c ? 'dark' : 'plain'" class="chip" @click="active = c">{{ c }}</el-tag>
       </div>
-      <p class="suli-muted hint">整卡可点开详情；详情里可复制或加入组合台。分组只做角标 chip + 上方筛选，不再分组折叠。</p>
       </template>
     </div>
 
@@ -77,7 +71,8 @@
         <div class="title-row"><span class="zh">{{ it.title }}</span><span v-if="it.en" class="en">{{ it.en }}</span></div>
         <div class="tags"><el-tag size="small" type="info">{{ it.cat }}</el-tag><el-tag v-if="it.tag" size="small">{{ it.tag }}</el-tag></div>
         <div class="summary">{{ it.summary }}</div>
-        <div v-if="isOpen(it.id)" class="detail-block" @click.stop>
+        <el-dialog append-to-body :model-value="isOpen(it.id)" @update:model-value="(v: boolean) => { if (!v) openKey = null }" width="min(880px,94vw)" destroy-on-close class="tool-dialog">
+          <div class="detail-block" @click.stop>
           <div class="detail-cols">
             <div class="detail-cover">{{ it.cover }}</div>
             <div>
@@ -95,6 +90,7 @@
             <el-button size="small" @click.stop="openKey=null">收起</el-button>
           </div>
         </div>
+        </el-dialog>
       </div>
     </div>
     <div v-else class="suli-muted empty-state">无匹配，换关键词或点清空。</div>
@@ -102,7 +98,6 @@
     <!-- 撞名自检 -->
     <div class="suli-card check-card">
       <h3>撞名自检 · 热门角色避让</h3>
-      <p class="suli-muted">输入候选名，先查内置雷区清单（{{ hotTotal }} 条），再点外链到搜索引擎复核。内置清单只是高频雷，不是全部。</p>
       <div class="check-bar">
         <el-input v-model="checkInput" placeholder="输入候选名，如：萧炎 / 苏晞 / Luna" clearable @keyup.enter="runCheck" />
         <el-button type="primary" @click="runCheck">检测</el-button>
@@ -693,7 +688,6 @@ function runCheck(): void {
   background: #fff;
   color: var(--suli-text);
 }
-.intro { margin: 0; line-height: 1.7; }
 .gen-card, .check-card { padding: 12px; }
 .gen-card { display: flex; flex-direction: column; gap: 8px; }
 .row-label { font-size: 12px; }
@@ -706,7 +700,6 @@ function runCheck(): void {
 .out-tag { cursor: pointer; }
 .out-sub { font-size: 11px; opacity: 0.75; margin-left: 4px; }
 .empty { font-size: 12px; padding-top: 4px; }
-.hint { margin: 0; font-size: 12px; }
 .ct-title { font-weight: 700; font-size: 14px; color: var(--suli-text); margin-right: 8px; }
 .pool-block { margin-bottom: 10px; }
 .subh { font-size: 13px; font-weight: 700; color: var(--suli-text); margin: 10px 0 6px; display: flex; align-items: center; gap: 8px; }

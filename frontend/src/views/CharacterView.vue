@@ -1,6 +1,5 @@
 <template>
   <div class="suli-card kun-page" style="padding:14px">
-    <div class="eyebrow kana">キャラクター CHARACTER</div>
     <h3>原创角色设计</h3>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <el-select v-model="curId" placeholder="角色" style="width:220px" @change="loadChar" :disabled="charLoading">
@@ -41,7 +40,13 @@
           <div class="worksec-head">
             <b>{{ secLabel(sec) }}</b>
             <span style="margin-left:8px"><el-radio-group v-model="attire[sec]" size="small"><el-radio-button v-for="a in attires" :key="a" :value="a">{{ a === 'dressed' ? '着装' : '无着装' }}</el-radio-button></el-radio-group></span>
-            <span class="suli-muted worksec-hint">左图右词1:1 · 右侧上中文下英文 · 图框3:4悬停放大</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
+            <span class="suli-muted" style="font-size:12px">槽位提示词出稿引擎</span>
+            <el-select v-model="imgEngine" size="small" style="width:270px">
+              <el-option v-for="m in imgModels" :key="m.key" :label="m.label" :value="m.key" />
+            </el-select>
+            <span class="suli-muted" style="font-size:12px">{{ imgModelHint }}</span>
           </div>
           <div class="slot-worklist" style="margin-top:10px">
             <div v-for="s in slots" :key="s" class="slot-card slot-workcard suli-card" style="padding:12px">
@@ -86,7 +91,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api, DIMS } from '../api/client'
 import SlotZoomImage from '../components/SlotZoomImage.vue'
@@ -103,6 +108,9 @@ const sections = ['head', 'half', 'full']
 const attires = ['undressed', 'dressed']
 const slots = ['front', 'side', 'back']
 const attire = ref<any>({ head: 'dressed', half: 'dressed', full: 'dressed' })
+const imgModels = ref<any[]>([{ key: 'novelai', label: 'NovelAI（英文 tag 轨）' }, { key: 'tsubaki3', label: 'Tsubaki.3（中文自然语言）' }, { key: 'seedream', label: 'Seedream（自然语言）' }])
+const imgEngine = ref('tsubaki3')
+const imgModelHint = computed(() => { const m = imgModels.value.find(x => x.key === imgEngine.value); return m ? (m.hint || '') : '' })
 const promptMap = ref<any>({})
 const promptCnMap = ref<any>({})
 const foldedMap = ref<Record<string, boolean>>({})
@@ -188,9 +196,9 @@ async function loadPrompts() {
   promptMap.value = m
   promptCnMap.value = mc
 }
-async function genPrompt(sec: string, s: string) { if (!curId.value) return ElMessage.warning('未选角色'); const k = kindOf(sec, attire.value[sec]); const r = await api.genSlotPrompt(curId.value, k, s); promptMap.value[`${k}|${s}`] = (r.data as any).prompt }
+async function genPrompt(sec: string, s: string) { if (!curId.value) return ElMessage.warning('未选角色'); const k = kindOf(sec, attire.value[sec]); const r = await api.genSlotPrompt(curId.value, k, s, imgEngine.value === 'novelai' ? 'novelai' : 'novelai'); promptMap.value[`${k}|${s}`] = (r.data as any).prompt }
 async function savePrompt(sec: string, s: string) { const k = kindOf(sec, attire.value[sec]); await api.saveSlotPrompt(curId.value, k, s, promptMap.value[`${k}|${s}`] || ''); ElMessage.success('已保存英文提示词') }
-async function genPromptCn(sec: string, s: string) { if (!curId.value) return ElMessage.warning('未选角色'); const k = kindOf(sec, attire.value[sec]); const r = await api.genSlotPrompt(curId.value, k, s + '_cn'); promptCnMap.value[`${k}|${s}`] = (r.data as any).prompt }
+async function genPromptCn(sec: string, s: string) { if (!curId.value) return ElMessage.warning('未选角色'); const k = kindOf(sec, attire.value[sec]); const r = await api.genSlotPrompt(curId.value, k, s + '_cn', imgEngine.value === 'novelai' ? 'tsubaki3' : imgEngine.value); promptCnMap.value[`${k}|${s}`] = (r.data as any).prompt }
 async function savePromptCn(sec: string, s: string) { const k = kindOf(sec, attire.value[sec]); await api.saveSlotPrompt(curId.value, k, s + '_cn', promptCnMap.value[`${k}|${s}`] || ''); ElMessage.success('已保存中文提示词') }
 async function doIterate() { await api.iterate(curId.value, itDim.value, itIns.value); ElMessage.success('已迭代'); await loadVersions(); vPage.reset(); const r = await api.listCharacters(); const c = (r.data as any[]).find(x => x.id === curId.value); if (c) form.value = { ...c } }
 async function loadVersions() { const r = await api.listVersions(curId.value); versions.value = r.data; vPage.reset() }
@@ -205,11 +213,18 @@ async function saveDoc() { await api.saveDoc(curId.value, docHtml.value); store.
 async function loadPack() { const r = await api.pack(curId.value); pack.value = r.data }
 async function onAvatar(e: any) { const f = e.target.files?.[0]; if (!f || !curId.value) return; api.uploadAvatar(curId.value, f).then(r => { form.value.avatar_path = (r.data as any).path; ElMessage.success('已上传') }) }
 async function onSlot(sec: string, s: string, e: any) { const f = e.target.files?.[0]; if (!f || !curId.value) return; const k = kindOf(sec, attire.value[sec]); const r = await api.uploadSlotImage(curId.value, k, s, f); imgMap.value[`${k}|${s}`] = (r.data as any).url; ElMessage.success('已上传') }
-onMounted(reloadChars)
+onMounted(async () => {
+  await reloadChars()
+  try {
+    const r = await api.imageModels()
+    const rows = (r?.data || r || []) as any[]
+    if (rows.length) imgModels.value = rows.map(x => ({ key: x.key, label: x.label, hint: x.hint || '' }))
+  } catch {}
+})
 </script>
 <style scoped>
+.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .worksec-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.worksec-hint { margin-left: auto; font-size: 12px; }
 .worksec { max-width: 1140px; margin: 0 auto 4px; }
 .slot-worklist { display: flex; flex-direction: column; gap: 12px; }
 .slot-workcard { display: flex; flex-direction: column; gap: 10px; }
@@ -232,6 +247,5 @@ onMounted(reloadChars)
   .slot-main { flex-direction: column; }
   .slot-left, .slot-right { flex: none; width: 100%; max-width: none; }
   .slot-prompt :deep(.el-textarea__inner) { min-height: 160px; }
-  .worksec-hint { margin-left: 8px; }
 }
 </style>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "NSFW Directing (Adult Single-Image Animation)"
+  short_description: "Direct adult 18+ single-image animation into H3 prompts"
+  default_prompt: "Use $nsfw-directing to direct this adult reference image into an H3 I2VA prompt at the requested tier."

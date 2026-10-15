@@ -1,1 +1,12 @@
-{"sessions": []}
+{
+  "sessions": [
+    {
+      "scope": "episode",
+      "key": "EP-81695F",
+      "dsh_session_id": "",
+      "created_at": 1792038392380,
+      "last_active": 0,
+      "note": "lazy: dsh_session_id 落在首次 run 后"
+    }
+  ]
+}

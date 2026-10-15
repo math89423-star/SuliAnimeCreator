@@ -21,9 +21,6 @@
           <span class="suli-muted">Episode</span>
           <el-input v-model="store.episodeId" style="width:110px" size="small" />
           <span v-if="store.lastSavedAt" class="suli-muted tnum hide-narrow">已保存 {{ fmtTime(store.lastSavedAt) }}</span>
-          <el-button size="small" circle title="刷新后端状态" @click="refresh"><el-icon><Refresh /></el-icon></el-button>
-          <el-button size="small" circle title="帮助" @click="store.toggleRight()"><el-icon><QuestionFilled /></el-icon></el-button>
-          <div class="user" title="本地用户"><el-icon><UserFilled /></el-icon></div>
         </div>
       </div>
       <div class="center"><router-view /><el-backtop target=".center" :bottom="70" title="回顶部" /></div>
@@ -37,30 +34,27 @@
       v-if="!store.quickRef.open" class="qr-fab" circle size="large"
       :title="store.quickRef.minimized ? ('速查：' + store.quickRef.tool) : '速查本'"
       :style="{ right: store.rightCollapsed ? '60px' : '456px' }"
-      @click="store.openQuickRef()">📖</el-button>
+      @click="store.openQuickRef()"><el-icon><Notebook /></el-icon></el-button>
   </div>
   </el-config-provider>
 </template>
 <script setup lang="ts">
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { Refresh, QuestionFilled, UserFilled } from '@element-plus/icons-vue'
+import { Notebook } from '@element-plus/icons-vue'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import LeftNav from './components/LeftNav.vue'
 import RightChat from './components/RightChat.vue'
 import QuickRef from './components/QuickRef.vue'
 import { useAppStore } from './stores/app'
+import { useSettingsStore } from './stores/settings'
 import { api } from './api/client'
 const store = useAppStore()
+const settings = useSettingsStore()
 const route = useRoute()
 function fmtTime(ts: number) {
   const d = new Date(ts)
   return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0')
-}
-async function refresh() {
-  try { store.health = (await api.health()).data; ElMessage.success('后端已接通') }
-  catch { store.health = null; ElMessage.error('后端未起：后端 python run.py ＋ 前端 npm run dev') }
 }
 async function loadProjects() {
   try {
@@ -74,19 +68,23 @@ async function newProject() {
   store.projects.unshift(r.data)
   store.projectId = r.data.id
 }
-onMounted(async () => { try { store.health = (await api.health()).data } catch {} await loadProjects() })
+onMounted(async () => {
+  try { settings.apply() } catch {}
+  store.leftCollapsed = settings.settings.leftCollapsed
+  store.rightCollapsed = settings.settings.rightCollapsed
+  if (!store.episodeId && settings.settings.defaultEpisode) store.episodeId = settings.settings.defaultEpisode
+  try { store.health = (await api.health()).data } catch {} await loadProjects() })
 </script>
 <style>
-html,body,#app{height:100%;margin:0}
-.shell{display:flex;height:100vh;background:var(--suli-bg)}
+html,body,#app{height:100%;margin:0;overflow:hidden}
+.shell{display:flex;height:100vh;max-height:100vh;overflow:hidden;background:var(--suli-bg)}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 .topbar{margin:12px 12px 0;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 .topbar-row{display:flex;gap:8px;align-items:center;width:100%}
 .topbar-steps{display:flex;gap:8px;align-items:center;width:100%;border-top:1px solid var(--suli-border);padding-top:6px}
 .topbar-steps .el-steps{flex:1}
-.center{flex:1;padding:12px 16px;overflow:auto}
+.center{flex:1;padding:12px;overflow:auto}
 .rail{width:44px;display:flex;align-items:flex-start;justify-content:center;padding-top:12px}
-.user{width:28px;height:28px;border-radius:50%;background:var(--suli-surface-2);border:1px solid var(--suli-border);display:flex;align-items:center;justify-content:center}
 .qr-fab{position:fixed;bottom:16px;z-index:1890;box-shadow:var(--suli-shadow);background:var(--suli-surface)}
 @media (max-width: 1100px) { .topbar-steps{max-width:340px} }
 @media (max-width: 900px) { .topbar-steps, .hide-narrow{display:none} }
