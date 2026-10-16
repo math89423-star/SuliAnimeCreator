@@ -9,12 +9,43 @@ from ..services.director_prompts import (
     PIXAI_MODELS, shot_images, first_image, img_url,
 )
 from ..services import repo as _repo
+from ..services.disk_store import load as _load_store, save as _save_store
 
 bp = Blueprint("director", __name__, url_prefix="/api/v1/director")
+
+_PUSH_STORE = _load_store("director_push_db.json", {"pushes": {}})
+
+
+def _ppersist():
+    _save_store("director_push_db.json", _PUSH_STORE)
 
 
 def ok(data):
     return jsonify({"code": 0, "data": data})
+
+
+def _detect_tier(ep, rows):
+    """按内容推导档位：分镜 tier 栏 → 大纲档位行。任一 nsfw 即整包 nsfw
+    （保路由到 Enhanced/Professional）；否则 sfw；都无则空。"""
+    from ..services.director_prompts.tiers import normalize_tier
+    seen = [normalize_tier((s or {}).get("tier")) for s in (rows or [])]
+    if "nsfw" in seen:
+        return "nsfw"
+    head = ((ep or {}).get("outline_md") or "")[:3000]
+    low = head.lower()
+    if "nsfw" in low or "explicit" in low or "成人向" in head:
+        return "nsfw"
+    if "sfw" in seen:
+        return "sfw"
+    if "sfw" in low or "普通" in head:
+        return "sfw"
+    return ""
+
+
+def _req_tier(raw, ep, rows):
+    """导出档位：手动传了就用（归一化），没传按内容推导。内容定稿后分级跟着内容走。"""
+    from ..services.director_prompts.tiers import normalize_tier
+    return normalize_tier(raw) or _detect_tier(ep, rows)
 
 
 @bp.post("/prompts/assemble")
@@ -150,26 +181,51 @@ def export():
     return ok(pkg)
 
 
-@bp.get("/export-bundle")
-def export_bundle():
-    """去程交付包·文件夹版（对齐 POSITIONING §2 草案形态）：一次下载一个 ZIP，
+def _resolve_bundle_project(eid, requested_project):
+    """出包/直投共用的项目归属解析：ok → (project_id, project_name, None)；
+    归属冲突 → (None, None, error_response)。"""
+    if requested_project:
+        from .projects import get_project, project_id_for_episode
+        project = get_project(requested_project)
+        if not project:
+            return None, None, (jsonify({"code": 4002, "msg": f"未知项目 {requested_project}"}), 409)
+        owner = project_id_for_episode(eid)
+        if owner and owner != project["id"]:
+            return None, None, (jsonify({"code": 4002, "msg": f"集号 {eid} 已属于项目 {owner}"}), 409)
+        return project["id"], project["name"], None
+    from .projects import project_id_for_episode, get_project
+    project_id = project_id_for_episode(eid)
+    owner = get_project(project_id) if project_id else None
+    return project_id, ((owner or {}).get("name", "") if owner else ""), None
+
+
+def _build_director_bundle(eid, cid="", project_id="", project_name="",
+                           engine="pixai", video_model="tsubaki-video",
+                           tier="", req_mode="startframe", note=""):
+    """去程交付包·文件夹版（对齐 POSITIONING §2 草案形态）：一次搬运一个 ZIP，
     内含 manifest.json + character.md/json + ref_image/ + screenplay_draft.md + outline.md +
     beats.json + shots.json + images/ + prompts/。复制即交付，sha 对不上停手。
-    query: episode_id, character_id(空=首个角色), engine=h3|pixai(默认pixai),
-           pixai_model/video_model, tier, note(方向说明,写入manifest)."""
+
+    返回 dict(pkg_id, files, manifest, missing, package_json, receipt_rows,
+              character_id, tier, req_mode)：GET /export-bundle 与 POST /push-lport 共用，
+    两处落盘字节一致（ZIP 按 sorted(files) 打包）。"""
     import io as _io
     import time as _time
     import hashlib as _hashlib
     import zipfile as _zipfile
     import datetime as _dt
+    import json as _json
     from pathlib import Path as _Path
 
-    eid = request.args.get("episode_id", "")
-    cid = request.args.get("character_id", "")
-    engine = (request.args.get("engine") or "pixai").strip() or "pixai"
-    video_model = (request.args.get("pixai_model") or request.args.get("video_model") or "tsubaki-video").strip()
-    tier = (request.args.get("tier") or "").strip()
-    note = (request.args.get("note") or "").strip()[:500]
+    engine = (engine or "pixai").strip() or "pixai"
+    video_model = (video_model or "tsubaki-video").strip()
+    tier = (tier or "").strip()
+    note = (note or "").strip()[:500]
+    # 参考方式谁定：Suli 定。按 seg 生效：页面的 ref_mode 只当默认值，
+    # build_pixai 再按模型能力（v3.x/v2.7 只认首帧）与有无额外参考图逐镜结算 eff_mode，落进 shots.json。
+    req_mode = (req_mode or "startframe").strip()
+    if req_mode not in ("startframe", "reference"):
+        req_mode = "startframe"
 
     ep = _repo.get_episode(eid)
     chars_map = _repo.chars_map()
@@ -184,6 +240,7 @@ def export_bundle():
                   key=lambda x: x.get("id", ""))
     uploads = _Path(__file__).resolve().parents[2] / "data" / "uploads"
     pkg_id = f"PKG-{eid or 'NA'}-{int(_time.time())}"
+    tier = _req_tier(tier, ep, rows)
 
     files = {}   # path -> bytes
     missing = []
@@ -204,7 +261,7 @@ def export_bundle():
         add_file("character.md",
                  f"# {character.get('name', '')} 设定\n\n" + "\n".join(
                      f"- {k}: {character.get(k, '')}" for k in dims) + "\n")
-        add_file("character.json", __import__("json").dumps({
+        add_file("character.json", _json.dumps({
             "id": character.get("id", ""), "name": character.get("name", ""),
             "avatar": character.get("avatar_path", ""),
             "dims": {k: character.get(k, "") for k in dims},
@@ -218,6 +275,24 @@ def export_bundle():
         doc_html = (docs.get(cid) or {}).get("doc_html", "") or ""
         if doc_html.strip():
             add_file("character_doc.html", doc_html)
+        # 槽位设定图（富媒体：kind|slot 最新一张 + 索引，L-Port 选参考/模仿用）
+        slot_idx = []
+        try:
+            assets = _repo.character_assets(cid)
+        except Exception:
+            assets = []
+        for a in assets:
+            nm = _Path(a.get("path") or "").name
+            if not nm:
+                continue
+            dest = f"slot_images/{nm}"
+            before = len(files)
+            add_upload(nm, dest)
+            if len(files) > before:
+                slot_idx.append({"kind": a.get("kind", ""), "slot": a.get("slot", ""),
+                                 "file": dest, "note": a.get("note", "") or ""})
+        if slot_idx:
+            add_file("slot_images.json", _json.dumps(slot_idx, ensure_ascii=False, indent=2))
 
     # 2) 剧本方案稿 + beats
     add_file("screenplay_draft.md", ep.get("screenplay_md", "") or "")
@@ -225,6 +300,20 @@ def export_bundle():
         add_file("outline.md", ep["outline_md"])
     if ep.get("outline_image"):
         add_upload(ep["outline_image"], f"outline_image/{_Path(ep['outline_image']).name}")
+    # 剧本参考图（富媒体：含 role/desc 模仿说明，L-Port 引用/模仿用）
+    ep_refs = []
+    for im in (ep.get("ref_images") or []):
+        nm = _Path(im.get("name") or "").name
+        if not nm:
+            continue
+        dest = f"episode_refs/{nm}"
+        before = len(files)
+        add_upload(nm, dest)
+        if len(files) > before:
+            ep_refs.append({"file": dest, "role": im.get("role", "") or "",
+                            "desc": im.get("desc", "") or "", "label": im.get("label", "") or ""})
+    if ep_refs:
+        add_file("episode_refs.json", _json.dumps(ep_refs, ensure_ascii=False, indent=2))
     beats = []
     for pick in (story.get("confirmed") or []):
         if isinstance(pick, dict) and pick.get("beats"):
@@ -238,49 +327,201 @@ def export_bundle():
             beats = parse_beats_from_screenplay(ep.get("screenplay_md", ""), eid)
         except Exception:
             beats = []
-    add_file("beats.json", __import__("json").dumps(beats, ensure_ascii=False, indent=2))
+    add_file("beats.json", _json.dumps(beats, ensure_ascii=False, indent=2))
 
-    # 3) 分镜 + 媒体 + 提示词
+    # 3) 分镜 + 媒体 + 提示词（ref_mode 逐镜落盘：请求值只当默认，生效值以组装结算为准）
     shots_out, prompts_out = [], {}
     for shot in rows:
         sid = shot.get("id", "")
-        shots_out.append({k: shot.get(k) for k in
-                          ("id", "episode_id", "ord", "duty", "duty_en", "duration_s",
-                           "camera", "sound", "key_text_en", "tier", "images", "image")})
+        r = (build_pixai(shot, character, [], "", tier, req_mode, video_model)
+             if engine == "pixai"
+             else build_i2va(shot, character, [], "", "", tier))
+        entry = {k: shot.get(k) for k in
+                 ("id", "episode_id", "ord", "duty", "duty_en", "duration_s",
+                  "camera", "sound", "key_text_en", "tier", "images", "image")}
+        entry["ref_mode"] = r.get("ref_mode", "")
+        shots_out.append(entry)
         for x in shot_images(shot):
             if x.get("name"):
                 add_upload(x["name"], f"images/{_Path(x['name']).name}")
-        r = (build_pixai(shot, character, [], "", tier, "startframe", video_model)
-             if engine == "pixai"
-             else build_i2va(shot, character, [], "", "", tier))
         prompts_out[sid] = r["prompt"]
         add_file(f"prompts/{sid}.{engine}.txt", r["prompt"])
-    add_file("shots.json", __import__("json").dumps(shots_out, ensure_ascii=False, indent=2))
-    add_file("prompts.json", __import__("json").dumps(
+    add_file("shots.json", _json.dumps(shots_out, ensure_ascii=False, indent=2))
+    add_file("prompts.json", _json.dumps(
         {"engine": engine, "video_model": video_model, "tier": tier,
          "prompts": prompts_out}, ensure_ascii=False, indent=2))
+
+    # 回执归位：同一项目 + 同一集号的历史执行回执快照进包，供回程对账。
+    from .receipts import scoped_rows
+    receipt_rows = scoped_rows(project_id=project_id, episode_id=eid) if eid else []
+
+    # L-Port story_text 插件可直接吃的包形状（package_id/episode/shots/locks + 项目归属）：
+    # 与 GET /v1/director/export 同键，另带 manifest 级归属，存为收件箱 package.json。
+    pkg_shots = []
+    for shot in rows:
+        r = build_prompt(shot, character, [], "")
+        imgs = shot_images(shot)
+        first = first_image(shot)
+        pkg_shots.append({"id": shot.get("id"), "assembled_en": r["assembled_en"],
+                          "locks_hit": r["locks_hit"],
+                          "visual_basis": ([f"首帧 {img_url(first.get('name'))}"] if first else []),
+                          "images": [{"name": x.get("name"), "kind": x.get("kind", "ref"),
+                                      "url": img_url(x.get("name"))} for x in imgs],
+                          "first_image": first.get("name") if first else "",
+                          "first_image_url": img_url(first.get("name")) if first else "",
+                          "duration_s": shot.get("duration_s", 0),
+                          "sound": shot.get("sound", ""),
+                          "tier": (shot.get("tier") or ""),
+                          "camera": shot.get("camera", {}),
+                          "boundaries": {"start": shot.get("start_boundary", {}),
+                                         "end": shot.get("end_boundary", {})}})
+    package_json = {
+        "package_id": pkg_id,
+        "episode_id": eid, "episode": eid,
+        "project_id": project_id, "project_name": project_name,
+        "verdict": ep.get("verdict", "draft"),
+        "engine": engine, "video_model": video_model if engine == "pixai" else "",
+        "ref_mode_default": req_mode if engine == "pixai" else "",
+        "tier": tier,
+        "shots": pkg_shots, "locks": [],
+        "images_base": "/api/images/",
+        "review": {"verdict": ep.get("verdict", "draft"), "findings": []},
+    }
+    receipts_file = "receipts.json" if receipt_rows else ""
+    if receipts_file:
+        add_file(receipts_file, _json.dumps(receipt_rows, ensure_ascii=False, indent=2))
 
     # 4) manifest
     manifest = {
         "package_id": pkg_id,
         "created_at": _dt.datetime.now().isoformat(timespec="seconds"),
+        "project_id": project_id, "project_name": project_name,
         "episode_id": eid, "character_id": cid,
         "engine": engine, "video_model": video_model if engine == "pixai" else "",
+        "ref_mode_default": req_mode if engine == "pixai" else "",
         "tier": tier, "direction": note,
         "verdict": ep.get("verdict", "draft"),
+        "receipt_count": len(receipt_rows),
+        "receipts_file": receipts_file,
         "files": [{"path": p, "bytes": len(b),
                    "sha256": _hashlib.sha256(b).hexdigest()} for p, b in sorted(files.items())],
         "missing": missing,
     }
-    add_file("manifest.json", __import__("json").dumps(manifest, ensure_ascii=False, indent=2))
+    add_file("manifest.json", _json.dumps(manifest, ensure_ascii=False, indent=2))
 
     buf = _io.BytesIO()
     with _zipfile.ZipFile(buf, "w", _zipfile.ZIP_DEFLATED) as zf:
         for p, b in sorted(files.items()):
             zf.writestr(p, b)
+    return {"pkg_id": pkg_id, "files": files, "manifest": manifest,
+            "missing": missing, "package_json": package_json,
+            "receipt_rows": receipt_rows, "character_id": cid,
+            "tier": tier, "req_mode": req_mode, "zip_bytes": buf.getvalue()}
+
+
+@bp.get("/export-bundle")
+def export_bundle():
+    """去程交付包·文件夹版（对齐 POSITIONING §2 草案形态）：一次下载一个 ZIP，
+    内含 manifest.json + character.md/json + ref_image/ + screenplay_draft.md + outline.md +
+    beats.json + shots.json + images/ + prompts/。复制即交付，sha 对不上停手。
+    query: episode_id, character_id(空=首个角色), engine=h3|pixai(默认pixai),
+           pixai_model/video_model, tier, note(方向说明,写入manifest),
+           project_id(可选；与集号归属一致时写入 manifest，并附带同项目同集回执快照)."""
+    import io as _io
+
+    eid = request.args.get("episode_id", "")
+    cid = request.args.get("character_id", "")
+    requested_project = (request.args.get("project_id") or "").strip()
+    project_id, project_name, err = _resolve_bundle_project(eid, requested_project)
+    if err:
+        return err
+    b = _build_director_bundle(
+        eid, cid, project_id, project_name,
+        engine=request.args.get("engine") or "pixai",
+        video_model=(request.args.get("pixai_model") or request.args.get("video_model") or "tsubaki-video"),
+        tier=request.args.get("tier") or "",
+        req_mode=request.args.get("ref_mode") or "startframe",
+        note=request.args.get("note") or "")
+    buf = _io.BytesIO(b["zip_bytes"])
     buf.seek(0)
     return send_file(buf, mimetype="application/zip", as_attachment=True,
-                     download_name=f"{pkg_id}.zip")
+                     download_name=f"{b['pkg_id']}.zip")
+
+
+def _director_inbox_root():
+    """导演包收件箱根目录：复用投流直投的 L-Port 共享挂载（容器 /lport-lib），
+    但写独立子目录 suli_packages/，不进 traffic 的 packages/（那边只收投流 .json，
+    导演 ZIP 进去会被投流包列表误收）。"""
+    try:
+        from .traffic import _lport_dirs
+        return _lport_dirs()
+    except Exception:
+        return None
+
+
+@bp.post("/push-lport")
+def push_lport():
+    """导演草案直投 L-Port：把本集交付包写进 L-Port 收件箱（共享挂载 suli_packages/），
+    前端拿到 package_id 后轮询回执，等 L-Port 那边登记即亮。
+
+    body: {episode_id*, project_id?, character_id?, engine?, pixai_model?,
+           tier?, ref_mode?, note?}
+    → {package_id, pushed, pkg_dir, package_json, manifest, shot_count,
+       receipt_count, hint}
+    """
+    import json as _json
+
+    b = request.get_json(force=True, silent=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    requested_project = str(b.get("project_id") or "").strip()
+    project_id, project_name, err = _resolve_bundle_project(eid, requested_project)
+    if err:
+        return err
+    built = _build_director_bundle(
+        eid, str(b.get("character_id") or ""), project_id, project_name,
+        engine=b.get("engine") or "pixai",
+        video_model=(b.get("pixai_model") or b.get("video_model") or "tsubaki-video"),
+        tier=b.get("tier") or "",
+        req_mode=b.get("ref_mode") or "startframe",
+        note=b.get("note") or "")
+    pkg_id = built["pkg_id"]
+
+    root = _director_inbox_root()
+    if root is None:
+        return jsonify({"code": 4003,
+                        "msg": "L-Port 素材库未挂载（/lport-lib 缺失）：先起 L-Port，或用导出ZIP手工搬"}), 400
+    pkgdir = root / "suli_packages" / pkg_id
+    try:
+        pkgdir.mkdir(parents=True, exist_ok=True)
+        (pkgdir / f"{pkg_id}.zip").write_bytes(built["zip_bytes"])
+        (pkgdir / "manifest.json").write_text(
+            _json.dumps(built["manifest"], ensure_ascii=False, indent=2), encoding="utf-8")
+        (pkgdir / "package.json").write_text(
+            _json.dumps(built["package_json"], ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError as e:
+        return jsonify({"code": 4005, "msg": "写 L-Port 收件箱失败：%s" % e}), 500
+
+    _PUSH_STORE.setdefault("pushes", {})[pkg_id] = {
+        "package_id": pkg_id, "episode_id": eid,
+        "project_id": project_id, "project_name": project_name,
+        "engine": built["package_json"]["engine"],
+        "pushed": str(pkgdir / f"{pkg_id}.zip"), "pkg_dir": str(pkgdir),
+        "shot_count": len(built["package_json"]["shots"]),
+        "receipt_count_at_push": len(built["receipt_rows"]),
+    }
+    _ppersist()
+    return ok({
+        "package_id": pkg_id, "episode_id": eid,
+        "project_id": project_id, "project_name": project_name,
+        "pushed": str(pkgdir / f"{pkg_id}.zip"), "pkg_dir": str(pkgdir),
+        "package_json": f"package.json（story_text 插件输入口径：package_id/episode/shots/locks）",
+        "shot_count": len(built["package_json"]["shots"]),
+        "receipt_count": len(built["receipt_rows"]),
+        "missing": built["missing"],
+        "hint": "已落 L-Port 收件箱 suli_packages/%s：L-Port 侧在 story_text 插件载入 package.json 跑完分镜后，调 push-shots-to-suli 回写分镜，并在本项目回执页登记回执（package_id=%s），这边轮询即亮。" % (pkg_id, pkg_id),
+    })
 
 
 @bp.get("/draft-doc")
@@ -295,12 +536,16 @@ def draft_doc():
     engine = (request.args.get("engine") or "pixai").strip() or "pixai"
     video_model = (request.args.get("pixai_model") or request.args.get("video_model") or "tsubaki-video").strip()
     tier = (request.args.get("tier") or "").strip()
+    req_mode = (request.args.get("ref_mode") or "startframe").strip()
+    if req_mode not in ("startframe", "reference"):
+        req_mode = "startframe"
 
     ep = _repo.get_episode(eid)
     chars_map = _repo.chars_map()
     chars = list(chars_map.values())
     character = chars_map.get(cid) if cid else (chars[0] if chars else {})
     rows = _repo.list_shots_by_episode(eid)
+    tier = _req_tier(tier, ep, rows)
     total = round(sum(float(s.get("duration_s") or 0) for s in rows), 1)
 
     L = []
@@ -335,7 +580,7 @@ def draft_doc():
     L.append("## 逐镜提示词（复制即用）")
     for s in rows:
         sid = s.get("id", "")
-        r = (build_pixai(s, character, [], "", tier, "startframe", video_model)
+        r = (build_pixai(s, character, [], "", tier, req_mode, video_model)
              if engine == "pixai"
              else build_i2va(s, character, [], "", "", tier))
         L.append("")

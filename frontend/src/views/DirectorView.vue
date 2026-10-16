@@ -58,48 +58,51 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="大纲" name="outline">
-    <el-empty v-if="!outline.md" description="暂无大纲" :image-size="64">
-      <el-button size="small" type="primary" @click="dtab = 'script'">去剧本</el-button>
-    </el-empty>
-    <div v-if="outline.md" class="suli-card outline-card">
-      <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-dropdown trigger="click" @command="onDraftMode">
-          <el-button size="small" type="primary" :loading="agentLoading || draftLiteLoading">② 生成草案<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="lite"><el-icon style="margin-right:4px"><Lightning /></el-icon><b>快速模式</b></el-dropdown-item>
-              <el-dropdown-item command="expert"><el-icon style="margin-right:4px"><MagicStick /></el-icon><b>专家模式</b></el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown><el-popconfirm title="清空大纲，并连带清理全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearOutline"><template #reference><el-button size="small" type="danger" text :loading="clearingOutline">清空</el-button></template></el-popconfirm></div>
-      <div v-show="!outlineFolded" class="outline-main">
-        <el-image v-if="outline.image" :src="`/api/images/${outline.image}`" class="outline-thumb" fit="cover" :preview-src-list="[`/api/images/${outline.image}`]" preview-teleported />
-        <div v-if="!outlineEditing" class="outline-textwrap">
-          <MarkdownView class="outline-text" :content="outline.md" :style="{ zoom: outlineZoom, maxHeight: outlineMaxH + 'px' }" />
-          <div class="outline-rz" title="上下拖动调整高度，双击恢复默认" @mousedown="startOutlineResize" @dblclick="resetOutlineMaxH" />
-        </div>
-        <div v-else class="outline-editwrap">
-          <el-input v-model="outlineDraft" type="textarea" :rows="16" />
-          <div style="display:flex;gap:8px;align-items:center">
-            <el-tag v-if="outlineDirty" size="small" type="warning">未存*</el-tag>
-            <span style="flex:1" />
-            <span class="suli-muted tnum" style="font-size:12px">{{ outlineDraft.length }}字</span>
+        <input ref="outlineFileEl" type="file" accept="image/*" hidden @change="onScriptRef" />
+        <el-empty v-if="!outline.md" description="暂无大纲" :image-size="64">
+          <el-button size="small" type="primary" @click="dtab = 'script'">去剧本</el-button>
+        </el-empty>
+        <div v-if="outline.md" class="suli-card outline-card">
+          <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFileEl?.click()" title="上传参考图（与「剧本」页签同一清单，可作大纲/手帧参考）">+参考图</el-button><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-dropdown trigger="click" @command="onDraftMode">
+            <el-button size="small" type="primary" :loading="agentLoading || draftLiteLoading">② 生成草案<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="lite"><el-icon style="margin-right:4px"><Lightning /></el-icon><b>快速模式</b></el-dropdown-item>
+                <el-dropdown-item command="expert"><el-icon style="margin-right:4px"><MagicStick /></el-icon><b>专家模式</b></el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown><el-popconfirm title="清空大纲，并连带清理全部草案？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearOutline"><template #reference><el-button size="small" type="danger" text :loading="clearingOutline">清空</el-button></template></el-popconfirm></div>
+          <div v-show="!outlineFolded" class="outline-main">
+            <el-image v-if="outline.image" :src="`/api/images/${outline.image}`" class="outline-thumb" fit="cover" :preview-src-list="[`/api/images/${outline.image}`]" preview-teleported />
+            <div v-if="!outlineEditing" class="outline-textwrap">
+              <MarkdownView class="outline-text" :content="outline.md" :style="{ zoom: outlineZoom, maxHeight: outlineMaxH + 'px' }" />
+              <div class="outline-rz" title="上下拖动调整高度，双击恢复默认" @mousedown="startOutlineResize" @dblclick="resetOutlineMaxH" />
+            </div>
+            <div v-else class="outline-editwrap">
+              <el-input v-model="outlineDraft" type="textarea" :rows="16" />
+              <div style="display:flex;gap:8px;align-items:center">
+                <el-tag v-if="outlineDirty" size="small" type="warning">未存*</el-tag>
+                <span style="flex:1" />
+                <span class="suli-muted tnum" style="font-size:12px">{{ outlineDraft.length }}字</span>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
       </el-tab-pane>
       <el-tab-pane label="草案" name="draft">
     <!-- 组装工具条：动作在左，设置在右 -->
     <div class="dir-bar">
       <div class="bar-group">
-        <el-button type="primary" size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId">生成草案文档</el-button>
+        <el-button type="primary" size="small" @click="downloadBundle" :loading="bundleLoading" :disabled="!store.episodeId" title="L-Port 上传草案包用的 ZIP（manifest+shots+prompts+图）">导出草案包ZIP</el-button>
+        <el-button size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId" title="人读版交接文档（.md，L-Port 上传请用左边 ZIP）">草案文档</el-button>
+        <el-button size="small" type="success" plain @click="pushToLport" :loading="pushing" :disabled="!store.episodeId" title="自动投递到 L-Port 收件箱 suli_packages，投完自动等回执">直投 L-Port</el-button>
         <el-popconfirm title="清空本集全部草案分镜？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearShots">
           <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
         </el-popconfirm>
       </div>
       <span class="bar-spacer" />
       <div class="bar-group">
-        <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级">
+        <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级（空=按内容）" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
           <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
         </el-select>
         <el-select v-model="engine" size="small" class="w-engine" placeholder="引擎">
@@ -113,6 +116,14 @@
           <el-option v-if="refSupportsMulti" label="参考图" value="reference" />
         </el-select>
       </div>
+    </div>
+    <div v-if="pushMsg" class="push-status">
+      <LoadingSpinner v-if="pushing || (pushedPkg && !pushDone)" :size="14" />
+      <span v-else class="push-dot ok" />
+      <span class="suli-muted" style="font-size:12px">{{ pushMsg }}</span>
+      <el-button v-if="pushDone" size="small" type="primary" link @click="dtab = 'receipt'">去回执页查看 →</el-button>
+      <el-button v-if="pushDone" size="small" link @click="stopWait">关闭</el-button>
+      <el-button v-else size="small" link @click="stopWait">停止等待</el-button>
     </div>
 
     <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
@@ -147,15 +158,16 @@
     <!-- 8-block 静帧：折叠面板，默认收起，不占版面 -->
       </el-tab-pane>
       <el-tab-pane label="回执" name="receipt">
-        <ReceiptPanel :episode-id="store.episodeId" />
+        <ReceiptPanel :episode-id="store.episodeId" :project-id="store.projectId" :project-name="currentProjectName" :refresh-key="receiptRefreshKey" />
       </el-tab-pane>
     </el-tabs>
   </div>
 </template>
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
+import { directorApi } from '../api/director'
 import { useAppStore } from '../stores/app'
 import { useSettingsStore } from '../stores/settings'
 import { useAgentDirect } from '../composables/useAgentDirect'
@@ -164,9 +176,11 @@ import ReceiptPanel from '../components/director/ReceiptPanel.vue'
 import { ArrowDown, Lightning, MagicStick } from '@element-plus/icons-vue'
 import MarkdownView from '../components/MarkdownView.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
+import { castNames, loadCastInput } from '../utils/cast'
 
 const store = useAppStore()
 const settings = useSettingsStore()
+const currentProjectName = computed(() => (store.projects.find((p: any) => p.id === store.projectId) as any)?.name || '')
 
 // 分级四档（真源在后端 /director/tiers）：'' = 按镜设置
 const tierOpts = ref<{ key: string; label: string }[]>([{ key: '', label: '不分级' }])
@@ -193,16 +207,39 @@ const dtab = ref('outline')
 // 剧本页（与分镜页同一份后端数据）
 const script = ref('')
 const savedScript = ref('')
+const scriptLoadedFor = ref('')   // 文本框里的稿属于哪一集（防跨集误写/误清）
 const scriptDirty = computed(() => script.value !== savedScript.value)
 let suspendScriptWatch = false
 let scriptTimer: any = null
 const scriptSaving = ref(false)
 const scriptSavedAt = ref('')
 const scriptSaveErr = ref('')
-async function saveScript(silent = false) {
+const scriptClearing = ref(false)
+async function saveScript(silent = false, force = false) {
+  if (scriptClearing.value) return          // 清空进行中：连 3s 自动保存一起丢，别把稿写回来
+  const eid = store.episodeId
+  // 集号切走（或本页还没为当前集加载过）时先把新集读回来 —— 否则会把上一集的稿/空内容写进当前集
+  if (!eid || (scriptLoadedFor.value && scriptLoadedFor.value !== eid)) { await loadScript(); return }
+  // 自动保存（切页/切集 debounce 触发）绝不允许把非空剧本写空；要清空只能手动 + 二次确认 + force
+  if (silent && !script.value.trim()) return
+  if (!script.value.trim() && savedScript.value.trim() && !force) {
+    try {
+      await ElMessageBox.confirm('这会清空本集剧本正文（不可撤销），确定？', '清空剧本',
+        { confirmButtonText: '清空', cancelButtonText: '取消', type: 'warning' })
+    } catch { return }
+    force = true
+  }
   scriptSaving.value = true
   try {
-    await api.saveScreenplay(store.episodeId, script.value)
+    const r: any = await api.saveScreenplay(eid, script.value, force ? { force: true } : {})
+    if (r?.data?.kept) {
+      // 后端拒绝了空覆盖：把库里的真稿读回来，别让界面留个空框
+      scriptSaveErr.value = r.data.msg || '空内容被拒绝覆盖'
+      ElMessage.warning(`已拒绝空内容覆盖，剧本仍是 ${r.data.chars} 字`)
+      await loadScript()
+      return
+    }
+    if (scriptClearing.value) return
     savedScript.value = script.value
     scriptSavedAt.value = new Date().toLocaleTimeString('zh-CN', { hour12: false })
     scriptSaveErr.value = ''
@@ -219,6 +256,7 @@ watch(script, () => {
 })
 const scriptRefs = ref<any[]>([])
 const scriptFileEl = ref<HTMLInputElement | null>(null)
+const outlineFileEl = ref<HTMLInputElement | null>(null)
 function imgUrl(name: string) { return `/api/images/${name}` }
 async function loadScript() {
   suspendScriptWatch = true
@@ -227,6 +265,7 @@ async function loadScript() {
     script.value = ((r as any).data?.screenplay_md ?? '') as string
     savedScript.value = script.value
     scriptRefs.value = ((r as any).data?.ref_images ?? []) as any[]
+    scriptLoadedFor.value = store.episodeId
   } catch {} finally { suspendScriptWatch = false }
 }
 async function loadScriptRefs() {
@@ -300,20 +339,42 @@ function handleClear(cmd: string) {
   else clearShots()
 }
 
-// 草案文档：方向草案交接件（大纲全文 + 草案表 + 逐镜提示词），落一个 .md
+// 草案包 ZIP：L-Port「上传草案包」吃的机器包（manifest.json+shots.json+prompts+图），对照 POSITIONING §2
+const bundleLoading = ref(false)
+async function downloadBundle() {
+  bundleLoading.value = true
+  try {
+    const blob = await directorApi.exportBundle({ episode_id: store.episodeId, project_id: store.projectId || '', engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value, ref_mode: refMode.value })
+    const url = URL.createObjectURL(new Blob([blob as any], { type: 'application/zip' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `草案包-${store.episodeId}.zip`
+    a.click()
+    setTimeout(() => URL.revokeObjectURL(url), 5000)
+    ElMessage.success('草案包ZIP已下载，拿到 L-Port 剧本页上传草案包')
+  } catch { ElMessage.error('下载失败，后端未起？') }
+  finally { bundleLoading.value = false }
+}
+// 草案文档：方向草案交接件（大纲全文 + 草案表 + 逐镜提示词），落一个 .md（人读版，不进 L-Port）
 const docLoading = ref(false)
 const clearing = ref(false)
 const clearingScript = ref(false)
 async function clearScript() {
   clearingScript.value = true
+  scriptClearing.value = true
+  // 先掐掉 3s 自动保存的定时器：否则它会在清空之后拿旧稿再 PUT 一次，刷新就又回来了
+  clearTimeout(scriptTimer)
   try {
     const r = await api.clearEpisode(store.episodeId, 'script')
+    script.value = ''
+    savedScript.value = ''
+    scriptLoadedFor.value = ''
     await loadScript()
     await refresh()
     await loadOutline()
     ElMessage.success(`已清空剧本，连带清理大纲和草案${(r as any)?.data?.shot_count ?? 0}镜`)
   } catch { ElMessage.error('清空失败，后端未起？') }
-  finally { clearingScript.value = false }
+  finally { scriptClearing.value = false; clearingScript.value = false }
 }
 async function clearShots() {
   clearing.value = true
@@ -327,22 +388,122 @@ async function clearShots() {
 async function downloadDraft() {
   docLoading.value = true
   try {
-    const blob = await api.draftDoc({ episode_id: store.episodeId, engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value })
+    const blob = await api.draftDoc({ episode_id: store.episodeId, engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value, ref_mode: refMode.value })
     const url = URL.createObjectURL(new Blob([blob as any], { type: 'text/markdown' }))
     const a = document.createElement('a')
     a.href = url
     a.download = `DRAFT-${store.episodeId}.md`
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 5000)
-    ElMessage.success('草案文档已下载，拷给 L-Port 即交付')
+    ElMessage.success('草案文档已下载（人读版；L-Port 上传请用草案包ZIP）')
   } catch { ElMessage.error('下载失败，后端未起？') }
   finally { docLoading.value = false }
 }
+
+// 草案直投 L-Port：投进收件箱 suli_packages/<pkg>/，拿 package_id 轮询回执，等 L-Port 登记即亮
+// 投递包持久化（刷新/切页不丢）：localStorage 只记 {pkg, at, eid}，回来按集号认领续等
+const PUSH_KEY = 'suli.director.push'
+const PUSH_TTL = 10 * 60 * 1000
+const pushing = ref(false)
+const pushMsg = ref('')
+const pushedPkg = ref('')
+const pushDone = ref(false)
+const receiptRefreshKey = ref(0)
+let waitTimer: any = null
+function savePush(pkg: string, at: number, eid: string) {
+  try { localStorage.setItem(PUSH_KEY, JSON.stringify({ pkg, at, eid })) } catch {}
+}
+function loadPush(): { pkg: string; at: number; eid: string } | null {
+  try {
+    const d = JSON.parse(localStorage.getItem(PUSH_KEY) || 'null')
+    if (d?.pkg && d?.at && d?.eid) return d
+  } catch {}
+  return null
+}
+function clearPush() {
+  try { localStorage.removeItem(PUSH_KEY) } catch {}
+}
+async function pushToLport() {
+  if (pushing.value || !store.episodeId) return
+  pushing.value = true
+  pushDone.value = false
+  pushedPkg.value = ''
+  pushMsg.value = '正在投递到 L-Port 收件箱…'
+  try {
+    const r: any = await directorApi.pushToLport({
+      episode_id: store.episodeId, project_id: store.projectId || '',
+      engine: engine.value, pixai_model: pixaiModel.value,
+      tier: globalTier.value, ref_mode: refMode.value,
+    })
+    const d = (r as any)?.data ?? r
+    pushedPkg.value = d.package_id
+    pushMsg.value = `已投递 ${d.package_id}（${d.shot_count}镜）→ L-Port 收件箱，等待回执中…`
+    savePush(d.package_id, Date.now(), store.episodeId)
+    ElMessage.success(`已直投 L-Port（${d.shot_count}镜），等待回执`)
+    pollReceipts(d.package_id, Date.now() + PUSH_TTL, false)
+  } catch (e: any) {
+    pushMsg.value = ''
+    ElMessage.error(String(e?.response?.data?.msg || '直投失败（L-Port 没起？先用导出ZIP手工搬）').slice(0, 140))
+  } finally { pushing.value = false }
+}
+async function pollReceipts(pkg: string, deadline: number, immediate: boolean) {
+  clearTimeout(waitTimer)
+  const tick = async () => {
+    if (!pushedPkg.value || pushedPkg.value !== pkg) return
+    try {
+      const r: any = await api.receipts({ package_id: pkg })
+      const rows = (r as any)?.data ?? r ?? []
+      const n = Array.isArray(rows) ? rows.length : 0
+      if (n > 0) {
+        pushDone.value = true
+        pushMsg.value = `L-Port 回执已到 ${pkg}（${n}条），点右边去回执页查看`
+        receiptRefreshKey.value++
+        ElMessage.success(`L-Port 回执已到（${n}条）`)
+        return
+      }
+      if (Date.now() < deadline) {
+        pushMsg.value = `已投递 ${pkg}，等待 L-Port 回执中…（暂无回执，5s 后再查）`
+        waitTimer = setTimeout(tick, 5000)
+      } else {
+        pushMsg.value = `已投递 ${pkg}，10 分钟仍无回执：到 L-Port story_text 载入 package.json 跑完后记得登记回执`
+      }
+    } catch {
+      if (Date.now() < deadline) waitTimer = setTimeout(tick, 5000)
+    }
+  }
+  if (immediate) tick()
+  else waitTimer = setTimeout(tick, 5000)
+}
+function stopWait() {
+  clearTimeout(waitTimer)
+  pushedPkg.value = ''
+  pushMsg.value = ''
+  pushDone.value = false
+  clearPush()
+}
+// 刷新/切回本集：同集 + 10 分钟内的投递自动续等，回来立刻查一次；过期清掉，过集不管（切回去再续）
+function resumePush() {
+  clearTimeout(waitTimer)
+  pushedPkg.value = ''
+  pushMsg.value = ''
+  pushDone.value = false
+  const d = loadPush()
+  if (!d) return
+  if (d.eid !== store.episodeId) return
+  if (Date.now() - d.at > PUSH_TTL) { clearPush(); return }
+  pushedPkg.value = d.pkg
+  pushMsg.value = `已投递 ${d.pkg}，等待 L-Port 回执中…（页面回来，续等）`
+  pollReceipts(d.pkg, d.at + PUSH_TTL, true)
+}
+watch(dtab, v => { if (v === 'receipt') receiptRefreshKey.value++ })
+watch(() => store.episodeId, () => { resumePush() })
 
 // 单图Agent导演域（抽到 composable，大纲 brief 留在视图）
 const { agentTotal, agentLoading, outline, loadOutline, stopAgent, runBrief } = useAgentDirect(
   () => store.episodeId, refresh,
 )
+// 离开页面时清掉剧本自动保存的 debounce：否则组件销毁后它还会拿旧/空文本再 PUT 一次（2026-10-16 清库事故）
+onUnmounted(() => { clearTimeout(scriptTimer); clearTimeout(waitTimer) })
 function pickOutlineImage(): string {
   if (outline.value.image) return outline.value.image
   if (scriptRefs.value[0]?.name) return scriptRefs.value[0].name
@@ -361,6 +522,7 @@ async function runOutlineBrief(imgName: string) {
     `集号：${store.episodeId}`,
     '请按这张单图出方案大纲：看图写一份方案大纲markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/备注 / 合计时长），2-5镜，单镜3-8秒。然后 PUT /api/v1/scriptboard/outline/<集号> 保存 {outline_md: 全文, outline_image: 本图basename}，最后回复方向一句话+镜数+合计时长。只出大纲，不要写分镜库。',
     `总时长要求：${agentTotal.value}秒内，按此时长分配镜数与每镜秒数（优先保证单镜3-8秒）。`,
+    castNames(loadCastInput()).length ? `出镜角色（点名照写，别自造人名）：${castNames(loadCastInput()).join('、')}。` : '出镜角色：查角色库取现有角色名，查不到用「主角/对手」占位，别自造人名。',
     `目标引擎：${(engineOpts.value.find(e => e.key === engine.value) || {}).label || engine.value}${engine.value === 'pixai' ? '（提示词按 PixAI 视频格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行，见 skills/video/pixai-video-prompting）' : '（提示词按 MiniMax H3 字段格式，见 skills/video/h3-prompt-writing）'}。`,
     agentTier.value ? `分级档位：${tierLabel(agentTier.value)}（${agentTier.value}）。按 skills/video/nsfw-directing 的该档水位出镜：成年虚构角色锚定、微动作预算（一镜一事件、呼吸级幅度）、遮挡结构、锚点carry；duty_en 用英文写可见层动作。` : '',
   ].filter(Boolean).join('\n')
@@ -373,7 +535,7 @@ async function genOutline() {
 async function genOutlineHere() {
   if (agentLoading.value) return
   const img = pickOutlineImage()
-  if (!img) return ElMessage.warning('还没有参考图，先去大纲页签传一张图，或给分镜挂图')
+  if (!img) return ElMessage.warning('还没有参考图，先去「剧本」页签或大纲页签点「+参考图」传一张，或给分镜挂图')
   dtab.value = 'outline'
   await runOutlineBrief(img)
 }
@@ -389,6 +551,7 @@ async function genOutlineLite() {
       tier: agentTier.value || globalTier.value || '',
       hint: script.value.slice(0, 800),
       image: img,
+      cast: castNames(loadCastInput()),  // 故事页点名；空数组=没点名，后端按「本集已记 → 正文说话人 → 角色库」取角
     })
     await loadOutline()
     ElMessage.success('大纲已存（轻），确认后点 ② 生成草案')
@@ -527,6 +690,7 @@ onMounted(async () => {
   await loadScript()
   await refresh()
   await loadOutline()
+  resumePush()
 })
 </script>
 <style scoped>
@@ -547,6 +711,9 @@ onMounted(async () => {
 .w-model { width: 210px; }
 .w-ref { width: 190px; }
 .dir-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(620px, 100%), 1fr)); gap: 10px; margin-top: 8px; align-items: start; }
+.push-status { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--suli-border); border-radius: 8px; background: var(--suli-surface); }
+.push-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.push-dot.ok { background: var(--el-color-success); }
 .script-refs { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
 .script-refs.top { margin-top: 0; margin-bottom: 8px; }
 .shot-refwrap { display: inline-flex; gap: 4px; align-items: center; }

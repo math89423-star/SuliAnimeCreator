@@ -44,12 +44,16 @@ L-Port `story_text` 插件输入已写明"接 Suli 交付包：`package_json` �
 
 | 资产 | 文件 | 内容/形状 | L-Port 用途 |
 |---|---|---|---|
-| 角色 | `character.md` + `character_doc.html` + `ref_image/` + `character.json` | md：`# 名 设定` + 四维（hairstyle/face/physique/identity，`GET /v1/characters/<id>/pack` 现成形状）；doc：角色页"文档交付" tab 的设计文档原文（有才有）；ref_image/：avatar 主图 + slot 图原文件；json：机器字段（anchors/服装/各引擎槽位提示词） | `ref_images` 人物参照 + premise 人物描述 |
-| 故事剧本 | `screenplay_draft.md` + `outline.md` + `beats.json` | md：场景+动作+对白（scriptboard 的 screenplay_md）；outline：方案大纲（方向一句话/基调档位/分镜大纲表/合计，`GET /v1/scriptboard/outline/<集号>` 存取，进包）；beats 用 `[{beat_id, function, text_cn}]`（对齐它 beats_json） | 产出 `script_md` 发散成稿 + `premise_cn`，存它那边 |
-| 分镜 | `shots.json` + `images/` | `[{shot_id, duty_cn, duration_s, crop, sound_cn, key_text_en, tier, ref_roles}]`（前 6 键对齐它 shots_json）；images/：首帧+参考图文件 | 产出 shots_json 成稿，存它那边 |
+| 角色 | `character.md` + `character_doc.html` + `ref_image/` + `character.json` + `slot_images/` + `slot_images.json` | md：`# 名 设定` + 四维（hairstyle/face/physique/identity，`GET /v1/characters/<id>/pack` 现成形状）；doc：角色页"文档交付" tab 的设计文档原文（有才有）；ref_image/：avatar 主图原文件；slot_images/：18 槽位 kind|slot 各最新一张 + json 索引（kind/slot/note）；json：机器字段（anchors/服装/各引擎槽位提示词） | `ref_images` 人物参照 + premise 人物描述 |
+| 故事剧本 | `screenplay_draft.md` + `outline.md` + `beats.json` + `episode_refs/` + `episode_refs.json` | md：场景+动作+对白（scriptboard 的 screenplay_md）；outline：方案大纲（方向一句话/基调档位/分镜大纲表/合计，`GET /v1/scriptboard/outline/<集号>` 存取，进包）；beats 用 `[{beat_id, function, text_cn}]`（对齐它 beats_json）；episode_refs/：剧本参考图原文件 + json 索引（role/desc 模仿说明） | 产出 `script_md` 发散成稿 + `premise_cn`，存它那边 |
+| 分镜 | `shots.json` + `images/` | `[{shot_id, duty_cn, duration_s, crop, sound_cn, key_text_en, tier, ref_roles, ref_mode}]`（前 6 键对齐它 shots_json；`ref_mode` 按镜生效值 startframe/reference/t2v，由 Suli 定，见下）；images/：首帧+参考图文件 | 产出 shots_json 成稿，存它那边 |
 | 提示词 | `prompts/<shot_id>.<engine>.txt` + `prompts.json` | txt：粘贴即用全文（pixai/h3 分引擎）；json：机器字段（engine/video_model/ref_mode/duration/tier/refs） | Translator 译参，或人工粘贴（PixAI 无视频 API，只能人贴） |
 
 命名纪律：我们给的带 `_draft`（草案），它产出的无后缀（成稿），后缀即方向标记。
+参考方式归属（2026-10-15 敲定）：一个 seg 用首尾帧还是多图参考，**由 Suli 定，按 seg 生效，L-Port 只执行**。
+规则：v3.x/v2.7 只认首帧（硬约束）；锁开场构图/姿势 → Start Frame；只保身份、动作去新场景 → `@image1` 多图参考；两者互斥。
+出包时 `ref_mode_default` 记页面请求值，每镜 `ref_mode` 记组装结算值（模型能力 + 有无额外参考图逐镜修正）；
+L-Port 包里没标才走保底（有首帧按 startframe、无图按 t2v，且留痕上报），不得静默改判。
 包装：一次搬运一个以 `package_id` 命名的文件夹 + `manifest.json`（文件清单 + sha256 + 版本 + 方向说明 + 档位）；
 export 接口吐的 `/api/images/<名>` 只是 URL（过不了界，仅对账用），`images/` 文件夹必须一起拷走。
 
@@ -62,14 +66,35 @@ export 接口吐的 `/api/images/<名>` 只是 URL（过不了界，仅对账用
 ```json
 POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
   "engine": "comfyui|cloud", "provider": "flux|gpt_image|..",
-  "media_url": "..", "status": "done|failed", "log_tail": ".."}
+  "media_url": "..", "status": "done|failed", "log_tail": "..",
+  "project_id": "PRJ-XXXXXX", "episode_id": "EP-XXXXXX"}
 ```
+
+新建回执默认必须可归位：`episode_id` 可显式传入，或从 `package_id/media_url/task_id/shot_id`
+推断；`project_id` 可显式传入，或按集号归属解析。归属冲突、未知项目或未知集号会
+被拒绝（`allow_unscoped=true` 仅用于确实无法归位的例外登记）。
+导出包会把当前项目写入 `manifest.json`，并附带同项目同集回执快照
+`receipts.json`。
 
 回执只存**事实**供审计（哪镜、何时、用什么引擎出了什么图），不触发重生成。
 成品本体留在 L-Port，本项目只存回执指针；视频回执扩展字段（video_model/ref_mode/duration_s/refs_used）见组装层返回。
 
 **远期互通 TODO**（现在不建）：方案包直传、成品与回执自动回流、媒体 sha 对账自动化。
 互通建成前，人工搬运只做复制：sha 对不上→停手上报，不猜不补。
+
+### 草案直投（2026-10-16 已建：去程自动、回程轮询）
+
+导演草案页「直投 L-Port」调 `POST /v1/director/push-lport`
+（body：`episode_id` + 可选 `project_id/character_id/engine/pixai_model/tier/ref_mode/note`，
+与导出包同口径、归属冲突同样 409）：
+后端用同一份构建函数出包，写进 L-Port 收件箱 `suli_packages/<package_id>/`
+（含 `<包>.zip` + `manifest.json` + `package.json`，后者即 story_text 插件输入口径
+`package_id/episode/shots/locks`），推送记录落 `director_push_db.json`。
+收件箱与投流 `packages/` 隔离：导演 ZIP 不进投流包列表。
+前端拿到 `package_id` 后每 5s 轮询 `GET /v1/receipts?package_id=..`（10 分钟上限），
+回执一到即提示并可一键跳回执页（回执面板按 `refreshKey` 自动重刷）。
+L-Port 侧仍需人工一步：在 story_text 插件载入 `package.json` 跑完分镜后，
+调 `push-shots-to-suli` 回写分镜并在本项目登记回执（带该 `package_id`）。
 
 ## 3. 本项目要改的（后续任务池）
 

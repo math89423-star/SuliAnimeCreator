@@ -3,6 +3,7 @@
     <div class="rc-bar">
       <el-button size="small" @click="load" :loading="loading">刷新</el-button>
       <el-tag size="small" class="tnum">{{ segList.length }}镜可投</el-tag>
+      <el-tag size="small" type="info" class="tnum">{{ projectLabel }}</el-tag>
       <el-tag size="small" type="info" class="tnum">{{ props.episodeId || '无集号' }}</el-tag>
       <el-tag size="small" type="warning">形式以回执为准（三者互斥）</el-tag>
       <span style="flex:1" />
@@ -36,6 +37,7 @@
             </div>
             <pre class="rc-prompt">{{ s.prompt }}</pre>
             <div class="rc-row"><span class="rc-k">声场</span><span class="rc-v">{{ s.sound || '—' }}</span></div>
+            <div class="rc-row"><span class="rc-k">回执</span><span class="rc-v">{{ receiptLine(s) }}</span></div>
             <div class="rc-row"><span class="rc-k">投放</span><span class="rc-v">{{ modeDesc(s) }} · {{ s.video_model_label || 'Tsubaki Video' }} · {{ formSource(s) }}{{ s.ref_note ? ' · ' + s.ref_note : '' }}</span></div>
           </div>
 
@@ -115,7 +117,7 @@ import { systemApi } from '../../api/system'
 import { directorApi } from '../../api/director'
 import { api } from '../../api/client'
 
-const props = defineProps<{ episodeId: string }>()
+const props = defineProps<{ episodeId: string; projectId?: string; projectName?: string; refreshKey?: number }>()
 const receipts = ref<any[]>([])
 const segs = ref<any[]>([])
 const outlineImage = ref('')
@@ -124,22 +126,36 @@ const err = ref('')
 const openIds = ref<string[]>([])
 
 const allOpen = computed(() => segList.value.length > 0 && openIds.value.length >= segList.value.length)
+const projectLabel = computed(() => {
+  if (props.projectName) return props.projectName
+  if (props.projectId) return props.projectId
+  return '未指定项目'
+})
 function toggleAll() {
   openIds.value = allOpen.value ? [] : segList.value.map(s => s.id)
 }
 
 function segMode(s: any) {
   // 形式以回执为准：回执行若带 form/ref_mode 则用它，否则回退组装自动判定
-  const rec = receipts.value.find(r => String(r.shot_id) === String(s?.shot_id))
+  const rec = receiptOf(s)
   const f = String((rec as any)?.form || (rec as any)?.ref_mode || '').trim()
   if (f === 'reference' || f === 'startframe' || f === 't2v') return f
   return String(s?.ref_mode || (s?.missing_image ? 't2v' : 'startframe'))
 }
 function formSource(s: any) {
-  const rec = receipts.value.find(r => String(r.shot_id) === String(s?.shot_id))
+  const rec = receiptOf(s)
   const f = String((rec as any)?.form || (rec as any)?.ref_mode || '').trim()
   if (f === 'reference' || f === 'startframe' || f === 't2v') return '回执指定'
   return '回执未定·组装判定'
+}
+function receiptOf(s: any) {
+  return receipts.value.find(r => String(r.shot_id) === String(s?.shot_id))
+}
+function receiptLine(s: any) {
+  const r = receiptOf(s)
+  if (!r) return '未登记'
+  const scope = r.scope_source === 'explicit' ? '已归位' : r.scope_source === 'inferred' ? '推断归位' : '未归位'
+  return `${r.package_id || '无包'} · ${r.project_id || '未归属项目'} · ${r.episode_id || props.episodeId || '未归属集号'} · ${scope}`
 }
 function modeLabel(s: any) {
   const m = segMode(s)
@@ -266,7 +282,10 @@ async function load() {
   loading.value = true
   err.value = ''
   try {
-    const r: any = await systemApi.receipts()
+    const r: any = await systemApi.receipts({
+      ...(props.projectId ? { project_id: props.projectId } : {}),
+      ...(props.episodeId ? { episode_id: props.episodeId } : {}),
+    })
     const data = (r as any)?.data ?? r ?? []
     receipts.value = Array.isArray(data) ? data : []
   } catch (e: any) {
@@ -312,7 +331,8 @@ async function load() {
   }
 }
 
-watch(() => props.episodeId, () => { openIds.value = []; load() })
+watch(() => [props.projectId, props.episodeId], () => { openIds.value = []; load() })
+watch(() => props.refreshKey, (k) => { if (k) load() })
 onMounted(() => { load() })
 </script>
 <style scoped>
