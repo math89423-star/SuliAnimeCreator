@@ -1,15 +1,18 @@
 <template>
   <div class="right">
-    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-button size="small" circle title="会话历史" @click="histOpen = true"><el-icon><Clock /></el-icon></el-button><el-button size="small" circle title="新建会话" @click="ensure"><el-icon><Plus /></el-icon></el-button><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
+    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-button size="small" circle title="会话历史（集号会话）" @click="histOpen = true"><el-icon><Clock /></el-icon></el-button><el-button size="small" circle title="本集会话（名即集号）" @click="backToEpisode"><el-icon><Plus /></el-icon></el-button><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
     <div class="agent-sub">
       <span class="suli-muted" style="font-size:12px">本集 {{ store.episodeId }} · skill {{ skills.length ? `${skills.length}已载` : '载入中…' }}</span>
       <span style="flex:1" />
+      <el-select v-model="model" size="small" style="width:178px" title="Agent 运行模型（每次发送按当前选择生效）">
+        <el-option v-for="m in MODEL_OPTIONS" :key="m.value" :label="m.label" :value="m.value" />
+      </el-select>
       <el-button size="small" text @click="backToEpisode">本集会话</el-button>
     </div>
     <!-- 当前会话卡：点击打开会话历史（照参考：标题行 + 会话名） -->
-    <div class="suli-card cur-card" @click="histOpen = true" title="打开会话历史">
-      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话</span><span class="cur-count tnum">{{ sessions.length }}个</span></div>
-      <div class="cur-key">{{ curKey || '无会话' }}</div>
+    <div class="suli-card cur-card" @click="histOpen = true" title="打开集号会话历史（一集一会）">
+      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话即集号</span><span class="cur-count tnum">{{ sessions.length }}个</span></div>
+      <div class="cur-key">{{ store.episodeId || curKey || '先选集号' }}</div>
     </div>
     <div v-if="loadingList" style="margin-top:8px"><div class="skeleton" style="height:32px" /></div>
 
@@ -20,7 +23,7 @@
         <div v-for="(t, i) in turns" :key="i" class="turn">
           <div class="bubble-row from-user">
             <div class="bubble user-b">
-              <div class="q">{{ t.q }}</div>
+              <MarkdownView class="q-md" :content="t.q" />
               <div v-if="t.files && t.files.length" class="files files-end">
                 <el-image
                   v-for="(f, j) in t.files.filter((x: Att) => x.kind === 'image')"
@@ -67,7 +70,24 @@
           </div>
         </div>
       </template>
-      <div v-if="loading && progress" class="hint">{{ progress }}</div>
+      <div v-if="loading" class="run-card suli-card">
+        <div class="run-head">
+          <span class="run-pulse" />
+          <b>运行中</b>
+          <span class="suli-muted tnum" style="font-size:12px">{{ progress || '已发车…' }}</span>
+        </div>
+        <div class="run-acts">
+          <div v-for="(a, i) in acts" :key="i" class="run-act">
+            <span class="run-dot" :class="a.kind" />
+            <span class="run-label">{{ a.label }}</span>
+            <span class="run-time tnum">{{ secAgo(a.t) }}</span>
+          </div>
+          <div v-if="!acts.length" class="suli-muted" style="font-size:12px">等 dsh 冷启动首帧…（首 token 常见 10–30s）</div>
+        </div>
+        <div class="run-foot suli-muted">
+          单步静默 1–3 分钟属正常（模型在写长文），整轮常见 3–6 分钟；任务跑在后端，切页/刷新都不中断。
+        </div>
+      </div>
     </div>
 
     <!-- 输入区：沉底 -->
@@ -75,8 +95,10 @@
       <div v-if="pending.length" class="pending">
         <div v-for="(f, i) in pending" :key="i" class="pend-chip">
           <img v-if="f.kind === 'image'" :src="f.url" class="pend-thumb" />
+          <span v-else-if="f.kind === 'video'" class="pend-file" title="参考视频"><el-icon><VideoCamera /></el-icon></span>
           <span v-else class="pend-file"><el-icon><Paperclip /></el-icon></span>
-          <span class="pend-name">{{ f.name }}</span>
+          <span class="pend-name">{{ f.name }}{{ f.dur ? ` · ${Math.round(f.dur)}s` : '' }}</span>
+          <el-button v-if="f.kind === 'video'" size="small" type="primary" @click="extractFrames(f)" :loading="framing === f.path">抽帧</el-button>
           <el-button size="small" text circle @click="pending.splice(i, 1)"><el-icon><Close /></el-icon></el-button>
         </div>
       </div>
@@ -93,6 +115,7 @@
       <div class="toolbar">
         <div class="tools">
           <el-button circle size="small" @click="imgInput?.click()" :loading="uploading" title="上传图片"><el-icon><Picture /></el-icon></el-button>
+          <el-button circle size="small" @click="vidInput?.click()" :loading="uploading" title="上传参考视频（≤300MB，可抽帧）"><el-icon><VideoCamera /></el-icon></el-button>
           <el-button circle size="small" @click="fileInput?.click()" :loading="uploading" title="上传文件"><el-icon><Paperclip /></el-icon></el-button>
         </div>
         <span class="tip suli-muted">Enter 发送 · Shift+Enter 换行</span>
@@ -100,6 +123,7 @@
         <el-button v-else type="primary" round size="small" @click="send" :disabled="!msg.trim() && !pending.length">发送</el-button>
       </div>
       <input ref="imgInput" type="file" accept="image/*" multiple hidden @change="onPick($event, 'image')" />
+      <input ref="vidInput" type="file" accept="video/*" multiple hidden @change="onPick($event, 'video')" />
       <input ref="fileInput" type="file" multiple hidden @change="onPick($event, 'file')" />
     </div>
 
@@ -114,11 +138,12 @@
         <el-button size="small" text circle title="关闭" @click="histOpen = false"><el-icon><Close /></el-icon></el-button>
       </div>
       <div class="hist-tools">
-        <el-input v-model="histKw" size="small" placeholder="搜索会话名" clearable style="flex:1;min-width:0">
+        <el-input v-model="histKw" size="small" placeholder="搜索集号" clearable style="flex:1;min-width:0">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
-        <el-button size="small" type="primary" @click="ensure(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>新会话</el-button>
+        <el-button size="small" type="primary" @click="backToEpisode(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>本集会话</el-button>
       </div>
+      <div class="suli-muted" style="font-size:11px;padding:0 12px 6px">一集一会：会话名即集号，点击切换中央集号</div>
       <div class="hist-list">
         <div v-if="!filteredSessions.length" class="hist-empty">暂无历史会话</div>
         <div
@@ -126,28 +151,14 @@
           class="suli-card hist-item" :class="{ active: curKey === s.key && curScope === s.scope }"
           @click="pickAndClose(s)"
         >
-          <template v-if="!(renaming && renameTarget === s.scope + ':' + s.key)">
-            <div class="hist-top">
+          <div class="hist-top">
               <span class="dot" :class="s.dsh_session_id ? 'on' : 'off'" />
               <b class="hist-key">{{ s.key }}</b>
               <span style="flex:1" />
-              <el-button size="small" text circle title="重命名" @click.stop="startRename(s)"><el-icon><EditPen /></el-icon></el-button>
               <el-button size="small" text circle title="导出该会话" @click.stop="exportOne(s)"><el-icon><Download /></el-icon></el-button>
               <el-button size="small" text circle title="删除该会话" @click.stop="delSession(s)"><el-icon><Close /></el-icon></el-button>
             </div>
-            <div class="hist-meta tnum">{{ scopeLabel(s.scope) }} · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
-          </template>
-          <template v-else>
-            <div class="hist-rename" @click.stop>
-              <el-input
-                ref="renameInput" v-model="renameText" size="small" style="flex:1;min-width:0"
-                placeholder="新会话名，回车确定" maxlength="60"
-                @keydown.enter="doRename" @keydown.esc="renaming = false"
-              />
-              <el-button size="small" type="primary" @click="doRename">确定</el-button>
-              <el-button size="small" @click="renaming = false">取消</el-button>
-            </div>
-          </template>
+            <div class="hist-meta tnum">集号会话 · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
         </div>
       </div>
     </div>
@@ -158,11 +169,11 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
-import { EditPen, Close, Check, Paperclip, Picture, CircleClose, Clock, Plus, Download, Delete, Search } from '@element-plus/icons-vue'
+import { Close, Check, Paperclip, Picture, CircleClose, Clock, Plus, Download, Delete, Search, VideoCamera } from '@element-plus/icons-vue'
 import MarkdownView from './MarkdownView.vue'
 import { useAppStore } from '../stores/app'
 
-interface Att { name: string; url: string; path: string; kind: 'image' | 'file' }
+interface Att { name: string; url: string; path: string; kind: 'image' | 'file' | 'video'; dur?: number; size?: number }
 interface Turn { q: string; a: string; files?: Att[]; applied?: boolean }
 
 const store = useAppStore()
@@ -173,32 +184,31 @@ const sessions = ref<any[]>([])
 const curKey = ref('')
 const curSid = ref('')
 const msg = ref('')
+// Agent 运行模型（2026-10-17）：白名单与后端 _RUN_MODELS 对齐；每次发送按当前选择生效
+const MODEL_OPTIONS = [
+  { label: 'DeepSeek V4.1 Flash', value: 'deepseek-v4.1-flash' },
+  { label: 'LongCat 2.5 Preview Free', value: 'longcat-2.5-preview-free' },
+]
+const model = ref('deepseek-v4.1-flash')
+try { const m = localStorage.getItem('suli.agent.model'); if (m && MODEL_OPTIONS.some(x => x.value === m)) model.value = m } catch {}
+// 选择持久化：watch 实现（不依赖组件事件绑定，刷新后保持选择）
+watch(model, v => { try { localStorage.setItem('suli.agent.model', v) } catch {} })
 
-function routeScope() {
-  if (route.path.startsWith('/character')) return 'character'
-  if (route.path.startsWith('/board')) return 'episode'
-  return 'story'
-}
 function findSession(scope: string, key: string) {
   return sessions.value.find(s => s.scope === scope && s.key === key)
 }
-// 当前选中的会话行（表头展示用）
-const curSess = computed(() => findSession(curScope.value, curKey.value))
-// 会话历史抽屉（照参考：右侧滑入，标题左 + 导出/清空/关闭右）
+// 会话历史抽屉（右侧滑入，标题左 + 导出/清空/关闭右）
 const histOpen = ref(false)
 const histKw = ref('')
 const filteredSessions = computed(() => {
+  // 一集一会：历史只显示集号会话（scope=episode），旧的多后缀/异域会话保留在后端但不再新建
   const kw = histKw.value.trim().toLowerCase()
-  const rows = [...sessions.value].sort((a, b) => (b.last_active || 0) - (a.last_active || 0))
+  const rows = [...sessions.value]
+    .filter(s => (s.scope || 'episode') === 'episode')
+    .sort((a, b) => (b.last_active || 0) - (a.last_active || 0))
   if (!kw) return rows
   return rows.filter(s => String(s.key || '').toLowerCase().includes(kw))
 })
-function scopeLabel(scope: string) {
-  if (scope === 'episode') return '分镜'
-  if (scope === 'character') return '角色'
-  if (scope === 'story') return '故事'
-  return scope || '会话'
-}
 function fmtTime(ts: number) {
   if (!ts) return '--'
   const d = new Date(ts)
@@ -248,8 +258,11 @@ const progress = ref('')
 const pending = ref<Att[]>([])
 const uploading = ref(false)
 const aborter = ref<AbortController | null>(null)
+const acts = ref<{ label: string; kind: string; t: number }[]>([])   // 实时动作流（进度卡）
+const nowTs = ref(Date.now())
 const turnBox = ref<HTMLElement | null>(null)
 const imgInput = ref<HTMLInputElement | null>(null)
+const vidInput = ref<HTMLInputElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const applyingIdx = ref(-1)
 const probingIdx = ref(-1)
@@ -257,9 +270,8 @@ const probe = ref<Record<number, any>>({})
 const applyMsg = ref<Record<number, string>>({})
 
 function autoKey() {
-  if (routeScope() === 'character') return store.selectedCharId || 'global'
-  if (routeScope() === 'episode') return store.episodeId || 'global'
-  return 'global'
+  // 会话名即集号：直接取中央集号，无集号返回空（调用方拦截提示）
+  return store.episodeId || ''
 }
 function rel(ts: number) {
   if (!ts) return '未开始'
@@ -269,9 +281,41 @@ function rel(ts: number) {
   if (s < 86400) return Math.floor(s / 3600) + '小时前'
   return Math.floor(s / 86400) + '天前'
 }
+function secAgo(ts: number) {
+  const s = Math.max(0, Math.floor((nowTs.value - ts) / 1000))
+  return s < 60 ? `${s}s 前` : `${Math.floor(s / 60)}m${s % 60}s 前`
+}
+function actKind(label: string) {
+  if (label.startsWith('调用')) return 'tool'
+  if (label.startsWith('返回')) return 'result'
+  if (label.startsWith('出稿')) return 'write'
+  if (label.startsWith('思考')) return 'think'
+  return 'step'
+}
+function pushAct(label: string) {
+  if (!label) return
+  const kind = actKind(label)
+  const list = acts.value.slice()
+  const last = list[list.length - 1]
+  // 流式动作（思考 / 正文片段）原地刷新同一行，别把日志刷成一片“思考”
+  if (last && last.kind === kind && (kind === 'think' || kind === 'write')) {
+    list[list.length - 1] = { label, kind, t: Date.now() }
+  } else if (last && last.label === label) {
+    list[list.length - 1] = { label, kind, t: Date.now() }
+  } else {
+    list.push({ label, kind, t: Date.now() })
+  }
+  acts.value = list.slice(-8)
+}
 function histKey() { return `dsh-turns:${curScope.value}:${curKey.value || 'new'}` }
 function loadLocal() { try { turns.value = JSON.parse(localStorage.getItem(histKey()) || '[]') } catch { turns.value = [] } }
 function saveLocal() { try { localStorage.setItem(histKey(), JSON.stringify(turns.value.slice(-30))) } catch {} }
+function fillAAt(i: number, a: string) { if (turns.value[i]) { turns.value[i].a = a; saveLocal() } }
+// 长任务持久化：run 由后端持有，这里只记"本会话正在跟随哪个 run"，刷新后据此重连
+function runStoreKey() { return `dsh-run:${curScope.value}:${curKey.value || 'new'}` }
+function rememberRun(rid: string) { try { localStorage.setItem(runStoreKey(), rid) } catch {} }
+function forgetRun() { try { localStorage.removeItem(runStoreKey()) } catch {} }
+function savedRun() { try { return localStorage.getItem(runStoreKey()) || '' } catch { return '' } }
 function scrollBottom() {
   nextTick(() => {
     const el = turnBox.value
@@ -396,13 +440,18 @@ async function reload() {
   try {
     const r = await api.dshSessions('')
     sessions.value = r.data as any[]
-    // 单会话收敛：一集一会话，优先选中本集 episode 会话
+    // 一集一会：当前会话恒等于中央集号；有集号就收敛过去，无集号才兜底旧选中/首个
     const epKey = store.episodeId
-    const epSess = findSession('episode', epKey)
-    const cur = epSess || findSession(curScope.value, curKey.value) || sessions.value[0]
-    curKey.value = (cur || {}).key || epKey || ''
-    curScope.value = (cur || {}).scope || 'episode'
-    curSid.value = (cur || {}).dsh_session_id || ''
+    if (epKey) {
+      curKey.value = epKey
+      curScope.value = 'episode'
+      curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
+    } else {
+      const cur = findSession(curScope.value, curKey.value) || sessions.value[0]
+      curKey.value = (cur || {}).key || ''
+      curScope.value = (cur || {}).scope || 'episode'
+      curSid.value = (cur || {}).dsh_session_id || ''
+    }
     loadLocal()
     scrollBottom()
   } catch { ElMessage.error('后端未起') }
@@ -426,30 +475,34 @@ async function backToEpisode() {
   curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
   loadLocal()
   scrollBottom()
+  await resumeIfAny()
 }
 async function ensure(silent = false) {
-  const sc = routeScope()
-  const base = autoKey()
-  // 同名已存在就顺延，保证每次新建都多出一行：EP-5S01 → EP-5S01-2 → …
-  let k = base
-  let n = 2
-  while (findSession(sc, k)) k = `${base}-${n++}`
+  // 一集一会：只确保本集会话存在，不再产生 EP-xxx-2 后缀
+  const epKey = store.episodeId
+  if (!epKey) { if (!silent) ElMessage.warning('先选择或新建集号'); return }
   try {
-    await api.dshEnsure(sc, k)
-  } catch { ElMessage.error('新建失败，后端未起？'); return }
+    await api.dshEnsureEpisode(epKey)
+  } catch { if (!silent) ElMessage.error('新建会话失败，后端未起？'); return }
   await reload()
-  curKey.value = k
-  curScope.value = sc
-  curSid.value = (findSession(sc, k) || {}).dsh_session_id || ''
+  curKey.value = epKey
+  curScope.value = 'episode'
+  curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
   loadLocal()
-  if (!silent) ElMessage.success(`已新建 ${k}`)
+  await resumeIfAny()
+  if (!silent) ElMessage.success(`已切到本集会话 ${epKey}`)
 }
 function pick(s: any) {
+  // 一集一会：点历史即切中央集号（集号会话联动）
+  if (s && s.scope === 'episode' && s.key && s.key !== store.episodeId && /^EP-/.test(s.key)) {
+    store.episodeId = s.key
+  }
   curKey.value = s.key
-  curScope.value = s.scope || routeScope()
+  curScope.value = 'episode'
   curSid.value = s.dsh_session_id || ''
   loadLocal()
   scrollBottom()
+  void resumeIfAny()
   // 点卡即进入该对话：聚焦输入框，可直接继续聊
   nextTick(() => {
     const ta = document.querySelector('.right .msg-input textarea') as HTMLElement | null
@@ -459,12 +512,6 @@ function pick(s: any) {
 function pickAndClose(s: any) {
   pick(s)
   histOpen.value = false
-}
-
-function delCurrent() {
-  const s = findSession(curScope.value, curKey.value)
-  if (s) delSession(s)
-  else ElMessage.warning('无可删会话')
 }
 
 // 单轮操作：引用进输入框 / 复制 / 删除整轮（一问一答一起删）
@@ -505,55 +552,7 @@ function delTurn(i: number) {
   saveLocal()
 }
 
-// 抽屉内行内改名：不经弹窗，直接在行内改
-const renaming = ref(false)
-const renameText = ref('')
-const renameTarget = ref('')
-const renameInput = ref<any>(null)
-function startRename(s?: any) {
-  const t = s || findSession(curScope.value, curKey.value)
-  if (!t) return ElMessage.warning('无可改名会话')
-  renaming.value = true
-  renameTarget.value = `${t.scope}:${t.key}`
-  renameText.value = t.key
-  nextTick(() => {
-    const el = renameInput.value as any
-    const inp = el?.$el?.querySelector?.('input') || el
-    inp?.focus?.()
-    inp?.select?.()
-  })
-}
-async function doRename() {
-  const [tScope, ...tRest] = renameTarget.value.split(':')
-  const tKey = tRest.join(':')
-  const s = (tScope && tKey ? findSession(tScope, tKey) : null) || findSession(curScope.value, curKey.value)
-  if (!s) { renaming.value = false; return }
-  const v = (renameText.value || '').trim()
-  if (!v) return ElMessage.warning('名字不能为空')
-  if (v === s.key) { renaming.value = false; return }
-  try {
-    await api.dshRename(s.scope, s.key, v)
-  } catch (e: any) {
-    ElMessage.error((e?.response?.data?.msg || e?.message || '改名失败').slice(0, 120))
-    return
-  }
-  // 本地聊天记录跟着改名搬家
-  try {
-    const oldH = localStorage.getItem(`dsh-turns:${s.scope}:${s.key}`)
-    if (oldH !== null) {
-      localStorage.setItem(`dsh-turns:${s.scope}:${v}`, oldH)
-      localStorage.removeItem(`dsh-turns:${s.scope}:${s.key}`)
-    }
-  } catch {}
-  await reload()
-  curKey.value = v
-  curScope.value = s.scope
-  curSid.value = (findSession(s.scope, v) || {}).dsh_session_id || ''
-  loadLocal()
-  renaming.value = false
-  renameTarget.value = ''
-  ElMessage.success(`已改名 ${v}`)
-}
+// 一集一会：会话名即集号，不提供改名入口
 
 async function delSession(s: any) {
   if (loading.value && s.key === curKey.value) stop()
@@ -567,32 +566,46 @@ async function delSession(s: any) {
   try { localStorage.removeItem(`dsh-turns:${s.scope || curScope.value}:${s.key}`) } catch {}
   sessions.value = sessions.value.filter(x => !(x.key === s.key && (x.scope || '') === (s.scope || '')))
   if (curKey.value === s.key) {
-    curKey.value = (sessions.value[0] || {}).key || ''
-    curSid.value = (sessions.value[0] || {}).dsh_session_id || ''
+    // 一集一会：删的是当前集会话，仍收敛回本集（下次发送自动重建）
+    curKey.value = store.episodeId || ''
+    curScope.value = 'episode'
+    curSid.value = ''
     loadLocal()
     scrollBottom()
   }
   ElMessage.success(remoteOk ? '会话已删除' : '本地已删除（后端待重启同步，刷新后若重现请重启后端）')
 }
 
-function stop() {
+async function stop() {
+  // 显式停止＝杀后端 run（唯一会杀进程的入口）。先断本地跟随，UI 立刻响应。
+  const rid = savedRun()
   aborter.value?.abort()
+  if (rid) { try { await api.dshRunStop(rid) } catch {} }
+  forgetRun()
+  const last = turns.value[turns.value.length - 1]
+  if (last && !last.a) { last.a = '[已停止]'; saveLocal() }
+  loading.value = false
+  progress.value = ''
 }
 
-async function onPick(e: Event, kind: 'image' | 'file') {
+async function onPick(e: Event, kind: 'image' | 'file' | 'video') {
   const input = e.target as HTMLInputElement
   const files = Array.from(input.files || [])
   input.value = ''
   if (!files.length) return
-  const limit = kind === 'image' ? 10 * 1024 * 1024 : 20 * 1024 * 1024
+  // 上传上限：图片 10MB / 文件 20MB / 参考视频 300MB（与后端抽帧上限对齐）
+  const limit = kind === 'image' ? 10 * 1024 * 1024 : kind === 'video' ? 300 * 1024 * 1024 : 20 * 1024 * 1024
   uploading.value = true
   try {
     for (const f of files) {
       if (kind === 'image' && !f.type.startsWith('image/')) continue
-      if (f.size > limit) { ElMessage.warning(`${f.name} 超过${limit / 1024 / 1024}MB，已跳过`); continue }
+      if (kind === 'video' && !f.type.startsWith('video/')) continue
+      if (f.size > limit) { ElMessage.warning(`${f.name} 超过${Math.round(limit / 1024 / 1024)}MB，已跳过`); continue }
       const d = await api.uploadFile(f)
       const row = d?.data || d
-      pending.value.push({ name: f.name, url: row.url, path: row.path, kind })
+      const att: Att = { name: f.name, url: row.url, path: row.path, kind, size: f.size }
+      if (kind === 'video') att.dur = await probeVideoDur(f)
+      pending.value.push(att)
     }
   } catch {
     ElMessage.error('上传失败，后端未起？')
@@ -601,11 +614,47 @@ async function onPick(e: Event, kind: 'image' | 'file') {
   }
 }
 
+function probeVideoDur(f: File): Promise<number> {
+  return new Promise(resolve => {
+    try {
+      const url = URL.createObjectURL(f)
+      const v = document.createElement('video')
+      v.preload = 'metadata'
+      v.onloadedmetadata = () => { const d = v.duration || 0; URL.revokeObjectURL(url); resolve(d) }
+      v.onerror = () => { URL.revokeObjectURL(url); resolve(0) }
+      v.src = url
+      setTimeout(() => resolve(0), 8000)
+    } catch { resolve(0) }
+  })
+}
+
+// 参考视频抽帧：调 video-frames，关键帧引用拼进输入框，agent 直接看图找灵感
+const framing = ref('')
+async function extractFrames(f: Att) {
+  if (framing.value) return
+  framing.value = f.path
+  try {
+    const r: any = await api.videoFrames({ path: f.path, max_frames: 12 })
+    const d = r?.data ?? r
+    const frames = (d?.frames ?? []) as any[]
+    if (!frames.length) { ElMessage.warning('没抽出关键帧'); return }
+    const refs = frames.map(x => `@data/uploads/${x.name}`).join('\n')
+    msg.value = msg.value ? msg.value.replace(/\s+$/, '') + `\n${refs}\n` : `${refs}\n`
+    ElMessage.success(`已抽 ${frames.length} 帧（片长${d?.duration_s ?? '?'}s），引用已填入输入框`)
+    focusComposer()
+  } catch (e: any) {
+    ElMessage.error((e?.response?.data?.msg || e?.message || '抽帧失败').slice(0, 120))
+  } finally {
+    framing.value = ''
+  }
+}
+
 async function send() {
   const text = msg.value.trim()
   if ((!text && !pending.value.length) || loading.value) return
-  // 无会话时自动建一个再发，不让按钮成死路
-  if (!curKey.value) {
+  // 一集一会：无集号不让发；有集号先确保本集会话存在，会话名恒为集号
+  if (!store.episodeId) return ElMessage.warning('先选择或新建集号，会话名即集号')
+  if (!curKey.value || curKey.value !== store.episodeId || !findSession('episode', store.episodeId)) {
     try { await ensure(true) } catch { ElMessage.error('新建会话失败，后端未起？'); return }
   }
   if (!curKey.value) return
@@ -620,54 +669,175 @@ async function send() {
   turns.value.push({ q: text || '(附件)', a: '', files })
   saveLocal()
   const idx = turns.value.length - 1
-  const fillA = (a: string) => { if (turns.value[idx]) { turns.value[idx].a = a; saveLocal() } }
   loading.value = true
   progress.value = '运行中…'
   scrollBottom()
   const ac = new AbortController()
-  aborter.value = ac
-  const t0 = Date.now()
-  const tick = setInterval(() => {
-    const s = Math.floor((Date.now() - t0) / 1000)
-    if (s >= 8 && !turns.value[idx]?.a) progress.value = `运行中…${s}s（dsh冷启动+首token较慢，超60s可点停止重试）`
-  }, 1000)
+  let runId = ''
   try {
-    let done: any = null
-    let errMsg = ''
-    await api.dshRunStream(
-      { scope: curScope.value, key: curKey.value, message: q, session_id: curSid.value || undefined },
-      (ev, d) => {
-        const s = Math.floor((Date.now() - t0) / 1000)
-        if (ev === 'dsh') progress.value = `运行中… 事件 ${d.n || ''} · ${s}s${(d.n || 0) > 200 ? '（事件过多，疑似空转，可点停止）' : ''}`
-        else if (ev === 'retry') progress.value = '检测到拒答，自动重试中…'
-        else if (ev === 'done') done = d
-        else if (ev === 'error') errMsg = (d as any).msg || '调用失败'
-      },
-      ac.signal,
-    )
-    if (done) {
-      if (done.session_id && done.session_id !== curSid.value) { curSid.value = done.session_id; await reload() }
-      fillA(done.answer || '(空回包)')
-      if (done.retried) ElMessage.info('上一轮被拒答，已自动重试并替换结果')
+    // 起 run：任务由后端线程持有，切页/刷新只会断"跟随"，不再杀掉这一轮
+    const st: any = await api.dshRunStart({ scope: curScope.value, key: curKey.value, message: q, session_id: curSid.value || undefined, model: model.value || undefined })
+    runId = st?.data?.run_id || ''
+    if (!runId) throw new Error('起任务失败：' + JSON.stringify(st).slice(0, 140))
+    rememberRun(runId)
+    const r = await followRun(runId, 0, idx, ac)
+    if (r.done) {
+      forgetRun()
+      if (r.done.session_id && r.done.session_id !== curSid.value) { curSid.value = r.done.session_id; await reload() }
+      fillAAt(idx, r.done.answer || '(空回包)')
+      if (r.done.retried) ElMessage.info('上一轮被拒答，已自动重试并替换结果')
+    } else if (r.aborted) {
+      // 断开跟随（切页/刷新）：任务在后端继续跑，run_id 已记住，回来会自动重连
+    } else if (r.stoppedFlag) {
+      forgetRun()
+      fillAAt(idx, '[已停止]')
     } else {
-      fillA('[失败] ' + (errMsg || '流中断'))
-      ElMessage.error((errMsg || '流中断').slice(0, 120))
+      // 流断了（切页/刷新/网络）：去问 run 的真实状态——任务可能还在跑，也可能已经跑完
+      let st: any = null
+      try { st = (await api.dshRunState(runId))?.data } catch {}
+      if (st && st.status !== 'running') { forgetRun(); applyFinished(st) }
+      else { rememberRun(runId) }   // 保留 run_id，回来/刷新后自动重连
     }
   } catch (e: any) {
-    if (ac.signal.aborted) {
-      fillA('[已停止]')
-    } else {
-      const m = (e?.message || '流连接失败').slice(0, 200)
-      fillA('[失败] ' + m)
-      ElMessage.error(m)
-    }
-  } finally { clearInterval(tick); loading.value = false; progress.value = ''; aborter.value = null }
+    forgetRun()
+    const m = (e?.message || '调用失败').slice(0, 200)
+    fillAAt(idx, '[失败] ' + m)
+    ElMessage.error(m.slice(0, 120))
+  } finally {
+    loading.value = false
+    progress.value = ''
+    aborter.value = null
+  }
   scrollBottom()
 }
-watch(() => [store.episodeId, store.selectedCharId, route.path], () => {
-  reload()
+
+/** 跟随一个后端 run：进度文案 + 事件计数 + 断线即返回（不杀任务）。 */
+async function followRun(runId: string, from: number, idx: number, ac: AbortController, tag = '') {
+  const t0 = Date.now()
+  let evCount = 0
+  let evAt = Date.now()
+  let done: any = null
+  let errMsg = ''
+  let stoppedFlag = false
+  let aborted = false
+  let streamErr = ''
+  // 事件计数由 tick 统一渲染（历史 bug：tick 每秒覆盖 SSE 处理器写的文案，
+  // 长任务永远只显示"运行中…Ns"，看着像卡死；写 3 分钟剧本单步静默可超 100s，属正常）
+  acts.value = []
+  const tick = setInterval(() => {
+    nowTs.value = Date.now()
+    const s = Math.floor((Date.now() - t0) / 1000)
+    if (idx >= 0 && turns.value[idx]?.a) return
+    if (!evCount) {
+      if (s >= 8) progress.value = `运行中…${tag}${s}s（dsh 冷启动 + 首 token 较慢；长剧本单步可能要几分钟，进度看事件计数）`
+      return
+    }
+    const gap = Math.floor((Date.now() - evAt) / 1000)
+    const tail = evCount > 200 ? '（事件过多，疑似空转，可点停止）'
+      : gap >= 60 ? `（已 ${gap}s 无新事件：模型在写长文/长思考，正常，别点停止）`
+      : gap >= 20 ? `（${gap}s 无新事件）` : ''
+    progress.value = `运行中…${tag} 事件 ${evCount} · ${s}s ${tail}`
+  }, 1000)
+  loading.value = true
+  progress.value = `运行中…${tag}`
+  aborter.value = ac
+  try {
+    await api.dshRunFollow(runId, from, (ev, d) => {
+      if (ev === 'dsh') { evCount = d?.n || evCount; evAt = Date.now(); pushAct(d?.label || '') }
+      else if (ev === 'retry') progress.value = d?.msg || '检测到拒答，自动重试中…'
+      else if (ev === 'done') done = d
+      else if (ev === 'error') { errMsg = d?.msg || '调用失败'; stoppedFlag = !!d?.stopped }
+    }, ac.signal)
+  } catch (e: any) {
+    // 连接类失败（切页 abort / 刷新 network error / nginx 断）都不再当成任务失败：
+    // run 在后端，调用方会去问 run 的真实状态再决定怎么显示
+    if (ac.signal.aborted) aborted = true
+    else streamErr = (e?.message || '流中断').slice(0, 200)
+  } finally {
+    clearInterval(tick)
+    progress.value = ''
+  }
+  return { done, errMsg, stoppedFlag, aborted, streamErr }
+}
+
+/** 把已完成/中断的 run 结果补回最后一轮气泡（刷新、切页回来后走这里）。 */
+function applyFinished(st: any) {
+  const last = turns.value[turns.value.length - 1]
+  if (!last) return
+  // 空答案 or 之前的"[失败] …"占位才覆盖；真答案/已停止不动
+  if (last.a && !last.a.startsWith('[失败]')) return
+  if (st.status === 'done') last.a = st.answer || '(空回包)'
+  else if (st.status === 'stopped') last.a = '[已停止]'
+  else last.a = '[失败] ' + String(st.err || '流中断').slice(0, 200)
+  saveLocal()
+  scrollBottom()
+}
+
+/** 重连：页面加载/切回会话时，把后端还在跑（或刚跑完）的那一轮接回气泡。 */
+async function resumeIfAny() {
+  if (loading.value) return
+  let rid = savedRun()
+  if (!rid) {
+    // 本地游标丢了（新标签页/换设备）：按会话键问后端还有没有在跑的 run
+    try {
+      const arr: any[] = ((await api.dshRuns({ scope: curScope.value, key: curKey.value, limit: 3 }))?.data) || []
+      const running = arr.find(x => x && x.status === 'running')
+      if (running) rid = running.id
+      else if (arr[0]) { applyFinished(arr[0]); return }
+      if (!rid) return
+    } catch { return }
+  }
+  let st: any = null
+  try { st = (await api.dshRunState(rid))?.data } catch { forgetRun(); return }
+  if (!st) { forgetRun(); return }
+  if (st.status !== 'running') { forgetRun(); applyFinished(st); return }
+  rememberRun(rid)
+  const idx = Math.max(0, turns.value.length - 1)
+  const ac = new AbortController()
+  const r = await followRun(rid, 0, idx, ac, '（已重连）')
+  if (r.aborted) return
+  if (r.done) {
+    forgetRun()
+    if (r.done.session_id && r.done.session_id !== curSid.value) { curSid.value = r.done.session_id; await reload() }
+    fillAAt(idx, r.done.answer || '(空回包)')
+  } else if (r.stoppedFlag) { forgetRun(); fillAAt(idx, '[已停止]') }
+  else { forgetRun(); fillAAt(idx, '[失败] ' + String(r.errMsg || '流中断').slice(0, 200)) }
+}
+watch(() => [store.episodeId, route.path], async () => {
+  // 一集一会：切集即切会话（只断跟随不杀任务，切回自动重连）；无集号只刷新列表不建垃圾会话
+  try { aborter.value?.abort() } catch {}
+  loading.value = false
+  progress.value = ''
+  if (store.episodeId && !findSession('episode', store.episodeId)) {
+    try { await api.dshEnsureEpisode(store.episodeId) } catch {}
+  }
+  await reload()
+  await resumeIfAny()
 })
-onMounted(async () => { await loadSkills(); await reload(); await backToEpisodeSilent() })
+onMounted(async () => {
+  purgeLegacyDomainCaches()
+  await loadSkills()
+  await reload()
+  await backToEpisodeSilent()
+  await resumeIfAny()   // 刷新后把后台还在跑/刚跑完的那一轮接回来
+})
+// 一次性迁移：一集一会之前攒下的异域旧缓存（story/character/traffic/global 的 turns 与 run 游标）清掉，
+// 只保留 episode 域；旧后缀 EP-xxx-2 的 turns 一起清（后端映射本就只剩 episode 域，删本地即对齐）。
+function purgeLegacyDomainCaches() {
+  try {
+    if (localStorage.getItem('suli.dsh.purged-v1')) return
+    const drop: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i) || ''
+      if (k.startsWith('dsh-turns:') || k.startsWith('dsh-run:')) {
+        const scope = k.split(':')[1] || ''
+        if (scope && scope !== 'episode') drop.push(k)
+      }
+    }
+    drop.forEach(k => { try { localStorage.removeItem(k) } catch {} })
+    try { localStorage.setItem('suli.dsh.purged-v1', String(Date.now())) } catch {}
+  } catch {}
+}
 async function backToEpisodeSilent() {
   // 首屏自动收敛到本集单会话（已有就不建，不打扰）
   const epKey = store.episodeId
@@ -680,6 +850,20 @@ async function backToEpisodeSilent() {
 .head{display:flex;align-items:center;gap:4px}
 .agent-sub{display:flex;gap:6px;margin-top:8px;align-items:center}
 .hint{font-size:12px;color:var(--suli-text-2);margin:6px 0}
+.run-card{margin:6px 0;padding:8px 10px;display:flex;flex-direction:column;gap:6px}
+.run-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.run-pulse{width:8px;height:8px;border-radius:50%;background:var(--suli-primary);box-shadow:0 0 0 0 rgba(251,114,153,.6);animation:runpulse 1.6s infinite}
+@keyframes runpulse{0%{box-shadow:0 0 0 0 rgba(251,114,153,.55)}70%{box-shadow:0 0 0 8px rgba(251,114,153,0)}100%{box-shadow:0 0 0 0 rgba(251,114,153,0)}}
+.run-acts{display:flex;flex-direction:column;gap:2px;max-height:150px;overflow:auto}
+.run-act{display:flex;align-items:baseline;gap:6px;font-size:12px;line-height:1.6}
+.run-dot{width:6px;height:6px;border-radius:50%;flex:0 0 6px;background:var(--suli-border-hover)}
+.run-dot.tool{background:var(--suli-accent)}
+.run-dot.result{background:var(--suli-text-3)}
+.run-dot.write{background:var(--suli-primary)}
+.run-dot.think{background:var(--suli-gold)}
+.run-label{flex:1;min-width:0;color:var(--suli-text-2);word-break:break-all}
+.run-time{color:var(--suli-text-3);flex:0 0 auto}
+.run-foot{font-size:11px;line-height:1.6}
 .cur-card{margin-top:8px;padding:10px 12px;cursor:pointer}
 .cur-card:hover{border-color:var(--suli-primary)}
 .cur-title{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--suli-primary);font-weight:700}
@@ -713,6 +897,25 @@ async function backToEpisodeSilent() {
 .user-b{background:var(--suli-primary);color:#fff;border-radius:14px 4px 14px 14px}
 .agent-b{background:var(--suli-surface);border:1px solid var(--suli-border);border-radius:4px 14px 14px 14px;color:var(--suli-text)}
 .q{font-weight:600}
+.user-b .md-view{color:#fff}
+.user-b .md-view :deep(p),
+.user-b .md-view :deep(li),
+.user-b .md-view :deep(h1),
+.user-b .md-view :deep(h2),
+.user-b .md-view :deep(h3),
+.user-b .md-view :deep(h4),
+.user-b .md-view :deep(blockquote),
+.user-b .md-view :deep(td),
+.user-b .md-view :deep(th){color:#fff}
+.user-b .md-view :deep(a){color:#fff;text-decoration:underline}
+.user-b .md-view :deep(code){background:rgba(255,255,255,.22);color:#fff}
+.user-b .md-view :deep(pre){background:rgba(0,0,0,.22)}
+.user-b .md-view :deep(pre code){background:none}
+.user-b .md-view :deep(blockquote){border-left-color:rgba(255,255,255,.6);background:rgba(255,255,255,.12)}
+.user-b .md-view :deep(table),
+.user-b .md-view :deep(th),
+.user-b .md-view :deep(td){border-color:rgba(255,255,255,.45)}
+.user-b .md-view :deep(.md-img){border-color:rgba(255,255,255,.5)}
 .a{margin-top:0}
 .a.thinking{font-size:12px;color:var(--suli-text-3,#a3a3a3)}
 .agent-b .md-view{font-size:12.5px}

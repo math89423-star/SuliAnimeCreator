@@ -12,6 +12,7 @@
       <el-menu-item index="/character"><el-icon><User /></el-icon>角色</el-menu-item>
       <el-menu-item index="/director"><el-icon><VideoCamera /></el-icon>导演</el-menu-item>
       <el-menu-item index="/board"><el-icon><Film /></el-icon>剧本分镜</el-menu-item>
+      <el-menu-item index="/video"><el-icon><VideoPlay /></el-icon>拉片室</el-menu-item>
       <el-menu-item index="/traffic"><el-icon><Present /></el-icon>投流批量</el-menu-item>
       <el-menu-item index="/art"><el-icon><Picture /></el-icon>美术工具</el-menu-item>
     </el-menu>
@@ -24,7 +25,7 @@
 </template>
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { House, Reading, User, Film, VideoCamera, Picture, Setting, Present } from '@element-plus/icons-vue'
+import { House, Reading, User, Film, VideoCamera, VideoPlay, Picture, Setting, Present } from '@element-plus/icons-vue'
 import { useAppStore } from '../stores/app'
 const store = useAppStore()
 const route = useRoute()

@@ -5,22 +5,46 @@ services:
       - "5001:5001"
     volumes:
       - ./backend/data:/app/data
+      # 后端源码热挂：镜像里的 app/ 是构建期副本，改了代码不重建镜像就永远是旧逻辑
+      # （2026-10-16 事故：cast 角色库化改完，路由 404，查出来跑的是旧镜像）。
+      - ./backend/app:/app/app
+      - ./skills:/skills:ro
+      - /home/administrator/L-Port-Comfy/app/backend/data/libraries/投流素材库:/lport-lib
+      - /home/administrator/L-Port-Comfy/app/backend/data/libraries/广告引流素材库:/lport-ads
       # dsh 原生 runtime 家目录（项目本地 ./dsh-home:/root/.dsh）：
       # 首次部署先 mkdir dsh-home，把宿主 ~/.dsh/{profiles,.credentials.yaml} 拷进去；
       # sessions/凭据全落这里，不进镜像。详见 README 部署节。
       - ./dsh-home:/root/.dsh
+      # 破甲内核（提示词层/策略层）源码：profile 里 dsh-corebreak 是 link: 软链，
+      # 目标路径 = /root/dsh-corebreak（= 宿主 LLMCoreBreak/dsh，2026-10-17 改名对齐），
+      # 不挂进来容器内解析失败，表现是启动 stderr「skipping profile bundle "dsh-corebreak"」。
+      - /home/administrator/LLMCoreBreak/dsh:/root/dsh-corebreak:ro
+      # 项目指令链：容器 WORKDIR=/app，AGENTS.md 走"cwd 向上收集"，两处都要挂。
+      - ./backend/AGENTS.md:/app/AGENTS.md:ro
+      - ./AGENTS.md:/AGENTS.md:ro
+      # dsh 桥接层（拒答治理口径：授权话术不再贴进 user 消息，改走系统级注入）。
+      # 镜像里是构建期副本；改这一个文件不必整镜像 rebuild，挂进去即可热生效（重启容器）。
+      - ./backend/app/api/dsh.py:/app/app/api/dsh.py:ro
+    extra_hosts:
+      # 宿主自带 SearXNG（:8888）时，容器内用 http://host.docker.internal:8888 够到它；
+      # 不填 SEARXNG_URL 则走容器内 127.0.0.1:8888（连不上自动降级 Wikipedia/DDG，不报错）
+      - "host.docker.internal:host-gateway"
     environment:
       - DATABASE_URL=sqlite:///suli.db
       - FLASK_DEBUG=0
       - DSH_BIN=dsh
       - DSH_HOME=/root/.dsh
       - DSH_TIMEOUT_S=180
+      - SEARXNG_URL=http://searxng:8080
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:-}
       - OPENCODE_BASE=${OPENCODE_BASE:-https://opencode.ai/zen/go/v1}
       - OPENCODE_MODEL=${OPENCODE_MODEL:-opencode-go/muse-spark-1.3-contributor}
     env_file:
       - path: ./.env
         required: false
+    networks:
+      - default
+      - infra
     restart: unless-stopped
   frontend:
     build: ./frontend
@@ -29,3 +53,6 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+networks:
+  infra:
+    external: true

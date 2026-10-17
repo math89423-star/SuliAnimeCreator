@@ -6,8 +6,11 @@ headless Agent 经 backend/AGENTS.md 发现这两个接口（curl 直调）。
 import html as _html
 import os
 import re
+import shutil as _shutil
+import subprocess as _subprocess
 import urllib.parse
 import urllib.request
+import uuid as _uuid
 
 from flask import Blueprint, request, jsonify
 
@@ -155,3 +158,186 @@ def webfetch():
     text = _HTML_RE.sub(" ", text)
     text = _html.unescape(re.sub(r"\s+", " ", text)).strip()[:12000]
     return ok({"url": url, "title": title, "text": text})
+
+
+_FFMPEG_BIN = ""
+_MAX_VIDEO_BYTES = int(os.getenv("VIDEO_MAX_BYTES", str(300 * 1024 * 1024)))
+
+
+def _ffmpeg_bin():
+    """找 ffmpeg：系统优先，宿主无则用 imageio-ffmpeg 自带静态二进制，镜像里一定有系统版。"""
+    global _FFMPEG_BIN
+    if _FFMPEG_BIN:
+        return _FFMPEG_BIN
+    p = _shutil.which("ffmpeg")
+    if p:
+        _FFMPEG_BIN = p
+        return p
+    try:
+        from imageio_ffmpeg import get_ffmpeg_exe
+        q = get_ffmpeg_exe()
+        import pathlib as _pl
+        if q and _pl.Path(q).is_file():
+            _FFMPEG_BIN = q
+            return q
+    except Exception:
+        pass
+    return ""
+
+
+def _ff_duration(exe, src):
+    try:
+        r = _subprocess.run([exe, "-hide_banner", "-i", src],
+                            capture_output=True, text=True, timeout=30)
+        m = re.search(r"Duration:\s*(\d+):(\d+):([\d.]+)", r.stderr or "")
+        if m:
+            return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
+    except Exception:
+        pass
+    return 0.0
+
+
+def _pick_evenly(times, n):
+    """切点多于帧数上限时均匀挑选 n 个（含首尾），保证长片全片覆盖、不堆在开头。"""
+    if len(times) <= n:
+        return times
+    if n <= 1:
+        return [times[0]]
+    step = (len(times) - 1) / (n - 1)
+    idx = sorted({round(i * step) for i in range(n)})
+    return [times[i] for i in idx]
+
+
+@bp.post("/video-frames")
+def video_frames():
+    """视频参考抽帧：下载视频（或用已上传文件）→ ffmpeg 按场景切关键帧 → 返回 uploads 图。
+    body: {url?, path?(@data/uploads/xxx 或 basename 二选一), max_frames=12(4-24), scene=0.35(0.1-0.9),
+           start_s?, end_s?(秒, 可选: 只抽区间内的帧，前端时间轴圈选)}
+    返回 {source, mode, duration_s, start_s, end_s, count, frames:[{name,url}]}，帧图走 /api/images/<name> 直接看。"""
+    from pathlib import Path as _P
+    b = request.get_json(force=True, silent=True) or {}
+    url = (b.get("url") or "").strip()
+    path = (b.get("path") or "").strip()
+    try:
+        max_frames = max(4, min(24, int(b.get("max_frames") or 12)))
+    except (ValueError, TypeError):
+        max_frames = 12
+    try:
+        scene = float(b.get("scene") or 0.35)
+        scene = max(0.1, min(0.9, scene))
+    except (ValueError, TypeError):
+        scene = 0.35
+    exe = _ffmpeg_bin()
+    if not exe:
+        return jsonify({"code": 5001, "msg": "无 ffmpeg：容器镜像自带，宿主 pip 装 imageio-ffmpeg 也有"}), 500
+    root = _P(__file__).resolve().parents[2] / "data" / "uploads"
+    root.mkdir(parents=True, exist_ok=True)
+    tag = _uuid.uuid4().hex[:12]
+    if path:
+        name = _P(path.replace("@data/uploads/", "")).name
+        src = root / name
+        if not name or not src.is_file():
+            return jsonify({"code": 4004, "msg": "uploads 里没有这个视频文件"}), 404
+        source = name
+    elif url:
+        if not (url.startswith("http://") or url.startswith("https://")):
+            return jsonify({"code": 4001, "msg": "url 须 http(s) 开头"}), 400
+        suf = _P(urllib.parse.urlsplit(url).path).suffix[:5] or ".mp4"
+        if len(suf) > 5 or "." not in suf:
+            suf = ".mp4"
+        source = f"vsrc_{tag}{suf}"
+        try:
+            req = urllib.request.Request(url, headers=_UA)
+            with urllib.request.urlopen(req, timeout=120) as r, open(root / source, "wb") as f:
+                left = _MAX_VIDEO_BYTES
+                while True:
+                    chunk = r.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    left -= len(chunk)
+                    if left < 0:
+                        raise ValueError("视频超过 %dMB 上限" % (_MAX_VIDEO_BYTES // 1024 // 1024))
+                    f.write(chunk)
+        except Exception as e:
+            try:
+                (root / source).unlink()
+            except Exception:
+                pass
+            return jsonify({"code": 5001, "msg": "视频下载失败: %s" % str(e)[:200]}), 502
+        src = root / source
+    else:
+        return jsonify({"code": 4001, "msg": "url/path 二选一"}), 400
+    # 区间圈选（前端时间轴）：缺省整片；clamp 到有效范围，start/end 非法即退回全片
+    total_d = _ff_duration(exe, str(src))
+    try:
+        start_s = max(0.0, float(b.get("start_s") or 0))
+    except (ValueError, TypeError):
+        start_s = 0.0
+    try:
+        end_s = max(0.0, float(b.get("end_s") or 0))
+    except (ValueError, TypeError):
+        end_s = 0.0
+    if total_d > 0:
+        start_s = min(start_s, max(0.0, total_d - 0.5))
+        end_s = min(end_s, total_d) if end_s > start_s + 0.2 else total_d
+    seg = end_s - start_s if end_s > start_s + 0.2 else 0.0
+    seg_args = (["-ss", f"{start_s:.3f}"] if start_s > 0 else []) + (["-t", f"{seg:.3f}"] if seg > 0 else [])
+    out_pat = str(root / f"vf_{tag}_%03d.jpg")
+    last_err = ""
+    fmap = {}
+    mode = "scene"
+    # pass1：先全片扫一遍切点（不写图、不看结尾）：长片切点多于帧数上限时均匀挑选，避免只抽开头
+    scene_txt = root / f"vf_{tag}_scenes.txt"
+    scene_list = []
+    try:
+        p1 = _subprocess.run(
+            [exe, "-hide_banner", "-y", *seg_args, "-i", str(src), "-an", "-sn",
+             "-vf", f"select='gt(scene,{scene})',metadata=print:file={scene_txt}",
+             "-f", "null", "-"],
+            capture_output=True, text=True, timeout=300)
+        last_err = (p1.stderr or "")[-400:]
+        if scene_txt.is_file():
+            scene_list = sorted({round(float(m), 3) for m in re.findall(r"pts_time:([0-9.]+)", scene_txt.read_text())})
+    except Exception as e:
+        last_err = "scene 扫描失败: %s" % str(e)[:160]
+    finally:
+        try:
+            scene_txt.unlink()
+        except Exception:
+            pass
+    # pass2：挑选后的切点逐点精确抽帧（数量 = min(切点数, 上限)；帧文件按时间顺序编号）
+    for i, t in enumerate(_pick_evenly(scene_list, max_frames), 1):
+        out_f = root / f"vf_{tag}_{i:03d}.jpg"
+        try:
+            _subprocess.run(
+                [exe, "-hide_banner", "-y", "-ss", f"{start_s + t:.3f}", "-i", str(src),
+                 "-frames:v", "1", "-vf", "scale=960:-1,format=yuvj420p", "-q:v", "3", str(out_f)],
+                capture_output=True, text=True, timeout=60)
+        except Exception:
+            pass
+        if out_f.is_file():
+            fmap[out_f.name] = round(start_s + t, 1)
+    frames = sorted(root.glob(f"vf_{tag}_*.jpg"))
+    if not frames:
+        # 无切点（或切点检测不可用）：按 帧数上限÷时长 均匀采样——最密 0.5s/帧，长片自动变稀且覆盖全片
+        dur = seg if seg > 0 else total_d
+        fps = min(2.0, max_frames / dur) if dur > 0 else 1.0
+        fps = max(1e-6, fps)
+        try:
+            p2 = _subprocess.run(
+                [exe, "-hide_banner", "-y", *seg_args, "-i", str(src),
+                 "-vf", f"fps={fps:.6f},scale=960:-1,format=yuvj420p",
+                 "-frames:v", str(max_frames), "-q:v", "3", out_pat],
+                capture_output=True, text=True, timeout=180)
+            last_err = (p2.stderr or "")[-400:]
+        except Exception as e:
+            return jsonify({"code": 5001, "msg": "抽帧超时/失败: %s" % str(e)[:200]}), 500
+        frames = sorted(root.glob(f"vf_{tag}_*.jpg"))
+        fmap = {p.name: round(start_s + idx / fps, 1) for idx, p in enumerate(frames)}
+        mode = "uniform"
+    if not frames:
+        return jsonify({"code": 5001, "msg": "没抽出关键帧（片子太平？调小 scene 重试）: %s" % last_err[-200:]}), 500
+    return ok({"source": source, "mode": mode, "duration_s": round(total_d, 1),
+               "start_s": round(start_s, 2), "end_s": round(end_s if end_s > start_s else total_d, 2),
+               "count": len(frames),
+               "frames": [{"name": p.name, "url": f"/api/images/{p.name}", "time_s": fmap.get(p.name)} for p in frames]})
