@@ -11,6 +11,7 @@ import { dshApi } from './dsh'
 import { systemApi } from './system'
 import { trafficApi } from './traffic'
 import { toolsApi } from './tools'
+import { reportsApi } from './reports'
 
 export { http, DIMS }
 export const api = {
@@ -23,5 +24,6 @@ export const api = {
   ...dshApi,
   ...trafficApi,
   ...toolsApi,
+  ...reportsApi,
 }
 export type Api = typeof api

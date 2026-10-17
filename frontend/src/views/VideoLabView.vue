@@ -14,6 +14,7 @@
         <el-radio-group v-model="tab" size="small">
           <el-radio-button value="work">工作台</el-radio-button>
           <el-radio-button value="lib">素材源</el-radio-button>
+          <el-radio-button value="reports">报告</el-radio-button>
         </el-radio-group>
       </div>
     </div>
@@ -78,10 +79,20 @@
         <div class="suli-card sect">
           <div class="sect-title">③ 拉片报告</div>
           <el-input v-model="ask" type="textarea" :rows="3" placeholder="分析侧重（可选）…例如：重点反推性行为段的机位选择与切换节奏" />
+          <div class="row" style="margin-top:8px">
+            <el-checkbox v-model="deep" size="small">深度拆解（复刻级）</el-checkbox>
+            <el-select v-if="deep" v-model="deepModel" size="small" style="width:175px">
+              <el-option label="LongCat 2.5 Free" value="longcat-2.5-preview-free" />
+              <el-option label="DeepSeek V4.1 Flash" value="deepseek-v4.1-flash" />
+            </el-select>
+          </div>
+          <div v-if="deep" class="suli-muted" style="font-size:12px;margin-top:4px">
+            复刻级：Agent 自己切点 → 逐镜帧墙 → 镜头卡 → 详细设计报告；无需先抽帧，耗时约 10–30 分钟。
+          </div>
           <div class="suli-muted" style="font-size:12px;margin:6px 0">会话：{{ sessionLabel }}</div>
           <div class="row">
-            <el-button type="primary" :disabled="!frames.length" :loading="analyzing" @click="analyze">
-              <el-icon style="margin-right:4px"><MagicStick /></el-icon>{{ report ? '重新分析' : 'Agent 拉片分析' }}
+            <el-button type="primary" :disabled="deep ? !src : !frames.length" :loading="analyzing" @click="analyze(deep)">
+              <el-icon style="margin-right:4px"><MagicStick /></el-icon>{{ analyzing ? (deep ? '深度拆解中…' : '分析中…') : (report ? '重新分析' : (deep ? '深度拆解（复刻级）' : 'Agent 拉片分析')) }}
             </el-button>
             <el-button v-if="analyzing" @click="stopAnalyze">停止</el-button>
           </div>
@@ -172,7 +183,7 @@
 
         <div v-if="report || analyzing" class="suli-card sect">
           <div class="sect-title">
-            拉片报告
+            {{ deep ? '详细设计报告' : '拉片报告' }}
             <span style="flex:1" />
             <el-button v-if="report" size="small" text @click="copyReport">复制报告</el-button>
           </div>
@@ -219,6 +230,57 @@
         </div>
       </div>
     </div>
+
+    <div v-show="tab === 'reports'" class="suli-card sect">
+      <div class="sect-title">
+        报告历史
+        <span class="suli-muted" style="font-size:12px;font-weight:400">拉片 / 深度拆解报告自动入库——跑完即存，刷新、关页都不丢</span>
+        <span style="flex:1" />
+        <el-button size="small" :loading="repLoading" @click="loadReports">刷新</el-button>
+      </div>
+      <div v-if="!reports.length && !repLoading" class="suli-muted" style="padding:18px 0;text-align:center;font-size:12.5px">
+        还没有报告——跑一次「Agent 拉片分析」或「深度拆解（复刻级）」，出稿后会自动出现在这里
+      </div>
+      <div v-else class="rep-list">
+        <div v-for="r in reports" :key="r.id" class="rep-row" :class="{ picked: repCur === r.id }">
+          <div class="rep-main" @click="openReport(r)">
+            <div class="rep-title">
+              <el-tag size="small" :type="r.kind === 'deep' ? 'warning' : 'info'" effect="plain">{{ r.kind === 'deep' ? '深度拆解' : '拉片' }}</el-tag>
+              <span class="rep-name" :title="r.title">{{ r.title }}</span>
+            </div>
+            <div class="suli-muted" style="font-size:12px">
+              {{ r.source || '—' }} · {{ r.model || '默认模型' }} · {{ r.chars }} 字<span v-if="r.image_count"> · 配图 {{ r.image_count }}</span> · {{ fmtTime(r.created_at / 1000) }}
+            </div>
+          </div>
+          <div class="row">
+            <el-button size="small" text @click.stop="copyReportById(r)">复制</el-button>
+            <el-button size="small" text type="danger" @click.stop="delReport(r)">删除</el-button>
+          </div>
+        </div>
+      </div>
+      <div v-if="repMd" class="rep-view">
+        <div class="sect-title" style="margin-top:10px">
+          {{ repTitle || '报告' }}
+          <span v-if="repImages.length" class="suli-muted" style="font-size:12px;font-weight:400">配图 {{ repImages.length }} 帧</span>
+          <span style="flex:1" />
+          <el-button size="small" text @click="repMd = ''; repImages = []">收起</el-button>
+        </div>
+        <div v-if="repImages.length" class="rep-thumbs">
+          <el-image
+            v-for="(n, i) in repImages"
+            :key="n + '-' + i"
+            :src="`/api/images/${n}`"
+            :preview-src-list="repPreview"
+            :initial-index="i"
+            fit="cover"
+            class="rep-thumb"
+            lazy
+            hide-on-click-modal
+          />
+        </div>
+        <MarkdownView :content="repMd" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -247,12 +309,21 @@ const maxFrames = ref(12)
 const scene = ref(0.35)
 const framing = ref(false)
 const hfetching = ref(false)
-const tab = ref<'work' | 'lib'>('work')
+const tab = ref<'work' | 'lib' | 'reports'>('work')
 const frames = ref<{ name: string; url: string; time_s?: number }[]>([])
 const durationS = ref(0)
 const mode = ref('')
 const segInfo = ref<{ start: number; end: number } | null>(null)
 const ask = ref('')
+const deep = ref(false)
+const deepModel = ref('longcat-2.5-preview-free')
+const reports = ref<{ id: string; title: string; kind: string; source: string; model: string; created_at: number; chars: number; image_count?: number }[]>([])
+const repLoading = ref(false)
+const repCur = ref('')
+const repTitle = ref('')
+const repMd = ref('')
+const repImages = ref<string[]>([])
+const repPreview = computed(() => repImages.value.map(n => `/api/images/${n}`))
 const analyzing = ref(false)
 const progress = ref('')
 const report = ref('')
@@ -306,7 +377,7 @@ function persist() {
       tab: tab.value, src: src.value, url: url.value, maxFrames: maxFrames.value, scene: scene.value,
       frames: frames.value, durationS: durationS.value, mode: mode.value, segInfo: segInfo.value,
       segStart: segStart.value, segEnd: segEnd.value, loopSeg: loopSeg.value,
-      ask: ask.value, report: report.value, ts: Date.now(),
+      ask: ask.value, report: report.value, deep: deep.value, deepModel: deepModel.value, ts: Date.now(),
     }))
   } catch {}
 }
@@ -316,7 +387,7 @@ function restore() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY) || '{}')
     if (!d || typeof d !== 'object') return
-    if (d.tab === 'lib' || d.tab === 'work') tab.value = d.tab
+    if (d.tab === 'lib' || d.tab === 'work' || d.tab === 'reports') tab.value = d.tab
     if (d.src && typeof d.src === 'object') src.value = d.src
     if (typeof d.url === 'string') url.value = d.url
     if (typeof d.maxFrames === 'number') maxFrames.value = Math.min(24, Math.max(4, d.maxFrames))
@@ -330,9 +401,11 @@ function restore() {
     if (typeof d.loopSeg === 'boolean') loopSeg.value = d.loopSeg
     if (typeof d.ask === 'string') ask.value = d.ask
     if (typeof d.report === 'string') report.value = d.report
+    if (typeof d.deep === 'boolean') deep.value = d.deep
+    if (typeof d.deepModel === 'string' && d.deepModel) deepModel.value = d.deepModel
   } catch {}
 }
-watch([tab, src, url, maxFrames, scene, frames, durationS, mode, segInfo, segStart, segEnd, loopSeg, ask, report], persistSoon, { deep: true })
+watch([tab, src, url, maxFrames, scene, frames, durationS, mode, segInfo, segStart, segEnd, loopSeg, ask, report, deep, deepModel], persistSoon, { deep: true })
 
 /* —— 素材源（拉片室已拉素材库：uploads 视频列表）—— */
 type MediaItem = { name: string; url: string; bytes: number; mtime: number; dur?: number }
@@ -609,14 +682,37 @@ function buildBrief(): string {
   lines.push('2) 运镜与节奏：几秒一切、爆点落在哪、镜头怎么动')
   lines.push('3) 开场 3 秒钩子是什么')
   lines.push('4) 手法清单：可直接借鉴进我们后续分镜的点（运镜 / 节奏 / 构图 / 可见层写法），只借手法不抄画面；每条标出出现的大致秒数（如「2.4s 推镜」）')
+  lines.push('（本轮完整重做：即使帧与上一轮相同，也重新出报告，不要复用上一轮结论。）')
   const extra = ask.value.trim()
   if (extra) lines.push(`补充侧重：${extra}`)
   lines.push('帧引用（按时间顺序，括号内为该帧在片中的时间）：')
   lines.push(frames.value.map(frameRefLine).join('\n'))
   return lines.join('\n')
 }
-async function analyze() {
-  if (!frames.value.length || analyzing.value) return
+function buildDeepBrief(): string {
+  const lines: string[] = []
+  if (store.episodeId) lines.push(`集号：${store.episodeId}`)
+  const s = src.value
+  const how = s?.path ? `本地素材（uploads）：${s.path}` : `视频直链：${s?.url || ''}`
+  const dur = durationS.value || videoDur.value || 0
+  lines.push(`【深度拉片请求】参考片：${s?.name || '本地上传视频'}（片长 ${dur ? dur.toFixed(1) + 's' : '未知'}；${how}）。`)
+  if (segIsPartial.value) {
+    lines.push(`素材区间：${fmtT(segStart.value)} → ${fmtT(effEnd.value)}（${segDur.value.toFixed(1)}s），只拆这个区间。`)
+  }
+  lines.push('目标：复刻级拆解 → 详细设计报告（复刻规格版）。执行《深度拉片工作流》：')
+  lines.push('先重读 ../skills/video/deep-teardown/SKILL.md（每轮都重读，以文件最新版为准，不要凭记忆跑旧流程）。')
+  lines.push('按 S0 切点扫描 → S1 逐镜帧墙 → 逐镜镜头卡 → S2 关键镜精拆 → S3 节奏结构 → S4 详细设计报告 逐步跑完。')
+  lines.push('本轮为完整重跑：切点/帧墙现场重新生成，逐镜交给本轮工具结果（即使与上一轮同源，也不要复用上一轮结论与数据）。')
+  lines.push('每镜必须配 1 张帧图：用本轮 shots-frames 返回的 frames[] 里该镜的中间帧，在镜块里写 ![镜 N · 时间码](/api/images/<name>)（name 逐字复制，别手敲）。')
+  lines.push('交稿前自检：报告里 /api/images/ 的引用数 ≥ 镜数，不够就补齐再交。')
+  lines.push('只出报告：不落盘、不出分镜、不改任何库；报告全文直接输出（这就是交付物）。')
+  const extra = ask.value.trim()
+  if (extra) lines.push(`补充侧重：${extra}`)
+  return lines.join('\n')
+}
+async function analyze(deepMode = false) {
+  if (analyzing.value) return
+  if (deepMode ? !src.value : !frames.value.length) return
   const scope = store.episodeId ? 'episode' : 'lab'
   const key = store.episodeId || 'video-lab'
   analyzing.value = true
@@ -625,15 +721,19 @@ async function analyze() {
   try {
     await api.dshEnsure(scope, key)
   } catch { ElMessage.error('Agent 会话建失败，后端未起？'); analyzing.value = false; progress.value = ''; return }
-  progress.value = 'Agent 拉片分析中…'
+  progress.value = deepMode ? '深度拆解中…（切点 → 逐镜帧墙 → 镜头卡 → 设计报告）' : 'Agent 拉片分析中…'
   const c = new AbortController()
   ac = c
   let done: any = null
   let errMsg = ''
   try {
-    await api.dshRunStream({ scope, key, message: buildBrief() }, (ev: string, d: any) => {
-      if (ev === 'dsh') progress.value = `Agent 拉片分析中… 事件 ${d?.n ?? ''}`
-      else if (ev === 'retry') progress.value = '检测到拒答，自动重试中…'
+    const payload: { scope: string; key: string; message: string; model?: string } = {
+      scope, key, message: deepMode ? buildDeepBrief() : buildBrief(),
+    }
+    if (deepMode && deepModel.value) payload.model = deepModel.value
+    await api.dshRunStream(payload, (ev: string, d: any) => {
+      if (ev === 'dsh') progress.value = `${deepMode ? '深度拆解中' : 'Agent 拉片分析中'}… 事件 ${d?.n ?? ''}`
+      else if (ev === 'retry') progress.value = d?.msg || '自动重试中…'
       else if (ev === 'done') done = d
       else if (ev === 'error') errMsg = d?.msg || '调用失败'
     }, c.signal)
@@ -641,7 +741,8 @@ async function analyze() {
       report.value = done.answer || '(空回包)'
       progress.value = ''
       persist()
-      ElMessage.success('拉片报告已生成')
+      ElMessage.success(deepMode ? '详细设计报告已生成（已存报告历史）' : '拉片报告已生成（已存报告历史）')
+      if (tab.value === 'reports') loadReports()
     } else {
       report.value = '[失败] ' + (errMsg || '流中断')
       progress.value = ''
@@ -660,6 +761,46 @@ async function analyze() {
   }
 }
 function stopAnalyze() { ac?.abort() }
+
+/* —— 报告历史（后端报告库：拉片/深度拆解跑完自动入库） —— */
+async function loadReports() {
+  repLoading.value = true
+  try {
+    const r: any = await api.reportList()
+    reports.value = (r?.data ?? r)?.items || []
+  } catch {
+    ElMessage.error('报告列表拉取失败（后端未起？）')
+  } finally { repLoading.value = false }
+}
+async function openReport(r: { id: string; title: string }) {
+  try {
+    const d: any = await api.reportGet(r.id)
+    const dd = d?.data ?? d
+    repCur.value = r.id
+    repTitle.value = dd?.title || r.title
+    repMd.value = dd?.report_md || ''
+    repImages.value = Array.isArray(dd?.images) ? dd.images : []
+  } catch { ElMessage.error('报告读取失败') }
+}
+async function copyReportById(r: { id: string }) {
+  try {
+    const d: any = await api.reportGet(r.id)
+    const dd = d?.data ?? d
+    copyText(dd?.report_md || '')
+  } catch { ElMessage.error('报告读取失败') }
+}
+async function delReport(r: { id: string; title: string }) {
+  try {
+    await ElMessageBox.confirm(`删除报告「${r.title}」？`, '删除报告', { type: 'warning' })
+  } catch { return }
+  try {
+    await api.reportDelete(r.id)
+    if (repCur.value === r.id) { repCur.value = ''; repMd.value = '' }
+    await loadReports()
+    ElMessage.success('已删除')
+  } catch { ElMessage.error('删除失败') }
+}
+watch(tab, v => { if (v === 'reports') loadReports() }, { immediate: true })
 
 /* —— 杂项 —— */
 function copyText(t: string) {
@@ -716,6 +857,16 @@ onMounted(restore)
 .media-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .media-meta { font-size: 11.5px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .media-card .row { margin-top: 0; }
+.rep-list { display: flex; flex-direction: column; gap: 8px; }
+.rep-row { display: flex; gap: 8px; align-items: center; border: 1px solid var(--suli-border); border-radius: 12px; padding: 8px 10px; background: var(--suli-bg-2); }
+.rep-row.picked { border-color: var(--suli-primary); box-shadow: 0 0 0 1px var(--suli-primary); }
+.rep-main { flex: 1; min-width: 0; cursor: pointer; display: flex; flex-direction: column; gap: 3px; }
+.rep-title { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.rep-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rep-view { margin-top: 6px; }
+.rep-thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; margin: 4px 0 10px; }
+.rep-thumb { width: 100%; aspect-ratio: 16/10; border: 1px solid var(--suli-border); border-radius: 6px; cursor: zoom-in; }
+.rep-row .row { margin-top: 0; flex-shrink: 0; }
 @media (max-width: 900px) {
   .cols { flex-direction: column; }
   .col-left { width: 100%; }

@@ -67,7 +67,7 @@ export const dshApi = {
     openSSE(`/api/v1/dsh/runs/${encodeURIComponent(runId)}/stream?from=${from}`, { method: 'GET', signal }, onEvent),
 
   /** 兼容旧调用：起 run 后原地跟随（断线不再杀任务） */
-  dshRunStream: (p: { scope: string; key: string; message: string; session_id?: string }, onEvent: (ev: string, data: any) => void, signal?: AbortSignal) =>
+  dshRunStream: (p: { scope: string; key: string; message: string; session_id?: string; model?: string }, onEvent: (ev: string, data: any) => void, signal?: AbortSignal) =>
     openSSE('/api/v1/dsh/stream', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(p), signal,
