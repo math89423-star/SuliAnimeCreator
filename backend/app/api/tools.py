@@ -208,6 +208,24 @@ def _pick_evenly(times, n):
     return [times[i] for i in idx]
 
 
+def _norm_range(b, total_d):
+    """start_s/end_s（秒）→ (start_s, end_s, seg, seg_args)；缺省整片，非法退回全片（video-frames 同款口径）。"""
+    try:
+        start_s = max(0.0, float(b.get("start_s") or 0))
+    except (ValueError, TypeError):
+        start_s = 0.0
+    try:
+        end_s = max(0.0, float(b.get("end_s") or 0))
+    except (ValueError, TypeError):
+        end_s = 0.0
+    if total_d > 0:
+        start_s = min(start_s, max(0.0, total_d - 0.5))
+        end_s = min(end_s, total_d) if end_s > start_s + 0.2 else total_d
+    seg = end_s - start_s if end_s > start_s + 0.2 else 0.0
+    seg_args = (["-ss", f"{start_s:.3f}"] if start_s > 0 else []) + (["-t", f"{seg:.3f}"] if seg > 0 else [])
+    return start_s, end_s, seg, seg_args
+
+
 @bp.post("/video-frames")
 def video_frames():
     """视频参考抽帧：下载视频（或用已上传文件）→ ffmpeg 按场景切关键帧 → 返回 uploads 图。
@@ -269,19 +287,7 @@ def video_frames():
         return jsonify({"code": 4001, "msg": "url/path 二选一"}), 400
     # 区间圈选（前端时间轴）：缺省整片；clamp 到有效范围，start/end 非法即退回全片
     total_d = _ff_duration(exe, str(src))
-    try:
-        start_s = max(0.0, float(b.get("start_s") or 0))
-    except (ValueError, TypeError):
-        start_s = 0.0
-    try:
-        end_s = max(0.0, float(b.get("end_s") or 0))
-    except (ValueError, TypeError):
-        end_s = 0.0
-    if total_d > 0:
-        start_s = min(start_s, max(0.0, total_d - 0.5))
-        end_s = min(end_s, total_d) if end_s > start_s + 0.2 else total_d
-    seg = end_s - start_s if end_s > start_s + 0.2 else 0.0
-    seg_args = (["-ss", f"{start_s:.3f}"] if start_s > 0 else []) + (["-t", f"{seg:.3f}"] if seg > 0 else [])
+    start_s, end_s, seg, seg_args = _norm_range(b, total_d)
     out_pat = str(root / f"vf_{tag}_%03d.jpg")
     last_err = ""
     fmap = {}
@@ -341,6 +347,339 @@ def video_frames():
                "start_s": round(start_s, 2), "end_s": round(end_s if end_s > start_s else total_d, 2),
                "count": len(frames),
                "frames": [{"name": p.name, "url": f"/api/images/{p.name}", "time_s": fmap.get(p.name)} for p in frames]})
+
+
+# ---- 深度拉片（复刻级拆解）：S0 切点清单 + S1/S2 逐镜帧墙 ----
+# 设计口径见 skills/video/deep-teardown/SKILL.md：agent 先用 video-scenes 拿镜头表，
+# 再用 shots-frames 把「每镜 2-4 帧」拼成带时间标签的接触表（一图看多镜，省读图次数）。
+_FONT_FILE = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+
+
+def _resolve_src(b, root, tag):
+    """url/path 二选一 → (src 路径, source 名)；异常抛 ValueError（中文提示）。"""
+    from pathlib import Path as _P
+    url = (b.get("url") or "").strip()
+    path = (b.get("path") or "").strip()
+    if path:
+        name = _P(path.replace("@data/uploads/", "")).name
+        src = root / name
+        if not name or not src.is_file():
+            raise ValueError("uploads 里没有这个视频文件")
+        return src, name
+    if not url:
+        raise ValueError("url/path 二选一")
+    if not (url.startswith("http://") or url.startswith("https://")):
+        raise ValueError("url 须 http(s) 开头")
+    suf = _P(urllib.parse.urlsplit(url).path).suffix[:5] or ".mp4"
+    if len(suf) > 5 or "." not in suf:
+        suf = ".mp4"
+    source = f"vsrc_{tag}{suf}"
+    try:
+        req = urllib.request.Request(url, headers=_UA)
+        with urllib.request.urlopen(req, timeout=120) as r, open(root / source, "wb") as f:
+            left = _MAX_VIDEO_BYTES
+            while True:
+                chunk = r.read(1024 * 1024)
+                if not chunk:
+                    break
+                left -= len(chunk)
+                if left < 0:
+                    raise ValueError("视频超过 %dMB 上限" % (_MAX_VIDEO_BYTES // 1024 // 1024))
+                f.write(chunk)
+    except Exception as e:
+        try:
+            (root / source).unlink()
+        except Exception:
+            pass
+        raise ValueError("视频下载失败: %s" % str(e)[:200])
+    return root / source, source
+
+
+def _scan_cuts(exe, src, seg_args, scene, scene_txt, timeout=300):
+    """ffmpeg select+metadata 扫切点（video-frames pass1 同款），返回相对区间起点的切点秒表。"""
+    try:
+        _subprocess.run(
+            [exe, "-hide_banner", "-y", *seg_args, "-i", str(src), "-an", "-sn",
+             "-vf", f"select='gt(scene,{scene})',metadata=print:file={scene_txt}",
+             "-f", "null", "-"],
+            capture_output=True, text=True, timeout=timeout)
+        if scene_txt.is_file():
+            return sorted({round(float(m), 3) for m in re.findall(r"pts_time:([0-9.]+)", scene_txt.read_text())})
+    except Exception:
+        pass
+    finally:
+        try:
+            scene_txt.unlink()
+        except Exception:
+            pass
+    return []
+
+
+def _shots_of(cuts_abs, t0, t1, min_shot_s):
+    """切点 → 镜头表：首尾补齐后剖段；短于 min_shot_s 的镜并入前一镜（首镜并入后一镜）。"""
+    bounds = [t0] + [c for c in cuts_abs if t0 + 0.05 < c < t1 - 0.05] + [t1]
+    segs = [(bounds[i], bounds[i + 1]) for i in range(len(bounds) - 1)]
+    if min_shot_s > 0:
+        merged = []
+        for s, e in segs:
+            if merged and (e - s) < min_shot_s:
+                merged[-1] = (merged[-1][0], e)
+            else:
+                merged.append((s, e))
+        if len(merged) > 1 and (merged[0][1] - merged[0][0]) < min_shot_s:
+            merged[1] = (merged[0][0], merged[1][1])
+            merged.pop(0)
+        segs = merged
+    return [{"i": i + 1, "start_s": round(s, 2), "end_s": round(e, 2), "dur_s": round(e - s, 2)}
+            for i, (s, e) in enumerate(segs)]
+
+
+def _fnum(b, key, lo, hi, dflt):
+    """body 取浮点参数（clamp 到 [lo,hi]，缺/非法用 dflt）。"""
+    try:
+        v = float(b.get(key))
+    except (ValueError, TypeError):
+        return dflt
+    return max(lo, min(hi, v))
+
+
+def _auto_shots(exe, src, cuts_rel, t0, t1, min_shot_s, tmp_root, tag, scene, long_shot_s, scene2):
+    """切点 → 镜头表；≥long_shot_s 的长镜在镜内用更低阈值 scene2 二级扫描拆细（拆出的镜带 sub:true）。
+    返回 (shots, sub_cuts)；sub_cuts 是二级扫描实际用上的内部切点（绝对秒）。
+    背景：实测该片 0.35 主阈值对蒙太奇式快切段整段漏检（80.9s「长镜」内实有 18 个切点），
+    而 0.15 在长镜内验证为真切点为主——主阈值保持严格、长镜内再敏感扫一遍是折中解。"""
+    shots = _shots_of([round(t0 + t, 3) for t in cuts_rel], t0, t1, min_shot_s)
+    sub_cuts = []
+    if long_shot_s > 0 and 0 < scene2 < scene:
+        out = []
+        for sh in shots:
+            if sh["dur_s"] >= long_shot_s:
+                rel2 = _scan_cuts(exe, src,
+                                  ["-ss", f"{sh['start_s']:.3f}", "-t", f"{sh['dur_s']:.3f}"],
+                                  scene2, tmp_root / f"vs2_{tag}_{sh['i']:03d}.txt")
+                inner = [round(sh["start_s"] + t, 3) for t in rel2]
+                subs = _shots_of(inner, sh["start_s"], sh["end_s"], min_shot_s)
+                if len(subs) > 1:
+                    for s2 in subs:
+                        s2["sub"] = True
+                    sub_cuts.extend(s2["start_s"] for s2 in subs[1:])
+                    out.extend(subs)
+                    continue
+            out.append(sh)
+        shots = out
+        for i, s in enumerate(shots, 1):
+            s["i"] = i
+    return shots, sub_cuts
+
+
+@bp.post("/video-scenes")
+def video_scenes():
+    """深度拉片 S0：整片（或区间）切点扫描 → 镜头清单（复刻拆解第一步，纯数据不用图）。
+    body: {url?|path?, scene=0.35(0.1-0.9), start_s?, end_s?, min_shot_s=0.5(0~5, 合并再短镜头),
+           long_shot_s=12(0~120, ≥此秒数的长镜做二级扫描; 0=关), scene2=0.15(0.05-0.9, 二级阈值)}
+    长镜二级扫描：0.35 主阈值对快切蒙太奇段会整段漏检（实测 80.9s「长镜」内有 18 个真切点），
+    ≥long_shot_s 的镜在镜内用更低阈值再扫一遍，拆出的镜带 "sub":true（供看图时复核，误拆可并在报告里说明）。
+    返回 {source, duration_s, start_s, end_s, threshold, cut_count, cuts, sub_count, sub_cuts, shots, stats}"""
+    from pathlib import Path as _P
+    b = request.get_json(force=True, silent=True) or {}
+    scene = _fnum(b, "scene", 0.1, 0.9, 0.35)
+    min_shot_s = _fnum(b, "min_shot_s", 0.0, 5.0, 0.5)
+    long_shot_s = _fnum(b, "long_shot_s", 0.0, 120.0, 12.0)
+    scene2 = _fnum(b, "scene2", 0.05, 0.9, 0.15)
+    exe = _ffmpeg_bin()
+    if not exe:
+        return jsonify({"code": 5001, "msg": "无 ffmpeg：容器镜像自带，宿主 pip 装 imageio-ffmpeg 也有"}), 500
+    root = _P(__file__).resolve().parents[2] / "data" / "uploads"
+    root.mkdir(parents=True, exist_ok=True)
+    tag = _uuid.uuid4().hex[:12]
+    try:
+        src, source = _resolve_src(b, root, tag)
+    except ValueError as e:
+        return jsonify({"code": 4001, "msg": str(e)}), 400
+    total_d = _ff_duration(exe, str(src))
+    start_s, end_s, seg, seg_args = _norm_range(b, total_d)
+    cuts_rel = _scan_cuts(exe, src, seg_args, scene, root / f"vs_{tag}_scenes.txt")
+    if seg > 0:
+        t0, t1 = start_s, start_s + seg
+    else:
+        t0, t1 = 0.0, (total_d or (max(cuts_rel) + 0.1 if cuts_rel else 1.0))
+    cuts_abs = [round(min(max(t0 + t, t0), t1), 3) for t in cuts_rel]
+    shots, sub_cuts = _auto_shots(exe, src, cuts_rel, t0, t1, min_shot_s, root, tag, scene, long_shot_s, scene2)
+    durs = [s["dur_s"] for s in shots]
+    stats = {"count": len(shots),
+             "mean_s": round(sum(durs) / len(durs), 2) if durs else 0,
+             "min_s": min(durs) if durs else 0, "max_s": max(durs) if durs else 0}
+    return ok({"source": source, "duration_s": round(total_d, 1),
+               "start_s": round(t0, 2), "end_s": round(t1, 2),
+               "threshold": scene, "min_shot_s": min_shot_s,
+               "long_shot_s": long_shot_s, "scene2": scene2,
+               "cut_count": len(cuts_abs), "cuts": cuts_abs,
+               "sub_count": sum(1 for s in shots if s.get("sub")),
+               "sub_cuts": [round(c, 3) for c in sub_cuts],
+               "shots": shots, "stats": stats})
+
+
+def _tile_ff(exe, src, t_abs, out_f, tile_w, label, font):
+    """抽单帧 → 缩到 tile_w 宽 → 左上角烙上 `#镜号 绝对秒` 标签；失败回退无标签重试。"""
+    vf = f"scale={tile_w}:-2"
+    if font:
+        vf += (f",drawtext=fontfile={font}:text='{label}':fontsize={max(13, tile_w // 18)}"
+               f":fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=4:x=6:y=6")
+    r = _subprocess.run([exe, "-hide_banner", "-y", "-ss", f"{t_abs:.3f}", "-i", str(src),
+                         "-frames:v", "1", "-vf", vf, "-q:v", "4", str(out_f)],
+                        capture_output=True, text=True, timeout=60)
+    if r.returncode != 0 and font:
+        _subprocess.run([exe, "-hide_banner", "-y", "-ss", f"{t_abs:.3f}", "-i", str(src),
+                         "-frames:v", "1", "-vf", f"scale={tile_w}:-2", "-q:v", "4", str(out_f)],
+                        capture_output=True, text=True, timeout=60)
+    return out_f.is_file()
+
+
+@bp.post("/shots-frames")
+def shots_frames():
+    """深度拉片 S1/S2：逐镜抽「帧墙」（接触表，格上带 #镜号+时间 标签）——一图看多镜，省读图次数。
+    body: {url?|path?, shots?:[{start_s,end_s}]（缺省现场扫切点）, per_shot=3(1-4), tile_w=320(240-640),
+           cols=8(4-8), rows=3(1-4), scene=0.35, start_s?, end_s?, min_shot_s=0.5,
+           long_shot_s=12, scene2=0.15（长镜二级扫描，同 video-scenes）,
+           keep=true（帧文件保留：带 #镜号+时间 标签的缩略图，供报告配图；false=用完即删）}
+    返回 {source, duration_s, shot_count, per_shot, keep, shots, sheets, frames:[{shot,time_s,name,url}]}
+    帧墙在 uploads（sh_*.jpg），单镜缩略在 frames[]（st_*.jpg）；Agent 用读图工具看 data/uploads/<name>。"""
+    from pathlib import Path as _P
+    b = request.get_json(force=True, silent=True) or {}
+
+    def _clampf(key, lo, hi, dflt):
+        try:
+            v = float(b.get(key))
+        except (ValueError, TypeError):
+            return dflt
+        return max(lo, min(hi, v))
+
+    per_shot = int(_clampf("per_shot", 1, 4, 3))
+    tile_w = int(_clampf("tile_w", 240, 640, 320))
+    cols = int(_clampf("cols", 4, 8, 8))
+    rows = int(_clampf("rows", 1, 4, 3))
+    scene = _clampf("scene", 0.1, 0.9, 0.35)
+    min_shot_s = _clampf("min_shot_s", 0.0, 5.0, 0.5)
+    long_shot_s = _fnum(b, "long_shot_s", 0.0, 120.0, 12.0)
+    scene2 = _fnum(b, "scene2", 0.05, 0.9, 0.15)
+    keep = True if b.get("keep") is None else bool(b.get("keep"))
+    exe = _ffmpeg_bin()
+    if not exe:
+        return jsonify({"code": 5001, "msg": "无 ffmpeg"}), 500
+    root = _P(__file__).resolve().parents[2] / "data" / "uploads"
+    root.mkdir(parents=True, exist_ok=True)
+    tag = _uuid.uuid4().hex[:12]
+    try:
+        src, source = _resolve_src(b, root, tag)
+    except ValueError as e:
+        return jsonify({"code": 4001, "msg": str(e)}), 400
+    total_d = _ff_duration(exe, str(src))
+    start_s, end_s, seg, seg_args = _norm_range(b, total_d)
+    # 镜头表：优先用消息给的 shots（关键镜精拆），否则现场扫切点
+    raw_shots = b.get("shots")
+    if isinstance(raw_shots, list) and raw_shots:
+        pairs = []
+        for it in raw_shots[:140]:
+            try:
+                s = max(0.0, float(it.get("start_s")))
+                e = float(it.get("end_s"))
+            except (AttributeError, ValueError, TypeError):
+                continue
+            if total_d > 0:
+                e = min(e, total_d)
+            if e > s + 0.05:
+                pairs.append((s, e))
+        pairs.sort()
+        shots = [{"i": i + 1, "start_s": round(s, 3), "end_s": round(e, 3), "dur_s": round(e - s, 3)}
+                 for i, (s, e) in enumerate(pairs)]
+    else:
+        cuts_rel = _scan_cuts(exe, src, seg_args, scene, root / f"sf_{tag}_scenes.txt")
+        if seg > 0:
+            t0, t1 = start_s, start_s + seg
+        else:
+            t0, t1 = 0.0, (total_d or 1.0)
+        shots, _sub = _auto_shots(exe, src, cuts_rel, t0, t1, min_shot_s, root, tag, scene, long_shot_s, scene2)
+    if not shots:
+        return jsonify({"code": 4001, "msg": "没解析出镜头（区间太小或参数不对）"}), 400
+    tiles_total = len(shots) * per_shot
+    if tiles_total > 336:
+        return jsonify({"code": 4001,
+                        "msg": "本次要生成 %d 帧（>336 上限）：per_shot 调小、拆两段或先缩素材区间" % tiles_total}), 400
+    # 逐镜抽格（带标签）
+    font = _FONT_FILE if _P(_FONT_FILE).is_file() else ""
+    idx = 0
+    tile_files = []
+    fail = 0
+    for sh in shots:
+        s, e, d = sh["start_s"], sh["end_s"], sh["dur_s"]
+        if per_shot <= 1:
+            ts = [s + d / 2]
+        else:
+            pad = min(0.08, max(0.0, d * 0.05))
+            span = max(0.0, d - 2 * pad)
+            ts = [s + pad + span * k / (per_shot - 1) for k in range(per_shot)]
+        for t_abs in ts:
+            idx += 1
+            out_f = root / f"st_{tag}_{idx:04d}.jpg"
+            if not _tile_ff(exe, src, t_abs, out_f, tile_w, f"#{sh['i']} {t_abs:.1f}s", font):
+                fail += 1
+            tile_files.append((out_f, sh["i"], round(t_abs, 2)))
+    if fail == len(tile_files) and tile_files:
+        return jsonify({"code": 5001, "msg": "抽帧全失败（ffmpeg 异常）"}), 500
+    # 拼帧墙：每张 cols×rows 格；尾墙不够就复制最后一格补齐
+    sheets = []
+    pad_list = []
+    per_sheet = cols * rows
+    for ci in range(0, len(tile_files), per_sheet):
+        chunk = list(tile_files[ci:ci + per_sheet])
+        n = len(chunk)
+        rows_r = max(1, min(rows, -(-n // cols)))
+        need = cols * rows_r
+        last = chunk[-1][0]
+        for _k in range(n, need):
+            p = root / f"st_{tag}_{idx + 1:04d}.jpg"
+            try:
+                _shutil.copyfile(last, p)
+            except Exception:
+                break
+            idx += 1
+            extra = (p, chunk[-1][1], chunk[-1][2])
+            chunk.append(extra)
+            pad_list.append(extra)
+        full = chunk
+        sheet_name = f"sh_{tag}_{len(sheets) + 1:02d}.jpg"
+        sheet_p = root / sheet_name
+        first_no = int(full[0][0].stem.rsplit("_", 1)[1])
+        r = _subprocess.run(
+            [exe, "-hide_banner", "-y", "-f", "image2", "-start_number", str(first_no),
+             "-i", str(root / f"st_{tag}_%04d.jpg"),
+             "-vf", f"tile={cols}x{rows_r}:padding=6:color=0x141414",
+             "-frames:v", "1", "-q:v", "3", str(sheet_p)],
+            capture_output=True, text=True, timeout=120)
+        if not sheet_p.is_file():
+            return jsonify({"code": 5001, "msg": "帧墙拼接失败: %s" % (r.stderr or "")[-200:]}), 500
+        sheets.append({"name": sheet_name, "url": f"/api/images/{sheet_name}", "cols": cols, "rows": rows_r,
+                       "tiles": [{"shot": t[1], "time_s": t[2]} for t in full]})
+    # 补齐用的重复格一律清掉；真帧默认保留（keep=true）——报告配图直接用这些带标签的缩略图
+    for p, _, _ in pad_list:
+        try:
+            p.unlink()
+        except Exception:
+            pass
+    frames = []
+    if keep:
+        frames = [{"shot": s, "time_s": t, "name": p.name, "url": f"/api/images/{p.name}"}
+                  for p, s, t in tile_files]
+    else:
+        for p, _, _ in tile_files:
+            try:
+                p.unlink()
+            except Exception:
+                pass
+    return ok({"source": source, "duration_s": round(total_d, 1),
+               "shot_count": len(shots), "per_shot": per_shot, "keep": keep,
+               "cols": cols, "rows": rows, "shots": shots, "sheets": sheets,
+               "frames": frames})
 
 
 # ---- H站（hanime1.me）下载入库 ----

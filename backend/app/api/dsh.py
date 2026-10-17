@@ -195,6 +195,32 @@ def _looks_like_refusal(text):
 _RETRY_SUFFIX = "\n\n继续。"
 _RETRY_SUFFIX_2 = "\n\n继续，直接给稿。"
 
+# 上游临时故障（网关 429/5xx、连接被掐）：退避重试兜底——一次抖动不该废掉整轮长任务（如 34 分钟的深度拆解）
+_TRANSIENT_MARKS = ("RATE_LIMIT", "rate limit", "429", "endpoint is unavailable",
+                    "502", "503", "504", "ECONNRESET", "ECONNREFUSED", "socket hang up",
+                    "fetch failed", "upstream")
+
+
+def _is_transient_err(msg):
+    m = (msg or "").lower()
+    return any(k in m for k in _TRANSIENT_MARKS)
+
+
+def _exec_dsh_with_retry(msg, sid, run, tries=2, delay=30):
+    """跑一次 dsh；上游临时故障退避重试 tries 次（同 sid 续跑，会话进度不丢）。"""
+    res = _exec_dsh(msg, sid, run)
+    t = 0
+    while (res.get("rc") and _is_transient_err(res.get("err"))
+           and t < tries and run.get("status") == "running"):
+        t += 1
+        run["retry_note"] = (f"上游临时故障（{delay}s 后自动重试第 {t}/{tries} 次）："
+                             f"{(res.get('err') or '')[:100]}")
+        time.sleep(delay)
+        if run.get("status") != "running":
+            break
+        res = _exec_dsh(msg, sid, run)
+    return res
+
 
 # —— 运行级模型切换（2026-10-17 火花）：白名单模型 → dsh --patch 覆盖 agent-default-model。
 # 实测要点：① --patch 是 launcher 选项，必须放在 app 选项（--json/--session-id）之前，
@@ -717,7 +743,7 @@ def _run_worker(run, message, scope, key, resume_id, mapping):
                 if run.get("status") == "stopped":
                     break
                 use_sid = None if mode == "fresh" else (resume_id if attempt == 1 else (sid or resume_id))
-                res = _exec_dsh(msg, use_sid, run)
+                res = _exec_dsh_with_retry(msg, use_sid, run)
                 if run.get("status") == "stopped":
                     run["err"] = run.get("err") or "用户已停止"
                     break
@@ -749,6 +775,16 @@ def _run_worker(run, message, scope, key, resume_id, mapping):
             run["session_id"] = sid or run.get("session_id") or ""
             if run.get("status") == "running":
                 run["status"] = "done"
+            # 拉片/深度拆解报告自动入库（拉片室「报告」页）：消息带标记就存，失败静默不影响 run
+            if run.get("status") == "done" and answer:
+                try:
+                    from .reports import parse_teardown_message, save_report
+                    _kind, _src = parse_teardown_message(message)
+                    if _kind:
+                        save_report(answer, kind=_kind, source=_src, model=run.get("model") or "",
+                                    episode_id=(key if scope == "episode" else ""), run_id=run.get("id") or "")
+                except Exception:
+                    pass
             if scope and key and run["session_id"]:
                 _upsert_mapping(scope, key, run["session_id"])
         except Exception as e:
