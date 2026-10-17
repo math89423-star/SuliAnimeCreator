@@ -185,16 +185,26 @@
     <div v-show="tab === 'lib'" class="suli-card sect">
       <div class="sect-title">
         素材源
-        <span class="suli-muted" style="font-size:12px;font-weight:400">已拉好的素材都在这里（uploads 库）；点「载入拉片」直接进工作台，本地文件模式抽帧零拷贝</span>
+        <span class="suli-muted" style="font-size:12px;font-weight:400">已拉好的素材都在这里（uploads 库）；支持全选批量删除与手动上传；载入即本地文件模式（抽帧零拷贝）</span>
+      </div>
+      <div class="lib-bar">
+        <el-checkbox :model-value="allSel" :indeterminate="someSel" size="small" @change="toggleAll">全选</el-checkbox>
+        <span v-if="sel.length" class="suli-muted" style="font-size:12px">已选 {{ sel.length }} 个</span>
         <span style="flex:1" />
+        <el-button size="small" type="primary" plain :loading="uploading" @click="pickUpload">上传视频</el-button>
+        <el-button size="small" type="danger" plain :disabled="!sel.length" :loading="deleting" @click="delSelected">删除所选{{ sel.length ? `（${sel.length}）` : '' }}</el-button>
         <el-button size="small" :loading="mediaLoading" @click="loadMedia">刷新</el-button>
+        <input ref="libFileInput" type="file" accept="video/*" multiple hidden @change="onLibPick" />
       </div>
       <div v-if="!media.length && !mediaLoading" class="suli-muted" style="padding:20px 0;text-align:center;font-size:12.5px">
-        还没有素材——去「工作台」贴个 H 站链接或传个视频，拉好的都会出现在这里
+        还没有素材——点「上传视频」，或去「工作台」贴个 H 站链接，拉好的都会出现在这里
       </div>
       <div v-else class="media-grid">
-        <div v-for="m in media" :key="m.name" class="media-card">
-          <video :src="m.url" muted playsinline preload="metadata" @loadedmetadata="onMediaMeta(m, $event)" />
+        <div v-for="m in media" :key="m.name" class="media-card" :class="{ picked: sel.includes(m.name) }">
+          <div class="media-thumb">
+            <video :src="m.url" muted playsinline preload="metadata" @loadedmetadata="onMediaMeta(m, $event)" />
+            <el-checkbox class="media-check" :model-value="sel.includes(m.name)" @change="toggleSel(m.name)" />
+          </div>
           <div class="media-name" :title="m.name">{{ m.name }}</div>
           <div class="media-meta suli-muted">
             <el-tag size="small" effect="plain" :type="m.name.startsWith('hanime1-') ? 'danger' : 'info'">{{ m.name.startsWith('hanime1-') ? 'H站' : '上传' }}</el-tag>
@@ -328,6 +338,12 @@ watch([tab, src, url, maxFrames, scene, frames, durationS, mode, segInfo, segSta
 type MediaItem = { name: string; url: string; bytes: number; mtime: number; dur?: number }
 const media = ref<MediaItem[]>([])
 const mediaLoading = ref(false)
+const sel = ref<string[]>([])
+const libFileInput = ref<HTMLInputElement | null>(null)
+const uploading = ref(false)
+const deleting = ref(false)
+const allSel = computed(() => media.value.length > 0 && sel.value.length === media.value.length)
+const someSel = computed(() => sel.value.length > 0 && sel.value.length < media.value.length)
 function fmtTime(ts: number) {
   const d = new Date(ts * 1000)
   const p = (n: number) => String(n).padStart(2, '0')
@@ -338,6 +354,7 @@ async function loadMedia() {
   try {
     const d: any = await api.mediaList()
     media.value = ((d?.data || d || []) as any[]).map(x => ({ ...x, dur: 0 }))
+    sel.value = sel.value.filter(n => media.value.some(m => m.name === n))
   } catch { ElMessage.error('素材列表加载失败') } finally { mediaLoading.value = false }
 }
 function onMediaMeta(m: MediaItem, e: Event) {
@@ -359,9 +376,52 @@ async function delMaterial(m: MediaItem) {
   try {
     await api.mediaDelete(m.name)
     media.value = media.value.filter(x => x.name !== m.name)
+    sel.value = sel.value.filter(n => n !== m.name)
     if (src.value?.path === m.name) clearSrc()
     ElMessage.success('已删除')
   } catch { ElMessage.error('删除失败') }
+}
+function toggleSel(name: string) {
+  const i = sel.value.indexOf(name)
+  if (i >= 0) sel.value.splice(i, 1)
+  else sel.value.push(name)
+}
+function toggleAll(v: any) { sel.value = v ? media.value.map(m => m.name) : [] }
+function pickUpload() { libFileInput.value?.click() }
+async function onLibPick(e: Event) {
+  const input = e.target as HTMLInputElement
+  const files = Array.from(input.files || [])
+  input.value = ''
+  if (!files.length) return
+  uploading.value = true
+  try {
+    let okN = 0
+    for (const f of files) {
+      if (!f.type.startsWith('video/')) { ElMessage.warning(`跳过非视频：${f.name}`); continue }
+      if (f.size > 300 * 1024 * 1024) { ElMessage.warning(`超过 300MB 上限：${f.name}`); continue }
+      await api.uploadFile(f)
+      okN++
+    }
+    if (okN) { ElMessage.success(`已上传 ${okN} 个视频`); await loadMedia() }
+  } catch { ElMessage.error('上传失败，后端未起？') } finally { uploading.value = false }
+}
+async function delSelected() {
+  const names = [...sel.value]
+  if (!names.length || deleting.value) return
+  try {
+    await ElMessageBox.confirm(`删除选中的 ${names.length} 个素材？文件会从 uploads 真删。`, '确认删除', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' })
+  } catch { return }
+  deleting.value = true
+  try {
+    const d: any = await api.mediaBatchDelete(names)
+    const row = d?.data || d || {}
+    const deleted: string[] = row.deleted || []
+    media.value = media.value.filter(x => !deleted.includes(x.name))
+    sel.value = sel.value.filter(n => !deleted.includes(n))
+    if (src.value?.path && deleted.includes(src.value.path)) clearSrc()
+    ElMessage.success(`已删除 ${deleted.length} 个素材`)
+    if ((row.missing?.length || 0) + Object.keys(row.errors || {}).length > 0) ElMessage.warning('部分文件未能删除')
+  } catch { ElMessage.error('批量删除失败') } finally { deleting.value = false }
 }
 watch(tab, (v) => {
   if (v === 'lib') { videoEl.value?.pause(); loadMedia() }
@@ -646,7 +706,11 @@ onMounted(restore)
 .im { width: 100%; height: 100%; display: block; cursor: zoom-in; }
 .idx { position: absolute; left: 6px; top: 6px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; }
 .tm { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; }
+.lib-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 10px; }
 .media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.media-thumb { position: relative; }
+.media-check { position: absolute; left: 6px; top: 6px; background: rgba(0, 0, 0, .45); border-radius: 6px; padding: 1px 5px; }
+.media-card.picked { border-color: var(--suli-primary); box-shadow: 0 0 0 1px var(--suli-primary); }
 .media-card { border: 1px solid var(--suli-border); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--suli-bg-2); }
 .media-card video { width: 100%; aspect-ratio: 16/9; object-fit: contain; background: #0b0b0d; border-radius: 8px; display: block; }
 .media-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

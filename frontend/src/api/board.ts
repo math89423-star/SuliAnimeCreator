@@ -16,6 +16,7 @@ export const boardApi = {
   uploadFile: (f: File) => { const fd = new FormData(); fd.append('file', f); return http.post('/v1/uploads', fd).then(r => r.data) },
   mediaList: () => http.get('/v1/uploads/media').then(r => r.data),
   mediaDelete: (name: string) => http.delete(`/v1/uploads/media/${encodeURIComponent(name)}`).then(r => r.data),
+  mediaBatchDelete: (names: string[]) => http.post('/v1/uploads/media/batch-delete', { names }).then(r => r.data),
   listShots: (eid: string) => http.get('/v1/scriptboard/shots', { params: { episode_id: eid } }).then(r => r.data),
   createShot: (p: any) => http.post('/v1/scriptboard/shots', p).then(r => r.data),
   uploadShotImage: (sid: string, f: File, kind = 'ref', extra: any = {}) => { const fd = new FormData(); fd.append('file', f); fd.append('kind', kind); if (extra.role) fd.append('role', extra.role); if (extra.desc) fd.append('desc', extra.desc); return http.post(`/v1/scriptboard/shots/${sid}/image`, fd).then(r => r.data) },

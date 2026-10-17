@@ -94,3 +94,25 @@ def media_delete(name):
     except Exception as e:
         return jsonify({"code": 5001, "msg": "删除失败：%s" % str(e)[:120]}), 500
     return ok({"deleted": nm})
+
+
+@bp.post("/uploads/media/batch-delete")
+def media_batch_delete():
+    """批量删视频素材：body {names: [...]}；返回 {deleted, missing, errors}。"""
+    b = request.get_json(force=True, silent=True) or {}
+    names = b.get("names")
+    if not isinstance(names, list) or not names:
+        return jsonify({"code": 4001, "msg": "names 须为非空数组"}), 400
+    deleted, missing, errors = [], [], {}
+    for raw in names[:200]:
+        nm = Path(str(raw or "")).name
+        p = ROOT / nm
+        if not nm or p.suffix.lower() not in _VIDEO_EXTS or not p.is_file():
+            missing.append(str(raw))
+            continue
+        try:
+            p.unlink()
+            deleted.append(nm)
+        except Exception as e:
+            errors[nm] = str(e)[:120]
+    return ok({"deleted": deleted, "missing": missing, "errors": errors})
