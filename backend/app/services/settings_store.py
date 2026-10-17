@@ -9,7 +9,7 @@ IMAGE_PROVIDERS = ("sd-webui", "comfyui", "custom")
 DEFAULTS = {
     "llm": {
         "provider": "opencode",
-        "model": "opencode-go/muse-spark-1.3-contributor",
+        "model": "opencode-go/deepseek-v4.1-flash",
         "base": "https://opencode.ai/zen/go/v1",
         "api_key": "",
         "local_url": "http://127.0.0.1:8080",

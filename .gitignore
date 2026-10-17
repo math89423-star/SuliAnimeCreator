@@ -15,6 +15,7 @@ backend/data/traffic_thumbs/
 backend/data/_orphan_backup_*/
 backend/data/director_push_db.json
 backend/data/dsh_runs.json
+backend/data/model_catalog_cache.json
 backend/data/traffic_assets.json
 backend/data/outline_ep*.md
 backend/data/tsubaki_prompt*

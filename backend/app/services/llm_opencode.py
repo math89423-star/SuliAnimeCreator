@@ -54,7 +54,7 @@ def llm_cfg():
     return {
         "provider": "opencode",
         "base": (s.get("base") or "").strip() or os.getenv("OPENCODE_BASE", "").strip() or OPENCODE_BASE,
-        "model": (s.get("model") or "").strip() or os.getenv("OPENCODE_MODEL", "opencode-go/muse-spark-1.3-contributor").strip(),
+        "model": (s.get("model") or "").strip() or os.getenv("OPENCODE_MODEL", "opencode-go/deepseek-v4.1-flash").strip(),
         "key": (s.get("api_key") or "").strip() or key,
         "key_src": "settings" if (s.get("api_key") or "").strip() else key_src,
         "effort": (s.get("effort") or "").strip(),

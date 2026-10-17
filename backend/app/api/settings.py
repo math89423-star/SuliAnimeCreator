@@ -4,6 +4,7 @@
 读接口永不返回密钥明文（只给 *_set 标记）；写接口空字符串表示保持原值。
 """
 import json
+import time
 import urllib.request
 import urllib.error
 from flask import Blueprint, jsonify, request
@@ -21,7 +22,7 @@ IMAGE_PROVIDERS = ("sd-webui", "comfyui", "custom")
 DEFAULTS = {
     "llm": {
         "provider": "opencode",
-        "model": "opencode-go/muse-spark-1.3-contributor",
+        "model": "opencode-go/deepseek-v4.1-flash",
         "base": "https://opencode.ai/zen/go/v1",
         "api_key": "",
         "local_url": "http://127.0.0.1:8080",
@@ -160,8 +161,36 @@ def _need_http(url):
 
 # 网关 key 未就绪时给下拉用的兜底（均为仓库已验证过路由规则的模型 id）
 CURATED_OPENCODE = [
-    "opencode-go/muse-spark-1.3-contributor",
+    "opencode-go/deepseek-v4.1-flash",
+    "opencode-go/longcat-2.5-preview-free",
 ]
+
+# 网关目录缓存：TTL 内直接复用（刷新按钮不再每次打网关）；
+# 拉取失败时退回上次成功结果（source=cache），只有从未成功过才用 CURATED 兜底。
+CATALOG_TTL = 120
+CATALOG_FILE = "model_catalog_cache.json"
+_memo = {}
+
+
+def _memo_get(mkey):
+    row = _memo.get(mkey)
+    if row is None:
+        disk = load(CATALOG_FILE, {}) or {}
+        row = disk.get(mkey)
+        if isinstance(row, dict):
+            _memo[mkey] = row
+    return row if isinstance(row, dict) else None
+
+
+def _memo_put(mkey, payload):
+    row = {"ts": time.time(), "payload": payload}
+    _memo[mkey] = row
+    try:
+        disk = load(CATALOG_FILE, {}) or {}
+        disk[mkey] = row
+        save(CATALOG_FILE, disk)
+    except Exception:
+        pass
 
 
 def _live_model_ids(base, key=""):
@@ -172,7 +201,7 @@ def _live_model_ids(base, key=""):
     last = None
     for path in ("/models", "/v1/models"):
         try:
-            _, data = _http_json(base + path, headers=headers, timeout=12)
+            _, data = _http_json(base + path, headers=headers, timeout=8)
             items = data.get("data") if isinstance(data, dict) else None
             if isinstance(items, list):
                 ids = [m.get("id", "") for m in items if isinstance(m, dict) and m.get("id")]
@@ -222,11 +251,16 @@ def _catalog(provider, base_q, key_q):
         base = _need_http(base)
     except ValueError as e:
         return err(str(e))
+    mkey = "opencode|" + base
+    if not key_q:
+        row = _memo_get(mkey)
+        if row and time.time() - float(row.get("ts") or 0) < CATALOG_TTL:
+            return ok(dict(row.get("payload") or {}))
     key = key_q.strip()
     if not key:
         key = (doc["llm"].get("api_key") or "").strip() or (doc["vlm"].get("api_key") or "").strip()
     if not key:
-        _, key = llm_svc._resolve_key()
+        key, _ = llm_svc._resolve_key()
     ids, source = [], "live"
     for k in ([key, ""] if key else [""]):
         try:
@@ -235,13 +269,21 @@ def _catalog(provider, base_q, key_q):
         except Exception:
             continue
     if not ids:
+        row = _memo_get(mkey)
+        if row and isinstance(row.get("payload"), dict):
+            data = dict(row["payload"])
+            data["source"] = "cache"
+            return ok(data)
         ids, source = list(CURATED_OPENCODE), "curated"
     import re as _re
     out = []
     for raw in ids:
         mid = _re.sub(r"^opencode-go/", "", raw)
         out.append({"id": raw, "endpoint": llm_svc._endpoint_for(mid).lstrip("/")})
-    return ok({"models": out, "source": source, "base": base})
+    data = {"models": out, "source": source, "base": base}
+    if source == "live" and not key_q:
+        _memo_put(mkey, data)
+    return ok(data)
 
 
 @bp.post("/models/test")

@@ -236,6 +236,7 @@ import { useSettingsStore, ACCENT_PRESETS } from '../stores/settings'
 import { useAppStore } from '../stores/app'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import { http, api } from '../api/client'
+import { once } from '../utils/inflight'
 
 interface TextModelCfg {
   provider: string; model: string; base: string
@@ -274,16 +275,16 @@ function fillBaseIfEmpty(sec: 'llm' | 'vlm', base = OPENCODE_DEFAULT_BASE) {
 
 async function loadCatalog(sec: 'llm' | 'vlm') {
   const cfg = models.value[sec]
+  const url = cfg.provider === 'opencode' ? cfg.base : cfg.local_url
+  const key = keys.value[sec]
   catalogLoading.value[sec] = true
   try {
-    const d = (await api.getModelCatalog(
-      cfg.provider,
-      cfg.provider === 'opencode' ? cfg.base : cfg.local_url,
-      keys.value[sec],
-    )).data
+    // 并发去重：llm/vlm 同配置、页面重挂载、连点刷新都只发一次请求
+    const d = (await once(`catalog|${cfg.provider}|${url}|${key}`, () => api.getModelCatalog(cfg.provider, url, key))).data
     catalogs.value[sec] = d?.models || []
     if (cfg.provider === 'opencode' && d?.base) fillBaseIfEmpty(sec, d.base)
-    testResults.value[sec] = `模型列表已更新（${(d?.models || []).length} 个${d?.source === 'curated' ? '，离线兜底' : ''}）`
+    const src = d?.source === 'curated' ? '，离线兜底' : d?.source === 'cache' ? '，缓存' : ''
+    testResults.value[sec] = `模型列表已更新（${(d?.models || []).length} 个${src}）`
   } catch (e: any) {
     testResults.value[sec] = '列表失败：' + (e?.response?.data?.msg || e?.message || '未知错误')
   } finally {
