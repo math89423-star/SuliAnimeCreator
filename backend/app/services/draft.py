@@ -5,6 +5,8 @@
 """
 import re
 
+from . import cast as cast_svc
+
 
 MOVEMENTS = ["固定", "推", "拉", "摇", "移", "跟", "环绕", "升降", "手持", "航拍"]
 CROPS = ["extreme_close", "closeup", "close", "medium_close", "medium",
@@ -40,9 +42,25 @@ def expand_idea(idea, n=3):
     return rows[:n], "template"
 
 
-def _outline_template(episode_id, total_s, shots_n, engine, tier, hint=""):
+def _cast_names(cast=None, hint="", episode_id=""):
+    """本次生成用谁：显式点名 → 集内正文说话人 → 角色库 → 主角/对手占位。"""
+    return cast_svc.resolve_cast(cast, hint or "", episode_id or "")
+
+
+def _lead_pair(names=None):
+    """模板对白用的一对说话人：没有角色就回占位，不编人名。"""
+    names = [n for n in (names or []) if str(n).strip()]
+    if not names:
+        names = list(cast_svc.FALLBACK_NAMES)
+    lead = names[0]
+    foil = names[1] if len(names) > 1 else cast_svc.FALLBACK_NAMES[1]
+    return lead, foil
+
+
+def _outline_template(episode_id, total_s, shots_n, engine, tier, hint="", cast=None):
     total_s = total_s or 15
     tier_name = {"nsfw": "成人向", "sfw": "普通"}.get(tier or "", "常规")
+    C = _cast_names(cast, hint, episode_id)
     lines = [
         "# 方案大纲 %s" % (episode_id or ""),
         "",
@@ -52,6 +70,10 @@ def _outline_template(episode_id, total_s, shots_n, engine, tier, hint=""):
         "## 基调与档位",
         "- 档位：%s / 引擎：%s" % (tier_name, engine or "pixai"),
         "- 约束：单镜 3-8 秒，一镜一事件",
+    ]
+    if C["anchored"]:
+        lines.append("- 出镜：%s（角色名照写，勿改用其他名字）" % "、".join(C["names"]))
+    lines += [
         "",
         "## 分镜大纲表",
         "",
@@ -66,10 +88,15 @@ def _outline_template(episode_id, total_s, shots_n, engine, tier, hint=""):
     return "\n".join(lines)
 
 
-def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", ref_image=""):
+def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", ref_image="", cast=None):
     """轻大纲：LLM 优先写 markdown，失败回模板。永远返回 (md, engine_tag)。"""
     total_s = int(total_s or 15)
     shots_n = 3 if total_s <= 15 else (4 if total_s <= 24 else 5)
+    C = _cast_names(cast, hint, episode_id)
+    cast_hint = ""
+    if C["anchored"]:
+        cast_hint = "出镜角色（点名照写，别换成别的人名）：%s。" % "、".join(
+            c["name"] for c in C["cast"][:4])
     try:
         from .llm_opencode import llm_cfg, _post
         cfg = llm_cfg()
@@ -77,9 +104,9 @@ def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", r
             model_id = re.sub(r"^opencode-go/", "", cfg["model"])
             prompt = ("只做方案大纲 markdown，含：方向一句话/基调与档位/分镜大纲表"
                       "(镜号|内容一句话|预计时长|运镜方向|备注)/合计时长。"
-                      "%d-%d镜，单镜3-8秒，总计约%d秒，引擎%s档位%s。背景：%s"
+                      "%d-%d镜，单镜3-8秒，总计约%d秒，引擎%s档位%s。%s背景：%s"
                       % (shots_n, shots_n, total_s, engine or "pixai",
-                         tier or "常规", (hint or "")[:800]))
+                         tier or "常规", cast_hint, (hint or "")[:800]))
             txt = _post(cfg["base"], cfg["key"], model_id, prompt,
                         effort=cfg.get("effort", ""))
             txt = (txt or "").strip()
@@ -87,7 +114,7 @@ def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", r
                 return txt, "llm"
     except Exception:
         pass
-    return _outline_template(episode_id, total_s, shots_n, engine, tier, hint), "template"
+    return _outline_template(episode_id, total_s, shots_n, engine, tier, hint, C["cast"]), "template"
 
 
 def _norm_crop(v):
@@ -162,51 +189,57 @@ def split_outline_to_shots(outline_md, episode_id, total_s=15, tier=""):
 # ---- 精品剧本链：screenplay 正文 / 校验 / 估时 / beats / 审查 ----
 
 def pick_to_screenplay_md(pick, episode_id=""):
-    """confirm 落底稿：pick{dir,logline,beats} -> 规范剧本 md。纯规则，可直接落盘。"""
+    """confirm 落底稿：pick{dir,logline,beats} -> 规范剧本 md。纯规则，可直接落盘。
+    说话人按角色库取（显式 cast → 本集正文说话人 → 角色库 → 主角/对手占位），不编人名。"""
     import datetime as _dt
     pick = pick or {}
     logline = str(pick.get("logline") or "未命名方向").strip()[:200]
     beats = pick.get("beats") or ["起", "转", "落"]
     beats = [str(b)[:60] for b in beats][:6] or ["起", "转", "落"]
     eid = (episode_id or "EP-DEMO01").strip() or "EP-DEMO01"
+    lead, foil = _lead_pair(_cast_names(pick.get("cast"), logline, eid)["names"])
     L = ["# %s %s" % (eid, logline), "",
          "## %s-SC001 内·主场景·夜" % eid, ""]
-    sfx = ["[SFX] 铁门低鸣", "[SFX] 烘干机骤停", "[SFX] 脚步逼近", "[SFX] 证据拍桌", "[SFX] 静默一拍", "[SFX] 低频鼓点起"]
-    replies = ["蒋姨：收到，冲突顶满再收。", "蒋姨：别松，证据马上到。", "蒋姨：顶上去，一句定生死。",
-               "蒋姨：稳住，钩子已经埋好。", "蒋姨：好，收束留白。", "蒋姨：成了，转场。"]
+    sfx = ["[SFX] 铁门低鸣", "[SFX] 环境底声停一拍", "[SFX] 脚步逼近", "[SFX] 关键道具落桌", "[SFX] 静默一拍", "[SFX] 低频鼓点起"]
+    replies = ["%s：收到，这条接住了。", "%s：别松，钩子还在推进。", "%s：顶上去，一句定生死。",
+               "%s：稳住，节拍按计划走。", "%s：好，收束留白。", "%s：成了，转场。"]
     for i, b in enumerate(beats, 1):
-        L.append("沈禾：%s第%d拍推进——%s。" % (logline[:12], i, b))
+        L.append("%s：%s第%d拍推进——%s。" % (lead, logline[:12], i, b))
         L.append(sfx[(i - 1) % len(sfx)])
-        L.append(replies[(i - 1) % len(replies)])
+        L.append(replies[(i - 1) % len(replies)] % foil)
         L.append("")
-    L.append("[连续性] 取衣牌在沈禾手中；烘干机停转。")
+    L.append("[连续性] 关键道具状态已交代；人物关系推进。")
     L.append("[转场] 硬切下场。")
     L.append("")
     L.append("<!-- beats:%s -->" % " / ".join(beats))
-    L.append("<!-- generated:%s template:p pick_to_screenplay -->" % _dt.datetime.now().isoformat(timespec="seconds"))
+    L.append("<!-- generated:%s template:p pick_to_screenplay cast:%s -->" % (
+        _dt.datetime.now().isoformat(timespec="seconds"),
+        "/".join(_cast_names(pick.get("cast"), logline, eid)["names"])))
     return "\n".join(L).strip() + "\n"
 
 
-def _screenplay_template(idea, logline, beats, target_s, episode_id):
+def _screenplay_template(idea, logline, beats, target_s, episode_id, cast=None):
     eid = (episode_id or "EP-DEMO01").strip() or "EP-DEMO01"
     base = (logline or idea or "单集矛盾").strip()[:120] or "单集矛盾"
     beats = beats or ["起", "转", "落"]
+    lead, foil = _lead_pair(_cast_names(cast, idea or base, eid)["names"])
     n_sc = 3 if target_s <= 20 else 4
     L = ["# %s %s" % (eid, base), ""]
     for i in range(n_sc):
         b = str(beats[i % len(beats)])[:40]
         L += ["## %s-SC%03d 内·主场景·夜" % (eid, i + 1), "",
               "动作：%s推进，镜头随人物走位给冲突。" % b,
-              "沈禾：%s，第%d场顶上去。" % (base[:16], i + 1),
+              "%s：%s，第%d场顶上去。" % (lead, base[:16], i + 1),
               "[SFX] 脚步+环境底声",
-              "蒋姨：别松，证据马上到。",
+              "%s：接第%d场，谁先变招谁定调。" % (foil, i + 1),
               ""]
     L += ["[连续性] 关键道具状态已交代；人物关系推进。", "[转场] 硬切收束。", ""]
     return "\n".join(L).strip() + "\n"
 
 
-def build_screenplay_md(idea="", logline="", beats=None, target_s=30, episode_id=""):
-    """剧本正文生成：LLM 优先，失败回模板。永远返回 (md, engine_tag)。"""
+def build_screenplay_md(idea="", logline="", beats=None, target_s=30, episode_id="", cast=None):
+    """剧本正文生成：LLM 优先，失败回模板。永远返回 (md, engine_tag)。
+    出镜人名一律来自角色库/本集正文/显式点名，prompt 里不再写死人名。"""
     idea = (idea or "").strip()[:500]
     logline = (logline or "").strip()[:200]
     beats = beats or []
@@ -214,16 +247,21 @@ def build_screenplay_md(idea="", logline="", beats=None, target_s=30, episode_id
         target_s = max(10, min(90, int(target_s or 30)))
     except (ValueError, TypeError):
         target_s = 30
+    C = _cast_names(cast, idea or logline, episode_id or "")
     try:
         from .llm_opencode import llm_cfg, _post
         cfg = llm_cfg()
         if cfg.get("provider") == "opencode" and cfg.get("key") and cfg.get("model"):
             model_id = re.sub(r"^opencode-go/", "", cfg["model"])
+            cast_hint = ("对白说话人只能用这些名字：%s。"
+                         "写法就是「名字：台词」，别在名字后加角色标签、别自造人名。"
+                         % "、".join(c["name"] for c in C["cast"][:4])) if C["anchored"] else \
+                        "角色名留空用「主角/对手」占位，别自造人名。"
             prompt = ("写一集中文短剧剧本 Markdown，必须含：首行‘# EP集名 标题’；"
                       "2-4 个‘## EP-SCxxx 内·地点·时间’场景；每场有动作行+‘角色：台词’对白"
-                      "（至少沈禾/蒋姨两人）+ [SFX]/[连续性]/[转场]标签；"
+                      "（%s）+ [SFX]/[连续性]/[转场]标签；"
                       "总时长约%d秒。只输出剧本正文。背景：%s / %s / 节拍%s"
-                      % (target_s, idea[:400], logline[:200], "/".join(beats[:4])[:120]))
+                      % (cast_hint, target_s, idea[:400], logline[:200], "/".join(beats[:4])[:120]))
             import json as _json  # noqa: F401 (keep import parity)
             txt = _post(cfg["base"], cfg["key"], model_id, prompt,
                         effort=cfg.get("effort", ""))
@@ -232,7 +270,8 @@ def build_screenplay_md(idea="", logline="", beats=None, target_s=30, episode_id
                 return txt.strip() + "\n", "llm"
     except Exception:
         pass
-    return _screenplay_template(idea, logline or idea, beats or ["起", "转", "落"], target_s, episode_id), "template"
+    return _screenplay_template(idea, logline or idea, beats or ["起", "转", "落"],
+                                target_s, episode_id, C["cast"]), "template"
 
 
 def validate_screenplay(md):

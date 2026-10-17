@@ -146,6 +146,8 @@ onMounted(load)
 </script>
 <style scoped>
 .gallery{position:relative}
+/* 与顶栏对齐：取消96rem居中限宽，铺满中央区（同其他工作页一致） */
+.gallery.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .section-head{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}
 .section-head h2{font-size:20px;font-weight:800;margin:0}
 .feature{padding:18px;display:flex;gap:18px;align-items:center;overflow:hidden;position:relative;background:linear-gradient(135deg,#f4f4f5,#fafafa 70%);border-width:2px}

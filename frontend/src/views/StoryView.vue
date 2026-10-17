@@ -27,6 +27,11 @@
             <span style="flex:1" />
             <el-button size="small" @click="charDialog = true">更换</el-button>
           </div>
+          <div class="field-head" style="margin-top:10px">
+            <span class="field-title">对白角色名</span>
+            <span class="suli-muted" style="font-size:12px">角色库取角；留空=自动（本集正文说话人 → 角色库 → 主角/对手）</span>
+          </div>
+          <el-input v-model="castInput" placeholder="留空自动取角；点名单人用逗号：女主角名, 对手名" @blur="saveCast" />
         </div>
 
         <!-- References -->
@@ -61,19 +66,6 @@
           <div class="sec-label"><span>设置</span></div>
           <div class="set-grid">
             <div class="set-item">
-              <span class="set-k">模型</span>
-              <el-select v-model="engineModel" size="default">
-                <el-option v-for="o in modelOpts" :key="o.value" :label="o.label" :value="o.value" />
-              </el-select>
-            </div>
-            <div class="set-item">
-              <span class="set-k">分辨率</span>
-              <div class="seg">
-                <span :class="{ on: resolution === '480p' }" @click="resolution = '480p'">480p</span>
-                <span :class="{ on: resolution === '720p' }" @click="resolution = '720p'">720p</span>
-              </div>
-            </div>
-            <div class="set-item">
               <span class="set-k">宽高比</span>
               <el-select v-model="aspect" size="default">
                 <el-option label="9:16 竖屏" value="9:16" />
@@ -101,23 +93,9 @@
 
           </div>
           <el-input-number v-model="videoCount" :min="2" :max="20" :step="1" class="len-num" />
-          <div class="quick-row">
-            <span
-              v-for="n in [5, 10, 20]" :key="n" class="quick"
-              :class="{ on: videoCount === n }" @click="videoCount = n"
-            >{{ n }}</span>
-          </div>
-          <div class="cost-row">
-            <span class="suli-muted">脚本</span>
-            <span class="tnum">{{ videoCount }} Gems</span>
-          </div>
           <div class="cost-row">
             <span class="suli-muted">{{ videoCount }} 个场景 · 每个 {{ shotLen }}s</span>
             <span class="tnum">{{ totalS }}s</span>
-          </div>
-          <div class="cost-row total">
-            <b>合计</b>
-            <span class="total-badge tnum">◇ {{ totalS }}s</span>
           </div>
           <div class="balance">你有 {{ confirmed.length }} 个已确认方向</div>
           <div class="form-actions">
@@ -197,10 +175,20 @@
 
     <!-- 聊本历史 -->
     <el-drawer v-model="histOpen" title="聊本历史 · 已确认方向" size="420px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span class="suli-muted" style="font-size:12px">{{ confirmed.length }} 条已确认</span>
+        <span style="flex:1" />
+        <el-button v-if="confirmed.length" size="small" type="danger" plain @click="clearConfirmed">清空</el-button>
+      </div>
       <el-empty v-if="!confirmed.length" description="暂无" :image-size="48" />
       <el-table v-else :data="confirmed">
         <el-table-column prop="dir" label="方向" width="70" />
         <el-table-column prop="logline" label="logline" />
+        <el-table-column label="操作" width="76">
+          <template #default="scope">
+            <el-button link type="danger" size="small" @click="removeConfirmed(scope.row, scope.$index)">删除</el-button>
+          </template>
+        </el-table-column>
       </el-table>
     </el-drawer>
   </div>
@@ -213,6 +201,8 @@ import { ElMessage } from 'element-plus'
 import { User, Plus, Document, Files, ChatDotRound } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { copyText } from '../utils/clipboard'
+import { castNames, loadCastInput, saveCastInput } from '../utils/cast'
+import { purgeLegacySeeds } from '../utils/legacySeeds'
 import { useAppStore } from '../stores/app'
 
 const store = useAppStore()
@@ -220,14 +210,38 @@ const router = useRouter()
 
 /* —— 故事主体（沿用旧逻辑） —— */
 const DRAFT_KEY = 'suli.story.idea'
-const idea = ref(localStorage.getItem(DRAFT_KEY) || '灰水村血税牢，星璃登场')
+/* 旧的演示种子只在没人动过时清一次；用户自己写的提示词一律不碰 */
+purgeLegacySeeds()
+const idea = ref(localStorage.getItem(DRAFT_KEY) || '')
 watch(idea, v => { try { localStorage.setItem(DRAFT_KEY, v) } catch {} })
+
+/* 对白角色名：用户点名的那批人；留空走后端自动取角（角色库/本集正文/占位） */
+const castInput = ref(loadCastInput())
+const castNamesList = () => castNames(castInput.value)
+async function saveCast() {
+  const names = saveCastInput(castInput.value)
+  try {
+    if (store.episodeId) await api.setEpisodeCast(store.episodeId, names)
+  } catch {}
+}
+async function loadCast() {
+  // 本集已记的角色名回填输入框；没有记忆就保持空（=自动取角）
+  if (!store.episodeId) return
+  try {
+    const r: any = await api.getEpisodeCast(store.episodeId)
+    const rows = ((r?.data?.cast) || []) as any[]
+    if (rows.length && !castInput.value) {
+      castInput.value = rows.map(c => c.name).filter(Boolean).join('、')
+      saveCastInput(castInput.value)
+    }
+  } catch {}
+}
 const drafts = ref<any>(null)
 const confirmed = ref<any[]>([])
 const loading = ref(false)
 const dirs = computed(() => (drafts.value?.drafts || []) as any[])
 
-/* —— Mage 式设置（本地持久化，不影响旧接口） —— */
+/* —— 故事设置（本地持久化，不影响旧接口） —— */
 const SET_KEY = 'suli.story.studio'
 function loadSet() {
   try { return JSON.parse(localStorage.getItem(SET_KEY) || '{}') } catch { return {} }
@@ -332,7 +346,7 @@ async function genScreenplay(d: any) {
   genLoading.value = true
   try {
     await confirm(d)
-    const r: any = await (api as any).screenplayGenerate({ idea: idea.value, pick: d, target_s: totalS.value || 30, episode_id: store.episodeId })
+    const r: any = await (api as any).screenplayGenerate({ idea: idea.value, pick: d, target_s: totalS.value || 30, episode_id: store.episodeId, cast: castNamesList() })
     const md = r?.data?.screenplay_md ?? r?.screenplay_md ?? ''
     if (md) {
       await api.saveScreenplay(store.episodeId, md)
@@ -347,11 +361,39 @@ async function reloadConfirmed() {
     confirmed.value = ((r as any)?.data?.confirmed || (r as any)?.confirmed || []) as any[]
   } catch {}
 }
+function confirmedKey(row: any, idx: number) {
+  const id = String(row?.id || '').trim()
+  if (id) return id
+  const log = String(row?.logline || '').trim()
+  if (log) return log
+  return String(idx)
+}
+async function removeConfirmed(row: any, idx: number) {
+  try {
+    await api.deleteConfirmedOne(confirmedKey(row, idx))
+    ElMessage.success('已删除')
+    await reloadConfirmed()
+  } catch (e: any) {
+    ElMessage.error((e?.response?.data?.msg || e?.message || '删除失败').slice(0, 200))
+    await reloadConfirmed()
+  }
+}
+async function clearConfirmed() {
+  try {
+    await api.clearConfirmed()
+    ElMessage.success('已清空已确认方向')
+    await reloadConfirmed()
+  } catch (e: any) {
+    ElMessage.error((e?.response?.data?.msg || e?.message || '清空失败').slice(0, 200))
+    await reloadConfirmed()
+  }
+}
 function copy(t: string) { copyText(t) }
 function clearAll() {
   idea.value = ''
   drafts.value = null
   videoCount.value = 5
+  try { void api.clearDrafts() } catch {}
   ElMessage.success('已清空')
 }
 function goBoard() { router.push('/board') }
@@ -359,12 +401,13 @@ function goDirect(d: any) {
   confirm(d).finally(() => router.push('/director'))
 }
 
-watch(() => store.episodeId, loadRefs)
+watch(() => store.episodeId, () => { loadRefs(); loadCast() })
 watch(() => store.selectedCharId, v => { if (v) curId.value = v })
 
 onMounted(async () => {
   await loadChars()
   await loadRefs()
+  await loadCast()
   await reloadConfirmed()
 })
 </script>

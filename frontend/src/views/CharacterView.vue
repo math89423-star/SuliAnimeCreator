@@ -40,6 +40,9 @@
           <div class="worksec-head">
             <b>{{ secLabel(sec) }}</b>
             <span style="margin-left:8px"><el-radio-group v-model="attire[sec]" size="small"><el-radio-button v-for="a in attires" :key="a" :value="a">{{ a === 'dressed' ? '着装' : '无着装' }}</el-radio-button></el-radio-group></span>
+            <el-popconfirm :title="`清空${secLabel(sec)}（${attireLabel(attire[sec])}）整组？图与中英提示词一并删除`" confirm-button-text="清空" cancel-button-text="取消" width="260" @confirm="clearSection(sec)">
+              <template #reference><el-button size="small" type="danger" plain>清空本组</el-button></template>
+            </el-popconfirm>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
             <span class="suli-muted" style="font-size:12px">槽位提示词出稿引擎</span>
@@ -56,7 +59,7 @@
                   <b>{{ slotLabel(s) }}</b><span class="suli-muted">{{ kindOf(sec, attire[sec]) }}</span>
                   <span v-if="foldedMap[pkey(sec, s)]" class="suli-muted tnum fold-summary">{{ imgMap[pkey(sec, s)] ? '有图' : '无图' }} · 中{{ (promptCnMap[pkey(sec, s)] || '').length }}字 · 英{{ (promptMap[pkey(sec, s)] || '').length }}字</span>
                 </div>
-                <div class="slot-head-btns"><el-button size="small" @click="slotRefs[pkey(sec, s)]?.click()">{{ imgMap[pkey(sec, s)] ? '更换图片' : '传图' }}</el-button><input :ref="(el: any) => { if (el) slotRefs[pkey(sec, s)] = el }" type="file" accept="image/*" hidden @change="(e: any) => onSlot(sec, s, e)" /></div>
+                <div class="slot-head-btns"><el-button size="small" @click="slotRefs[pkey(sec, s)]?.click()">{{ imgMap[pkey(sec, s)] ? '更换图片' : '传图' }}</el-button><el-popconfirm title="清除该槽位？（图 + 中/英提示词）" confirm-button-text="清除" cancel-button-text="取消" width="240" @confirm="clearSlot(sec, s)"><template #reference><el-button size="small" type="danger" plain>清除</el-button></template></el-popconfirm><input :ref="(el: any) => { if (el) slotRefs[pkey(sec, s)] = el }" type="file" accept="image/*" hidden @change="(e: any) => onSlot(sec, s, e)" /></div>
               </div>
               <div v-show="!foldedMap[pkey(sec, s)]" class="slot-main">
               <div class="slot-left">
@@ -64,11 +67,11 @@
               </div>
               <div class="slot-right">
                 <div class="prompt-block">
-                  <div class="slot-title"><div class="slot-name"><el-tag size="small">中文</el-tag><span class="suli-muted tnum">{{ (promptCnMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPromptCn(sec, s)">生成中文</el-button><el-button size="small" @click="savePromptCn(sec, s)">保存中文</el-button></div></div>
+                  <div class="slot-title"><div class="slot-name"><el-tag size="small">中文</el-tag><span class="suli-muted tnum">{{ (promptCnMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPromptCn(sec, s)">生成中文</el-button><el-button size="small" @click="savePromptCn(sec, s)">保存中文</el-button><el-popconfirm title="清空中文提示词？" confirm-button-text="清空" cancel-button-text="取消" @confirm="clearPrompt(sec, s, 'cn')"><template #reference><el-button size="small" type="danger" plain>清空</el-button></template></el-popconfirm></div></div>
                   <el-input v-model="promptCnMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="中文描述：发型 / 表情 / 服装 / 色彩…" class="slot-prompt prompt-cn" />
                 </div>
                 <div class="prompt-block">
-                  <div class="slot-title"><div class="slot-name"><el-tag size="small" type="info">英文</el-tag><span class="suli-muted tnum">{{ (promptMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPrompt(sec, s)">生成英文</el-button><el-button size="small" type="primary" @click="savePrompt(sec, s)">保存英文</el-button></div></div>
+                  <div class="slot-title"><div class="slot-name"><el-tag size="small" type="info">英文</el-tag><span class="suli-muted tnum">{{ (promptMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPrompt(sec, s)">生成英文</el-button><el-button size="small" type="primary" @click="savePrompt(sec, s)">保存英文</el-button><el-popconfirm title="清空英文提示词？" confirm-button-text="清空" cancel-button-text="取消" @confirm="clearPrompt(sec, s, 'en')"><template #reference><el-button size="small" type="danger" plain>清空</el-button></template></el-popconfirm></div></div>
                   <el-input v-model="promptMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="English prompt…" class="slot-prompt prompt-en" />
                 </div>
               </div>
@@ -78,9 +81,45 @@
         </div>
       </el-tab-pane>
       <el-tab-pane label="服装四分类" name="outfits">
-        <div style="display:flex;gap:8px"><el-input v-model="outName" placeholder="服装名" style="width:180px" /><el-select v-model="outCat" style="width:120px"><el-option v-for="c in outCats" :key="c" :label="c" :value="c" /></el-select><el-button type="primary" @click="addOutfit">新增</el-button></div>
-        <el-table :data="oRows" style="margin-top:8px"><el-table-column prop="name" label="名称" /><el-table-column prop="category" label="分类" width="100" /><el-table-column prop="is_active" label="激活" width="70" /><el-table-column label="操作" width="120"><template #default="s"><el-button link type="primary" @click="actOutfit(s.row.id)">激活</el-button><el-popconfirm title="删掉这件服装？" confirm-button-text="删" cancel-button-text="留" @confirm="delOutfit(s.row.id)"><template #reference><el-button link type="danger">删</el-button></template></el-popconfirm></template></el-table-column></el-table>
-        <el-pagination v-if="oPage.total.value > 0" v-model:current-page="oPage.page.value" v-model:page-size="oPage.pageSize.value" :total="oPage.total.value" layout="prev, pager, next, total" style="margin-top:8px;justify-content:flex-end" />
+        <div class="worksec" style="padding:12px">
+          <div class="outfit-toolbar">
+            <el-input v-model="outName" placeholder="服装名" style="width:200px" />
+            <el-select v-model="outCat" style="width:170px"><el-option v-for="c in outCats" :key="c" :label="outCatLabel(c) + '（' + c + '）'" :value="c" /></el-select>
+            <el-button type="primary" @click="addOutfit">新增</el-button>
+            <span class="suli-muted" style="font-size:12px">共 <b class="tnum">{{ outfits.length }}</b> 件 · <b>{{ outCatLabel(outCat) }}</b>{{ catDescMap[outCat] ? '：' + catDescMap[outCat] : '' }}</span>
+          </div>
+          <div class="outfit-list">
+            <div v-for="o in oRows" :key="o.id" class="outfit-card suli-card" :class="{ active: !!o.is_active }">
+              <div class="outfit-topbar">
+                <div class="outfit-name">
+                  <span class="outfit-chip">{{ outCatChip(o.category) }}</span>
+                  <b>{{ o.name }}</b>
+                  <el-tag v-if="o.is_active" size="small" type="success">已激活</el-tag>
+                  <el-tag size="small" type="info" effect="plain">{{ outCatLabel(o.category) }}</el-tag>
+                  <span v-if="o.description" class="suli-muted tnum" style="font-size:12px">{{ o.description.length }}字描述</span>
+                  <span class="suli-muted tnum" style="font-size:12px">#{{ o.id }}</span>
+                </div>
+                <div class="slot-head-btns">
+                  <el-button size="small" type="primary" plain :disabled="!!o.is_active" @click="actOutfit(o.id)">激活</el-button>
+                  <el-button size="small" @click="startEditOutfit(o)">{{ editId === o.id ? '收起' : '编辑' }}</el-button>
+                  <el-popconfirm title="删掉这件服装？" confirm-button-text="删" cancel-button-text="留" @confirm="delOutfit(o.id)"><template #reference><el-button size="small" type="danger" plain>删</el-button></template></el-popconfirm>
+                </div>
+              </div>
+              <div v-if="editId === o.id" class="outfit-edit">
+                <div class="outfit-edit-row">
+                  <el-input v-model="editForm.name" placeholder="服装名" style="width:200px" />
+                  <el-select v-model="editForm.category" style="width:170px"><el-option v-for="c in outCats" :key="c" :label="outCatLabel(c) + '（' + c + '）'" :value="c" /></el-select>
+                  <span class="suli-muted" style="font-size:12px">分类说明{{ catDescMap[editForm.category] ? '：' + catDescMap[editForm.category] : '待填（后端 outfit-categories）' }}</span>
+                </div>
+                <el-input v-model="editForm.description" type="textarea" :rows="2" placeholder="服装细节：版型 / 材质 / 配色 / 配饰…（供槽位提示词与交付包引用）" />
+                <div class="outfit-edit-actions"><el-button size="small" @click="editId = null">取消</el-button><el-button size="small" type="primary" @click="saveOutfitEdit(o.id)">保存</el-button></div>
+              </div>
+              <div v-else-if="o.description" class="outfit-desc">{{ o.description }}</div>
+            </div>
+            <el-empty v-if="!oRows.length" description="暂无服装：左侧填名称与分类，点「新增」" :image-size="60" />
+          </div>
+          <el-pagination v-if="oPage.total.value > 0" v-model:current-page="oPage.page.value" v-model:page-size="oPage.pageSize.value" :total="oPage.total.value" :page-sizes="[8, 16, 32]" layout="prev, pager, next, sizes, total" style="margin-top:8px;justify-content:flex-end" />
+        </div>
       </el-tab-pane>
       <el-tab-pane label="文档交付" name="doc">
         <el-input v-model="docHtml" type="textarea" :rows="6" placeholder="文档" />
@@ -98,7 +137,7 @@ import SlotZoomImage from '../components/SlotZoomImage.vue'
 import { usePagination } from '../composables/usePagination'
 import { useAppStore } from '../stores/app'
 const store = useAppStore()
-const cname = ref('星璃')
+const cname = ref('')  // 新建角色的输入框：空着让用户自己起名，不再预填演示名
 const chars = ref<any[]>([])
 const curId = ref('')
 const form = ref<any>({ name: '', hairstyle: '', face: '', physique: '', identity: '' })
@@ -126,8 +165,11 @@ const outName = ref('长外套')
 const outCat = ref('top')
 const outCats = ['headwear', 'top', 'bottom', 'shoes']
 const outfits = ref<any[]>([])
-const oPage = usePagination(() => outfits.value, 5)
+const oPage = usePagination(() => outfits.value, 8)
 const oRows = oPage.rows
+const catDescMap = ref<Record<string, string>>({})
+const editId = ref<number | null>(null)
+const editForm = ref<any>({ name: '', category: 'top', description: '' })
 const docHtml = ref('')
 const pack = ref<any>(null)
 const charLoading = ref(false)
@@ -200,14 +242,70 @@ async function genPrompt(sec: string, s: string) { if (!curId.value) return ElMe
 async function savePrompt(sec: string, s: string) { const k = kindOf(sec, attire.value[sec]); await api.saveSlotPrompt(curId.value, k, s, promptMap.value[`${k}|${s}`] || ''); ElMessage.success('已保存英文提示词') }
 async function genPromptCn(sec: string, s: string) { if (!curId.value) return ElMessage.warning('未选角色'); const k = kindOf(sec, attire.value[sec]); const r = await api.genSlotPrompt(curId.value, k, s + '_cn', imgEngine.value === 'novelai' ? 'tsubaki3' : imgEngine.value); promptCnMap.value[`${k}|${s}`] = (r.data as any).prompt }
 async function savePromptCn(sec: string, s: string) { const k = kindOf(sec, attire.value[sec]); await api.saveSlotPrompt(curId.value, k, s + '_cn', promptCnMap.value[`${k}|${s}`] || ''); ElMessage.success('已保存中文提示词') }
+function attireLabel(a: string) { return a === 'dressed' ? '着装' : '无着装' }
+function dropKey(map: any, key: string) { const m: any = { ...map }; delete m[key]; return m }
+// 清除三件套：先等后端删记录回 200，再删本地键——后端失败就保留画面，不做"假清除"
+async function clearPrompt(sec: string, s: string, which: 'cn' | 'en') {
+  if (!curId.value) return ElMessage.warning('未选角色')
+  const k = kindOf(sec, attire.value[sec])
+  await api.clearSlotPrompts(curId.value, k, s, which)
+  if (which === 'cn') promptCnMap.value = dropKey(promptCnMap.value, `${k}|${s}`)
+  else promptMap.value = dropKey(promptMap.value, `${k}|${s}`)
+  ElMessage.success(which === 'cn' ? '已清空中文提示词' : '已清空英文提示词')
+}
+async function clearSlot(sec: string, s: string) {
+  if (!curId.value) return ElMessage.warning('未选角色')
+  const k = kindOf(sec, attire.value[sec])
+  const r: any = await api.clearSlotAssets(curId.value, k, s)
+  await api.clearSlotPrompts(curId.value, k, s, 'both')
+  imgMap.value = dropKey(imgMap.value, `${k}|${s}`)
+  promptCnMap.value = dropKey(promptCnMap.value, `${k}|${s}`)
+  promptMap.value = dropKey(promptMap.value, `${k}|${s}`)
+  foldedMap.value[pkey(sec, s)] = false
+  ElMessage.success(`已清除 ${secLabel(sec)}·${slotLabel(s)}：图 ${r?.data?.cleared ?? 0} 张 + 中英提示词`)
+}
+async function clearSection(sec: string) {
+  if (!curId.value) return ElMessage.warning('未选角色')
+  const k = kindOf(sec, attire.value[sec])
+  const r: any = await api.clearSlotAssets(curId.value, k)
+  await api.clearSlotPrompts(curId.value, k, '', 'both')
+  for (const s of slots) {
+    imgMap.value = dropKey(imgMap.value, `${k}|${s}`)
+    promptCnMap.value = dropKey(promptCnMap.value, `${k}|${s}`)
+    promptMap.value = dropKey(promptMap.value, `${k}|${s}`)
+  }
+  ElMessage.success(`已清空${secLabel(sec)}（${attireLabel(attire.value[sec])}）整组：图 ${r?.data?.cleared ?? 0} 张 + 三槽中英提示词`)
+}
 async function doIterate() { await api.iterate(curId.value, itDim.value, itIns.value); ElMessage.success('已迭代'); await loadVersions(); vPage.reset(); const r = await api.listCharacters(); const c = (r.data as any[]).find(x => x.id === curId.value); if (c) form.value = { ...c } }
 async function loadVersions() { const r = await api.listVersions(curId.value); versions.value = r.data; vPage.reset() }
 async function doRollback(id: number) { await api.rollback(curId.value, id); ElMessage.success('已回滚'); await loadChar() }
 async function freeze() { const r = await api.freezeVersions(curId.value); ElMessage.success('已冻结，共' + (r.data as any).total + '版'); await loadVersions() }
 async function delOutfit(id: number) { await api.deleteOutfit(curId.value, id); ElMessage.success('已删'); await loadOutfits() }
-async function addOutfit() { await api.createOutfit(curId.value, { name: outName.value, category: outCat.value }); await loadOutfits(); oPage.reset() }
-async function loadOutfits() { const r = await api.listOutfits(curId.value); outfits.value = r.data; oPage.reset() }
-async function actOutfit(id: number) { await api.activateOutfit(curId.value, id); await loadOutfits() }
+async function addOutfit() { await api.createOutfit(curId.value, { name: outName.value, category: outCat.value }); ElMessage.success('已新增'); await loadOutfits(); oPage.reset() }
+async function loadOutfits() {
+  const r = await api.listOutfits(curId.value); outfits.value = r.data; oPage.reset(); editId.value = null
+  try {
+    const c = await api.listOutfitCats(curId.value)
+    const m: Record<string, string> = {}
+    for (const row of (c.data as any[])) m[row.category] = row.description || ''
+    catDescMap.value = m
+  } catch {}
+}
+async function actOutfit(id: number) { await api.activateOutfit(curId.value, id); ElMessage.success('已激活'); await loadOutfits() }
+// 卡片式一行一件：分类中文名 + 首字色块，编辑态就地改名/改分类/补描述
+const outCatMap: Record<string, string> = { headwear: '头饰', top: '上装', bottom: '下装', shoes: '鞋' }
+function outCatLabel(c: string) { return outCatMap[c] || c }
+function outCatChip(c: string) { return (outCatMap[c] || c).slice(0, 1) }
+function startEditOutfit(o: any) {
+  if (editId.value === o.id) { editId.value = null; return }
+  editId.value = o.id
+  editForm.value = { name: o.name || '', category: o.category || 'top', description: o.description || '' }
+}
+async function saveOutfitEdit(id: number) {
+  await api.updateOutfit(curId.value, id, editForm.value)
+  ElMessage.success('已保存服装')
+  await loadOutfits()
+}
 async function loadDoc() { const r = await api.getDoc(curId.value); docHtml.value = (r.data as any).doc_html || '' }
 async function saveDoc() { await api.saveDoc(curId.value, docHtml.value); store.touchSaved(); ElMessage.success('已保存') }
 async function loadPack() { const r = await api.pack(curId.value); pack.value = r.data }
@@ -243,6 +341,20 @@ onMounted(async () => {
 .prompt-cn :deep(.el-textarea__inner) { background: #fff; }
 .prompt-en :deep(.el-textarea__inner) { background: var(--suli-bg-2); font-family: var(--suli-mono); font-size: 13px; }
 .slot-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-top: 2px; }
+/* 服装四分类：一行一件卡片（与槽位卡同族：顶栏 + 体部） */
+.outfit-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.outfit-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.outfit-card { padding: 12px; display: flex; flex-direction: column; gap: 8px; transition: border-color 0.15s, box-shadow 0.15s; }
+.outfit-card:hover { border-color: var(--suli-border-hover); box-shadow: var(--suli-shadow-sm); }
+.outfit-card.active { border-color: var(--suli-primary); }
+.outfit-topbar { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.outfit-name { display: flex; gap: 8px; align-items: center; min-width: 0; flex-wrap: wrap; }
+.outfit-chip { width: 26px; height: 26px; flex: 0 0 26px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; background: var(--suli-bg-2); color: var(--suli-text-2); font-size: 13px; font-weight: 800; border: 1.5px solid var(--suli-border); }
+.outfit-card.active .outfit-chip { background: var(--suli-primary); border-color: var(--suli-primary); color: #fff; }
+.outfit-desc { color: var(--suli-text-2); font-size: 13px; line-height: 1.7; white-space: pre-wrap; word-break: break-word; }
+.outfit-edit { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; border-top: 1px dashed var(--suli-border); }
+.outfit-edit-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.outfit-edit-actions { display: flex; gap: 8px; justify-content: flex-end; }
 @media (max-width: 900px) {
   .slot-main { flex-direction: column; }
   .slot-left, .slot-right { flex: none; width: 100%; max-width: none; }

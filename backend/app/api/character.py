@@ -128,6 +128,36 @@ def delete_asset(cid, aid):
     _persist()
     return ok({"deleted": aid})
 
+@bp.delete("/<cid>/assets")
+def clear_assets(cid):
+    """清除槽位图（角色页「清除」按钮的图侧）：按 kind(+slot) 批量删。
+    不传 slot → 清该 kind 的 front/side/back 三槽；kind、slot 都不传 → 清该角色全部槽位图。
+    顺带删 uploads 里的真文件（只删 data/uploads 下的裸文件名，删不动不影响库内清除）。"""
+    from pathlib import Path
+    b = request.get_json(silent=True) or {}
+    kind = str(b.get("kind") or request.args.get("kind") or "").strip()
+    slot = str(b.get("slot") or request.args.get("slot") or "").strip()
+    root = Path(__file__).resolve().parents[2] / "data" / "uploads"
+    hit = []
+    for aid, a in list(_ASSETS.items()):
+        if a.get("character_id") != cid:
+            continue
+        if kind and a.get("kind") != kind:
+            continue
+        if slot and a.get("slot") != slot:
+            continue
+        hit.append(aid)
+        name = str(a.get("path") or "")
+        if name and "/" not in name and "\\" not in name:
+            try:
+                (root / name).unlink(missing_ok=True)
+            except OSError:
+                pass
+        _ASSETS.pop(aid, None)
+    if hit:
+        _persist()
+    return ok({"cleared": len(hit), "kind": kind, "slot": slot})
+
 @bp.post("/<cid>/avatar/from-asset")
 def avatar_from_asset(cid):
     b = request.get_json(force=True) or {}
@@ -146,6 +176,43 @@ def set_slot_prompt(cid):
     _SLOT_PROMPTS[(cid, b.get("kind", ""), b.get("slot", ""))] = b.get("prompt", "")
     _persist()
     return ok({"kind": b.get("kind"), "slot": b.get("slot"), "prompt": b.get("prompt")})
+
+@bp.delete("/<cid>/slot-prompts")
+def clear_slot_prompts(cid):
+    """清除槽位提示词（角色页「清空」按钮）：{kind, slot, which=both|cn|en}。
+    不传 slot → 清该组的 front/side/back；不传 kind → 清该角色全部槽位提示词。
+    `front` 与 `front_cn` 视为同一槽（cn 是英文槽 +_cn 后缀）。"""
+    b = request.get_json(silent=True) or {}
+    kind = str(b.get("kind") or request.args.get("kind") or "").strip()
+    slot = str(b.get("slot") or request.args.get("slot") or "").strip()
+    which = str(b.get("which") or request.args.get("which") or "both").strip().lower()
+    if which not in ("both", "cn", "en"):
+        which = "both"
+    base = slot[:-3] if slot.endswith("_cn") else slot
+    hit = []
+    for key in list(_SLOT_PROMPTS):
+        parts = list(key) if isinstance(key, (tuple, list)) else str(key).split("|")
+        if len(parts) != 3:  # 脏键不动它
+            continue
+        c0, k0, s0 = parts[0], parts[1], str(parts[2])
+        if c0 != cid:
+            continue
+        if kind and k0 != kind:
+            continue
+        s_base = s0[:-3] if s0.endswith("_cn") else s0
+        if base and s_base != base:
+            continue
+        is_cn = s0.endswith("_cn")
+        if which == "cn" and not is_cn:
+            continue
+        if which == "en" and is_cn:
+            continue
+        hit.append(key)
+    for key in hit:
+        _SLOT_PROMPTS.pop(key, None)
+    if hit:
+        _persist()
+    return ok({"cleared": len(hit), "kind": kind, "slot": base, "which": which})
 
 # SLOT_CN 见 services/character_prompts（唯一真源，此处保留导入名兼容）
 

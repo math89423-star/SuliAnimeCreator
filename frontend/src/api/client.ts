@@ -3,21 +3,25 @@
  */
 import { http } from './http'
 import { storyApi } from './story'
+import { projectApi } from './project'
 import { characterApi, DIMS } from './character'
 import { boardApi } from './board'
 import { directorApi } from './director'
 import { dshApi } from './dsh'
 import { systemApi } from './system'
 import { trafficApi } from './traffic'
+import { toolsApi } from './tools'
 
 export { http, DIMS }
 export const api = {
   ...systemApi,
   ...storyApi,
+  ...projectApi,
   ...characterApi,
   ...boardApi,
   ...directorApi,
   ...dshApi,
   ...trafficApi,
+  ...toolsApi,
 }
 export type Api = typeof api

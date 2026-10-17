@@ -66,6 +66,15 @@ license: MIT
 - 跨场、跨镜、跨集状态：[连续性变化](references/continuity-delta.md)
 - 跨镜服装/道具颜色、材质漂移：[跨镜一致性锁](references/continuity-lock.md)
 - 完成前做一次资产漏项检查：[资产审查清单](references/asset-review-checklist.md)
+- OSS 一致性锁（Subject registry + Atmosphere lock + 落库字段）：[OSS Subject Registry](references/oss-subject-registry.md)
+
+## OSS 一致性锁增补（project-planner + dramai/aid-studio 蒸馏）
+
+- Shot 1 之前先填 registry：`Portrait# | Role | Face/features逐字 | Clothing/props材质优先 | ≥2 imperfection anchors`；全片逐字复述不改写；Portrait 编号固定不中途换位。
+- Atmosphere lock 全片粘贴同一段（Core theme tags + Camera+lens + Color&tone + Grain），改一个词即回贴原文。
+- 先出首尾两镜定住长相再填中间；dramai 映射 `Character{referenceAssetId, locked}` 即 registry 行已绑定定妆图。
+- 光源与机位建议加字段：`Sxx{世界位置, 色温, 光比}` + 可拍机位区；调度建议 `blocking_map T0→T1→T2 + power_geometry{start,turn,end} + axis{a,b,camera_side}`；只继承白名单（构图/地平线/机位/占比/视线/主光向）。
+- 落库对照 aid-studio：asset 建议 `{name, aliases[], asset_type, introduction, profile_data, expected_appearances[{id, change_reason}], prompt_text, image_url, is_use, reference_images[], voice_binding{voice_id, speed, pitch, emotion}}`。
 
 ## 完成
 

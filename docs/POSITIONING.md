@@ -93,6 +93,8 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 收件箱与投流 `packages/` 隔离：导演 ZIP 不进投流包列表。
 前端拿到 `package_id` 后每 5s 轮询 `GET /v1/receipts?package_id=..`（10 分钟上限），
 回执一到即提示并可一键跳回执页（回执面板按 `refreshKey` 自动重刷）。
+多包并行：投递记录是数组（`suli.director.pushes`），一个轮询同时跟所有包，
+本集只显示本集的行、他集记一行提示，互不覆盖；刷新/切页回来自动续等。
 L-Port 侧仍需人工一步：在 story_text 插件载入 `package.json` 跑完分镜后，
 调 `push-shots-to-suli` 回写分镜并在本项目登记回执（带该 `package_id`）。
 

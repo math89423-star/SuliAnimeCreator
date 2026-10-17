@@ -7,6 +7,8 @@ export const systemApi = {
   saveModelSettings: (p: any) => http.put('/v1/settings/models', p).then(r => r.data),
   testModelSetting: (section: string, config: any) => http.post('/v1/settings/models/test', { section, config }).then(r => r.data),
   getModelCatalog: (provider: string, base = '', key = '') => http.post('/v1/settings/models/catalog', { provider, base, key }).then(r => r.data),
-  receipts: (package_id = '') => http.get('/v1/receipts', { params: package_id ? { package_id } : {} }).then(r => r.data),
+  receipts: (params: string | Record<string, string> = '') => http.get('/v1/receipts', {
+    params: typeof params === 'string' ? (params ? { package_id: params } : {}) : (params || {}),
+  }).then(r => r.data),
   addReceipt: (p: any) => http.post('/v1/receipts', p).then(r => r.data),
 }

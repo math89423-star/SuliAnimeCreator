@@ -16,5 +16,8 @@ export const useUiStore = defineStore('ui', () => {
   function switchModule(m: any) { module.value = m }
   function toggleLeft() { leftCollapsed.value = !leftCollapsed.value }
   function toggleRight() { rightCollapsed.value = !rightCollapsed.value }
-  return { module, health, leftCollapsed, rightCollapsed, quickRef, openQuickRef, closeQuickRef, minimizeQuickRef, switchModule, toggleLeft, toggleRight }
+  // 投流页历史包弹窗信号：顶栏按钮只发信号，弹窗状态归 TrafficView
+  const trafficHistSignal = ref(0)
+  function openTrafficHist() { trafficHistSignal.value++ }
+  return { module, health, leftCollapsed, rightCollapsed, quickRef, openQuickRef, closeQuickRef, minimizeQuickRef, switchModule, toggleLeft, toggleRight, trafficHistSignal, openTrafficHist }
 })

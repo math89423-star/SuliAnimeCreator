@@ -37,6 +37,7 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 | 时长上限 | 以界面为准（本项目取 15s 宽松上限） | **15s** | 10s | 10s | 10s |
 | 音频 | 支持（Voice 三段式） | 支持（Voice 三段式） | 支持（配音） | **无音频** → 台词改口型提示 | **无音频** → 台词改口型提示 |
 | 运镜写法 | 写进提示词 | 写进提示词 | 写进提示词 | 写进提示词 | **用相机下拉，正文不要写运镜** |
+| 提示词预算 | **5000 tokens**（界面实测上限，2026-10-16）；按 token 写满，不必按字符省 | ≤2000 字符（官方工作流建议） | ≤2000 字符 | ≤2000 字符 | ≤2000 字符 |
 
 项目内已实现：组装时选「型号」，后端自动做型号级校准（时长夹取 / Voice→口型 / 删运镜句），
 并在镜卡上显示"调整"提示；交付前对着这张表再核一遍。
@@ -174,7 +175,7 @@ Add special sound effects for scene transitions.
 | 参考视频 | ≤3 段，单段 ≤50MB / ≤15s，**合计也 ≤15s** |
 | 参考音频 | ≤3 段 |
 | 模式互斥 | Keyframe（首/尾帧）与 Multi-Reference 互斥 |
-| 提示词长度 | 官方工作流建议 **≤2000 字符** |
+| 提示词长度 | **Tsubaki Video / Flash：5000 tokens（操作者核对界面输入上限，2026-10-16）**；官方工作流建议的 **≤2000 字符** 仍适用于 v4.0 Preview / Lite 与 v3.x 老口径 —— 两套别混用：给 Tsubaki 出稿按 token 预算写满，给 v4.0 出稿仍按 2000 字符收 |
 | 会员门槛 | 视频功能需 Starter+（Normal）；Enhanced 需 Plus+ |
 | 成本与耗时 | 远高于出图（起步约 16,000 credits），单次 1-5 分钟 |
 
@@ -197,6 +198,18 @@ Add special sound effects for scene transitions.
 - 多图参考：分镜 images 里 kind=ref/last 的图（每项可选 role/desc）会按 `@image2` 起排出，
   beat 自动追加 Carry 句；含首帧一镜最多 6 张（2-3 张最优），超了只取前 6 张；
   有额外参考时自动切 Multi-Reference。role 词表：character/outfit/style/face/pose/scene/prop（last 默认 ending）。
+
+## 10 OSS 增补（jnMeta shortfilm-prompts 蒸馏，可直接用）
+
+- 详见 `references/oss-5stage-and-negative.md`；本节只留可执行纪律。
+- 5 段顺序不乱：`Core theme | Character & scene | Atmosphere & look | Camera rules | Storyboard`；单镜用 StyleA per-second（Action+Camera+VFX），多镜用 StyleB per-shot（Shot size+Composition+Camera move+Action）。
+- 禁词 Rule1：禁 `epic/stunning/perfect/handsome/4K/HD/texture-rich/cinematic/movie-quality`，替换成机身+镜头+物理细节；自检挑 3 个形容词，不能成像就删。
+- 机身锚对照：大场 `IMAX + Panavision C-series (35mm, f/4)` / 硬科幻 `Sony Venice + Canon K-35` / Noir `Kodak 35mm bleach-bypass` / 人像 `Canon EF 85mm f/1.2`；动漫转真人预设建议 `ARRI Alexa + vintage primes`。
+- 每 beat = Action+Camera+Sound 三行；例 `0-2s hook + 2-8s confrontation + 8-12s cliff`，竖屏加 `faces upper-middle, 9:16`。
+- Rule5 ≥2 残缺：每主体至少 2 处不完美锚（matte 磨损/油光/伤痕/线头），治塑料感。
+- Rule6 空结尾：末行声明不发生什么，`No dialogue. No explosion. No blinding light. Just {{subject}}{{action}}, {{env}}.`；无 negative 栏模型用此正向护栏代替。
+- Negative 路由：有栏（Veo/Kling/Wan/Hailuo）贴 canonical 逗号块不加 no/don't；Runway 禁 `no X`（会招 X）；Seedance 消费端无框则折叠进正向；单 ≤15s、多 ≤8 镜，超了重拆。
+- 10 项自检：5 段齐 / 机身镜头 / 呼吸原句 / Sound 原句 / ≥2 残缺 / 空结尾 / 无禁词 / 无 IP 或加警告 / negative 已路由 / 时长镜数合法 / 末尾模型建议行。
 
 ## PROVENANCE
 

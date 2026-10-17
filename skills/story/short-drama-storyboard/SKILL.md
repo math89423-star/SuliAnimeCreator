@@ -158,6 +158,17 @@ license: MIT
 - 剧本事实到关键帧的完整示例：[剧本到关键帧](references/screenplay-to-keyframe-example.md)
 - 拆镜、并镜和稳定镜头 ID：[镜头修订身份](references/shot-revision-identity.md)
 - 完成前的连续性检查：[审查与示例](references/review-and-fixtures.md)
+- OSS 导演包（先导演判断/世界锁/六模块/FCML 按需查）：[OSS 导演包](references/oss-director-package.md)
+- OSS 五段式与禁词（四字段/呼吸行/空结尾/negative 路由）：[OSS 五段式]( ../../video/pixai-video-prompting/references/oss-5stage-and-negative.md)
+
+## OSS 导演增补（ai-film-skills + shortfilm 蒸馏）
+
+- 导演判断前置门：先写观众信息差（何时知道什么）+ 权力转折（谁掌权何时翻转），再拆镜；编译阶段不补人补戏改天气改结局。
+- 每镜四字段（shortfilm StyleB）：`Shot size / Composition / Camera move / Story content`，动词不用形容词；另加两行：`剪辑动机（信息/权力/情绪/空间/节奏五选一）` + `尾态交接（持物/朝向/光源/环境进度）`。
+- 先锁后写：`../short-drama-assets/references/oss-subject-registry.md` 的 subject registry + atmosphere lock 逐字复用；Portrait 编号全片固定；motion rhyme（右出左进）；先测 2-3 镜再铺全集。
+- 五高收益技法按需取：empty 空镜 + off-screen 画外音 / OTS 越肩 / 表情终镜定格 / montage 蒙太奇 / 音频逐项枚举。
+- `critical_retention{距离, 尺度, 焦点接力}` + `decision_record` 短画框底稿保全；起中终三画框比较验收（去形容词仍可还原光形色块反射）；轴线 180° 判侧公式见导演包。
+- FCML 按需索引：先用观看位置缩小范围，选中存 `motion{fcml_ids, operations, stages}`，编译不重查库；横移/摇摄、升降/俯仰混淆按 diagnostic 纠偏。
 
 ## 修订
 

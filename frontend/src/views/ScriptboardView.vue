@@ -1,16 +1,17 @@
 <template>
   <div class="suli-card kun-page" style="padding:14px">
     <h3 class="script-title">{{ store.episodeId }} 故事剧本</h3>
-    <el-input v-model="script" type="textarea" :rows="4" />
+    <el-input v-model="script" type="textarea" :rows="8" />
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <el-button @click="() => save()" :loading="saving">保存剧本</el-button>
+      <el-button @click="() => save()">保存剧本</el-button>
       <el-button type="primary" @click="genOutlineByMode" :loading="agentLoading">生成</el-button>
       <el-button v-if="agentLoading" size="small" @click="agentAborter?.abort()">停止</el-button>
       <span v-if="agentProgress" class="suli-muted" style="font-size:12px">{{ agentProgress }}</span>
-      <el-tag v-if="scriptDirty" size="small" type="warning">未存*</el-tag>
+      <span class="save-state tnum">{{ saveStateText }}</span>
 
       <el-button type="primary" @click="addShot" :disabled="!canAdd">添加新镜</el-button>
       <el-button size="small" type="warning" @click="doReview">审查</el-button>
+      <el-button size="small" type="danger" plain @click="clearWorkspace">清空</el-button>
       <span v-if="qaMsg" class="suli-muted" style="font-size:12px">{{ qaMsg }}</span>
       <span style="flex:1" />
       <el-tag size="small" class="tnum">{{ stat.shots }}镜</el-tag>
@@ -20,9 +21,7 @@
     <div v-if="loading && !rows.length" class="shot-flow">
       <div v-for="i in 3" :key="i" class="suli-card" style="padding:14px"><div class="skeleton" style="height:20px;width:40%" /><div class="skeleton" style="height:14px;margin-top:8px" /><div class="skeleton" style="height:60px;margin-top:8px" /></div>
     </div>
-    <el-empty v-else-if="!rows.length" description="暂无分镜" :image-size="64">
-      <el-button size="small" type="primary" @click="addRows">添加 {{ addCount }} 行</el-button>
-    </el-empty>
+    <el-empty v-else-if="!rows.length" description="暂无分镜" :image-size="64" />
     <div v-else class="seg-table">
       <div class="seg-row seg-head">
         <div class="c-check"><el-checkbox v-model="allChecked" /></div>
@@ -54,8 +53,8 @@
           </el-popconfirm>
         </div>
         <div class="c-desc">
-          <el-input v-model="r.duty" type="textarea" :rows="3" placeholder="点击输入内容" @blur="saveRow(r)" />
-          <el-input v-model="r.duty_en" type="textarea" :rows="2" resize="none" placeholder="英文正文" @blur="saveRow(r)" />
+          <el-input v-model="r.duty" type="textarea" :rows="4" resize="none" placeholder="点击输入内容" @blur="saveRow(r)" />
+          <el-input v-model="r.duty_en" type="textarea" :rows="4" resize="none" placeholder="英文正文" @blur="saveRow(r)" />
         </div>
         <div class="c-clip">
           <div v-if="uploading[r.id]" class="clip-loading">转码中…</div>
@@ -64,10 +63,10 @@
           <el-button v-if="shotByKind(r, 'first') && !uploading[r.id]" link type="danger" size="small" @click="delShotImg(r, shotByKind(r, 'first').name)">删</el-button>
         </div>
         <div class="c-line">
-          <el-input v-model="r.sound" type="textarea" :rows="3" placeholder="点击输入台词" @blur="saveRow(r)" />
+          <el-input v-model="r.sound" type="textarea" :rows="4" resize="none" placeholder="点击输入台词" @blur="saveRow(r)" />
         </div>
         <div class="c-note">
-          <el-input v-model="r.note" type="textarea" :rows="3" placeholder="点击输入内容" @blur="saveRow(r)" />
+          <el-input v-model="r.note" type="textarea" :rows="4" resize="none" placeholder="点击输入内容" @blur="saveRow(r)" />
         </div>
         <input :ref="(el: any) => { if (el) shotRefs[r.id] = el }" type="file" accept="image/*" hidden @change="(e: any) => onShotImg(r, e)" />
       </div>
@@ -81,13 +80,18 @@
 </template>
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
 import { useSettingsStore } from '../stores/settings'
+import { castNames, loadCastInput } from '../utils/cast'
+import { purgeLegacySeeds } from '../utils/legacySeeds'
 const store = useAppStore()
 const settings = useSettingsStore()
-const script = ref('## EP001-SC001 内·洗衣房·夜\n沈禾：取衣牌呢？\n蒋姨：烘干机停了。')
+// 剧本底稿：空着等生成/手写。旧演示样稿（含固定人名那两句）不再预填，
+// 老浏览器里残留的同一份样稿也清掉，免得 debounce 自动保存把它写进库里。
+purgeLegacySeeds()
+const script = ref('')
 const rows = computed(() => store.shots)
 const crops = [
   { label: '大特写', value: 'extreme_close' }, { label: '特写', value: 'closeup' },
@@ -114,15 +118,21 @@ const movements = ['固定', '推', '拉', '摇', '移', '跟', '环绕', '升�
 const canAdd = computed(() => draft.value.duty.trim() !== '' || draft.value.sound.trim() !== '')
 const savedScript = ref('')
 const scriptDirty = computed(() => script.value !== savedScript.value)
+const savedAt = ref('')
+const saveStateText = computed(() => saving.value ? '保存中…' : (scriptDirty.value ? '未存*' : (savedAt.value ? '已保存' + savedAt.value : '')))
 let suspendScriptWatch = false
 let scriptTimer: any = null
 const loading = ref(false)
 const saving = ref(false)
-async function save(silent = false) {
+async function save(silent = false, force = false) {
   saving.value = true
   try {
-    await api.saveScreenplay(store.episodeId, script.value)
+    // 出镜角色留空：后端按「本集已记 cast → 手工点名 → 正文说话人」取角，存稿时顺手记住
+    // force 只在「清空工作区」走：空内容默认被后端护栏拒（防自动保存把稿冲空），清空必须显式声明
+    await api.saveScreenplay(store.episodeId, script.value, force ? { force: true } : {})
     savedScript.value = script.value
+    const d = new Date()
+    savedAt.value = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0')
     if (!silent) ElMessage.success('已保存')
   } catch { if (!silent) ElMessage.error('保存失败，后端未起？') }
   finally { saving.value = false }
@@ -138,6 +148,8 @@ async function loadScript() {
     const r = await api.getScreenplay(store.episodeId)
     script.value = ((r as any).data?.screenplay_md ?? script.value) as string
     savedScript.value = script.value
+    const _d = new Date()
+    savedAt.value = String(_d.getHours()).padStart(2, '0') + ':' + String(_d.getMinutes()).padStart(2, '0')
   } catch {} finally { suspendScriptWatch = false }
 }
 async function loadShots() { loading.value = true; try { const r = await api.listShots(store.episodeId); store.shots = r.data; selected.value = selected.value.filter(id => (store.shots as any[]).some(s => s.id === id)); await loadStat() } finally { loading.value = false } }
@@ -210,6 +222,7 @@ async function genOutline() {
       engine: 'pixai',
       hint: script.value.slice(0, 800),
       image: img,
+      cast: castNames(loadCastInput()),  // 故事页点名；空数组=没点名，后端按「本集已记 → 正文说话人 → 角色库」取角
     })
     const eng = (r as any)?.data?.engine || (r as any)?.engine || 'template'
     agentProgress.value = ''
@@ -283,6 +296,22 @@ async function move(i: number, dir: number) {
   await loadShots()
 }
 async function removeShot(id: string) { await api.deleteShot(id); ElMessage.success('已删'); await loadShots() }
+// 清空工作区：剧本清掉 + 本集全部分镜行逐个删（后端无批量口径），二次确认
+async function clearWorkspace() {
+  if (!rows.value.length && !script.value.trim()) return ElMessage.info('工作区已空')
+  try {
+    await ElMessageBox.confirm(`清空当前集 ${store.episodeId} 的剧本与全部 ${rows.value.length} 镜？不可恢复。`, '清空工作区', { type: 'warning', confirmButtonText: '清空', cancelButtonText: '取消' })
+  } catch { return }
+  for (const r of [...rows.value] as any[]) { try { await api.deleteShot(r.id) } catch {} }
+  selected.value = []
+  // 先把 3s 自动保存的定时器掐掉：否则它会在清空之后拿着旧稿再 PUT 一次，把刚清掉的稿写回来
+  clearTimeout(scriptTimer)
+  script.value = ''
+  savedScript.value = ''
+  await save(true, true)   // force：空内容必须显式声明，否则后端护栏会拒（2026-10-16 事故）
+  await loadShots()
+  ElMessage.success('工作区已清空')
+}
 async function onShotImg(r: any, e: any) {
   const f = e.target.files?.[0]
   e.target.value = ''
@@ -332,8 +361,9 @@ onMounted(async () => {
 .shot-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
 .shot-refwrap { display: inline-flex; gap: 4px; align-items: center; }
 .script-title { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
+.save-state { display: inline-block; min-width: 96px; font-size: 12px; color: var(--suli-text-3); }
 .seg-table { border: 1px solid var(--suli-border); border-radius: 10px; overflow-x: auto; background: #fff; margin-top: 10px; }
-.seg-row { display: grid; grid-template-columns: 52px 1.1fr 1.2fr 160px 1fr 1fr; min-width: 960px; }
+.seg-row { display: grid; grid-template-columns: 52px 180px 1.4fr 170px 1fr 1fr; min-width: 1000px; }
 .seg-head { background: var(--suli-bg-2); font-size: 13px; color: var(--suli-text-2); }
 .seg-head > div { padding: 10px 12px; }
 .seg-body { border-top: 1px dotted var(--el-border-color); }
@@ -346,12 +376,12 @@ onMounted(async () => {
 .seg-meta { font-size: 12px; color: var(--suli-text-2); margin: 4px 0; }
 .seg-tags { display: flex; gap: 4px; flex-wrap: wrap; }
 .seg-id { font-family: var(--suli-mono); font-size: 11px; color: var(--suli-text-3); margin: 4px 0; }
-.clip-thumb { width: 136px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; cursor: zoom-in; }
+.clip-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; cursor: zoom-in; }
 .clip-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }
-.clip-add { width: 136px; aspect-ratio: 16 / 9; border: 1px dashed var(--el-border-color); border-radius: 6px; background: #fafafa; color: var(--suli-text-3); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.clip-add { width: 100%; aspect-ratio: 16 / 9; border: 1px dashed var(--el-border-color); border-radius: 6px; background: #fafafa; color: var(--suli-text-3); font-size: 12px; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .clip-add:hover { border-color: var(--suli-primary); color: var(--suli-primary); }
 .clip-plus { font-size: 18px; line-height: 1; }
-.clip-loading { width: 136px; aspect-ratio: 16 / 9; border-radius: 6px; background: #2b2b2b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.clip-loading { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; background: #2b2b2b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 .seg-foot { display: flex; justify-content: center; gap: 10px; align-items: center; margin: 14px 0 4px; }
 .seg-add { background: #14b8a6; border: none; }
 </style>

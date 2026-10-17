@@ -39,6 +39,11 @@ function onClick(e: MouseEvent) {
 .md-view :deep(blockquote) { margin: 0 0 8px; padding: 6px 10px; border-left: 3px solid var(--el-border-color, #dcdfe6); color: var(--el-text-color-secondary, #606266); background: var(--el-fill-color-lighter, #f4f4f5); border-radius: 0 8px 8px 0; }
 .md-view :deep(hr) { border: none; border-top: 1px solid var(--el-border-color, #dcdfe6); margin: 10px 0; }
 .md-view :deep(a) { color: var(--el-color-primary, #409eff); }
+.md-view :deep(del) { color: var(--el-text-color-secondary, #606266); }
+.md-view :deep(.md-task) { list-style: none; margin-left: -20px; display: flex; gap: 6px; align-items: flex-start; }
+.md-view :deep(.md-task input) { margin-top: 5px; accent-color: var(--el-color-primary, #409eff); }
+.md-view :deep(.md-img-wrap) { display: block; margin: 6px 0; }
+.md-view :deep(.md-img) { max-width: 100%; border-radius: 8px; border: 1px solid var(--el-border-color, #dcdfe6); display: block; }
 .md-table-wrap, .md-view :deep(.md-table-wrap) { overflow-x: auto; margin: 0 0 8px; }
 .md-view :deep(table) { width: 100%; border-collapse: collapse; font-size: 12.5px; }
 .md-view :deep(th), .md-view :deep(td) { border: 1px solid var(--el-border-color, #dcdfe6); padding: 5px 8px; text-align: left; vertical-align: top; }

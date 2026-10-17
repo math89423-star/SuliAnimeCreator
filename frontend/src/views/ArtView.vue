@@ -84,6 +84,8 @@ function openInRef(id: string) { store.openQuickRef(id) }
 onMounted(loadTools)
 </script>
 <style scoped>
+/* 与顶栏对齐：取消96rem居中限宽，铺满中央区 */
+.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .art-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .tool-card{padding:10px;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;will-change:transform}
 .tool-card:hover{box-shadow:var(--suli-shadow)}

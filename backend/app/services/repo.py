@@ -36,6 +36,16 @@ def character_docs_map():
     return _DOCS
 
 
+def character_assets(cid=""):
+    """角色设定图资产（18 槽位：kind|slot 去重取最新）：只读。"""
+    from ..api.character import _ASSETS
+    rows = [a for a in _ASSETS.values() if not cid or a.get("character_id") == cid]
+    latest = {}
+    for a in sorted(rows, key=lambda x: x.get("id", 0)):
+        latest[(a.get("kind", ""), a.get("slot", ""))] = a
+    return [latest[k] for k in sorted(latest)]
+
+
 def character_dims():
     from ..api.character import DIMS
     return DIMS

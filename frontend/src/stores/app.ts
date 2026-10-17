@@ -10,13 +10,14 @@ export const useAppStore = defineStore('app', () => {
   const ui = useUiStore()
   const { projectId, projects, selectedCharId } = storeToRefs(project)
   const { episodeId, shots, lastSavedAt, centralApplySeq, centralApplyEpisode } = storeToRefs(episode)
-  const { module, health, leftCollapsed, rightCollapsed, quickRef } = storeToRefs(ui)
+  const { module, health, leftCollapsed, rightCollapsed, quickRef, trafficHistSignal } = storeToRefs(ui)
   return {
     module, episodeId, projectId, projects, selectedCharId, lastSavedAt, shots, health,
-    leftCollapsed, rightCollapsed, quickRef, centralApplySeq, centralApplyEpisode,
+    leftCollapsed, rightCollapsed, quickRef, trafficHistSignal, centralApplySeq, centralApplyEpisode,
     touchSaved: episode.touchSaved,
     switchModule: ui.switchModule, toggleLeft: ui.toggleLeft, toggleRight: ui.toggleRight,
     openQuickRef: ui.openQuickRef, closeQuickRef: ui.closeQuickRef, minimizeQuickRef: ui.minimizeQuickRef,
+    openTrafficHist: ui.openTrafficHist,
     requestCentralApply: episode.requestCentralApply,
   }
 })

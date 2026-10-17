@@ -247,11 +247,11 @@ def test_director_push_contracts():
     api = (ROOT / "frontend" / "src" / "api" / "director.ts").read_text()
     assert "pushToLport" in api and "/v1/director/push-lport" in api, "director.ts 缺 pushToLport"
     dv = (ROOT / "frontend" / "src" / "views" / "DirectorView.vue").read_text()
-    for frag in ("pushToLport", "直投 L-Port", "pollReceipts", "receiptRefreshKey", "去回执页查看"):
+    for frag in ("pushToLport", "直投 L-Port", "ensurePoller", "receiptRefreshKey", "去回执页查看"):
         assert frag in dv, f"导演页缺直投/等回执：{frag}"
     assert "push-status" in dv and "LoadingSpinner" in dv, "直投等待条缺 loading 动画"
-    for frag in ("suli.director.push", "resumePush", "savePush", "clearPush"):
-        assert frag in dv, f"直投缺刷新持久化：{frag}（刷新/切页回来要续等）"
+    for frag in ("suli.director.pushes", "resumePush", "curPushes", "ensurePoller"):
+        assert frag in dv, f"直投缺刷新持久化/多包并行：{frag}（刷新/切页回来要续等，多包互不覆盖）"
     panel = (ROOT / "frontend" / "src" / "components" / "director" / "ReceiptPanel.vue").read_text()
     assert "refreshKey" in panel, "回执面板缺 refreshKey（回执到了不会自动刷）"
 

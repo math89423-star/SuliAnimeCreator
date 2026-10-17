@@ -3,20 +3,6 @@
     <div class="dir-head">
       <h3 style="margin:0">导演 · 动画</h3>
       <el-tag size="small" class="tnum">{{ store.episodeId }}</el-tag>
-      <span style="flex:1" />
-      <el-input v-model="epInput" size="small" style="width:130px" placeholder="EP-xxx" @keyup.enter="switchEpisode" />
-      <el-button size="small" @click="switchEpisode" :loading="switching">切换</el-button>
-      <el-dropdown trigger="click" @command="handleClear">
-        <el-button size="small" type="danger" :loading="clearing || clearingScript || clearingOutline">清理<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item command="shots">清空草案（仅分镜）</el-dropdown-item>
-            <el-dropdown-item command="outline">清空大纲（含草案）</el-dropdown-item>
-            <el-dropdown-item command="script">清空剧本（含大纲+草案）</el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
-      <el-button size="small" @click="refresh">刷新</el-button>
     </div>
     <el-tabs v-model="dtab" class="dir-tabs">
       <el-tab-pane label="剧本" name="script">
@@ -117,13 +103,20 @@
         </el-select>
       </div>
     </div>
-    <div v-if="pushMsg" class="push-status">
-      <LoadingSpinner v-if="pushing || (pushedPkg && !pushDone)" :size="14" />
+    <div v-if="pushing" class="push-status">
+      <LoadingSpinner :size="14" />
+      <span class="suli-muted" style="font-size:12px">正在投递到 L-Port 收件箱…</span>
+    </div>
+    <div v-for="p in curPushes" :key="p.pkg" class="push-status">
+      <LoadingSpinner v-if="!p.done" :size="14" />
       <span v-else class="push-dot ok" />
-      <span class="suli-muted" style="font-size:12px">{{ pushMsg }}</span>
-      <el-button v-if="pushDone" size="small" type="primary" link @click="dtab = 'receipt'">去回执页查看 →</el-button>
-      <el-button v-if="pushDone" size="small" link @click="stopWait">关闭</el-button>
-      <el-button v-else size="small" link @click="stopWait">停止等待</el-button>
+      <span class="suli-muted tnum" style="font-size:12px">{{ pushLine(p) }}</span>
+      <el-button v-if="p.done" size="small" type="primary" link @click="dtab = 'receipt'">去回执页查看 →</el-button>
+      <el-button v-if="p.done" size="small" link @click="stopWait(p.pkg)">关闭</el-button>
+      <el-button v-else size="small" link @click="stopWait(p.pkg)">停止等待</el-button>
+    </div>
+    <div v-if="otherPushCount" class="push-status">
+      <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集的投递在后台等回执（切回那集可见），到了会弹提示</span>
     </div>
 
     <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
@@ -311,33 +304,7 @@ async function refresh() {
   try { const r = await api.listShots(store.episodeId); store.shots = (r as any).data } catch {}
 }
 
-// 顶部切换 + 清理（演示快捷入口，复用各页签已有逻辑）
-const epInput = ref('')
-const switching = ref(false)
-async function switchEpisode() {
-  const v = (epInput.value || '').trim() || store.episodeId
-  if (!v) return ElMessage.warning('先填集号，如 EP-DEMO01')
-  if (v === store.episodeId) {
-    await reloadAll()
-    return
-  }
-  switching.value = true
-  try {
-    store.episodeId = v
-    await reloadAll()
-    ElMessage.success('已切换到 ' + v)
-  } finally { switching.value = false }
-}
-async function reloadAll() {
-  await loadScript()
-  await refresh()
-  await loadOutline()
-}
-function handleClear(cmd: string) {
-  if (cmd === 'script') clearScript()
-  else if (cmd === 'outline') clearOutline()
-  else clearShots()
-}
+// 顶部切换 + 清理已移至全局顶栏与各页签内按钮，此处仅保留数据刷新函数
 
 // 草案包 ZIP：L-Port「上传草案包」吃的机器包（manifest.json+shots.json+prompts+图），对照 POSITIONING §2
 const bundleLoading = ref(false)
@@ -401,34 +368,44 @@ async function downloadDraft() {
 }
 
 // 草案直投 L-Port：投进收件箱 suli_packages/<pkg>/，拿 package_id 轮询回执，等 L-Port 登记即亮
-// 投递包持久化（刷新/切页不丢）：localStorage 只记 {pkg, at, eid}，回来按集号认领续等
-const PUSH_KEY = 'suli.director.push'
+// 多包并行：localStorage 记数组 [{pkg, at, eid, shots}]，一个全局轮询同时跟所有包，互不覆盖
+const PUSH_KEY = 'suli.director.pushes'
 const PUSH_TTL = 10 * 60 * 1000
+interface PendingPush { pkg: string; at: number; eid: string; shots: number; done: boolean; count: number }
 const pushing = ref(false)
-const pushMsg = ref('')
-const pushedPkg = ref('')
-const pushDone = ref(false)
+const pushes = ref<PendingPush[]>([])
 const receiptRefreshKey = ref(0)
 let waitTimer: any = null
-function savePush(pkg: string, at: number, eid: string) {
-  try { localStorage.setItem(PUSH_KEY, JSON.stringify({ pkg, at, eid })) } catch {}
+const curPushes = computed(() => pushes.value.filter(p => p.eid === store.episodeId))
+const otherPushCount = computed(() => pushes.value.filter(p => p.eid !== store.episodeId && !p.done).length)
+function pushLine(p: PendingPush) {
+  if (p.done) return `L-Port 回执已到 ${p.pkg}（${p.count}条），点右边去回执页查看`
+  return `已投递 ${p.pkg}（${p.shots}镜）→ L-Port 收件箱，等待回执中…`
 }
-function loadPush(): { pkg: string; at: number; eid: string } | null {
+function savePushes() {
+  try { localStorage.setItem(PUSH_KEY, JSON.stringify(pushes.value)) } catch {}
+}
+function loadPushes(): PendingPush[] {
   try {
-    const d = JSON.parse(localStorage.getItem(PUSH_KEY) || 'null')
-    if (d?.pkg && d?.at && d?.eid) return d
+    const d = JSON.parse(localStorage.getItem(PUSH_KEY) || '[]')
+    if (Array.isArray(d)) return d.filter(x => x?.pkg && x?.at && x?.eid)
   } catch {}
-  return null
+  // 兼容单包旧键（suli.director.push）：有就并进来并删旧键
+  try {
+    const o = JSON.parse(localStorage.getItem('suli.director.push') || 'null')
+    if (o?.pkg && o?.at && o?.eid) {
+      localStorage.removeItem('suli.director.push')
+      return [{ pkg: o.pkg, at: o.at, eid: o.eid, shots: 0, done: false, count: 0 }]
+    }
+  } catch {}
+  return []
 }
-function clearPush() {
+function clearPushStorage() {
   try { localStorage.removeItem(PUSH_KEY) } catch {}
 }
 async function pushToLport() {
   if (pushing.value || !store.episodeId) return
   pushing.value = true
-  pushDone.value = false
-  pushedPkg.value = ''
-  pushMsg.value = '正在投递到 L-Port 收件箱…'
   try {
     const r: any = await directorApi.pushToLport({
       episode_id: store.episodeId, project_id: store.projectId || '',
@@ -436,64 +413,63 @@ async function pushToLport() {
       tier: globalTier.value, ref_mode: refMode.value,
     })
     const d = (r as any)?.data ?? r
-    pushedPkg.value = d.package_id
-    pushMsg.value = `已投递 ${d.package_id}（${d.shot_count}镜）→ L-Port 收件箱，等待回执中…`
-    savePush(d.package_id, Date.now(), store.episodeId)
+    pushes.value = [...pushes.value.filter(p => p.pkg !== d.package_id),
+      { pkg: d.package_id, at: Date.now(), eid: store.episodeId, shots: d.shot_count || 0, done: false, count: 0 }]
+    savePushes()
     ElMessage.success(`已直投 L-Port（${d.shot_count}镜），等待回执`)
-    pollReceipts(d.package_id, Date.now() + PUSH_TTL, false)
+    ensurePoller(true)
   } catch (e: any) {
-    pushMsg.value = ''
     ElMessage.error(String(e?.response?.data?.msg || '直投失败（L-Port 没起？先用导出ZIP手工搬）').slice(0, 140))
   } finally { pushing.value = false }
 }
-async function pollReceipts(pkg: string, deadline: number, immediate: boolean) {
+// 单轮询同时跟所有未完成的包：哪个包先到回执就亮哪个
+function ensurePoller(immediate = false) {
   clearTimeout(waitTimer)
+  if (!pushes.value.some(p => !p.done && Date.now() - p.at < PUSH_TTL)) return
   const tick = async () => {
-    if (!pushedPkg.value || pushedPkg.value !== pkg) return
-    try {
-      const r: any = await api.receipts({ package_id: pkg })
-      const rows = (r as any)?.data ?? r ?? []
-      const n = Array.isArray(rows) ? rows.length : 0
-      if (n > 0) {
-        pushDone.value = true
-        pushMsg.value = `L-Port 回执已到 ${pkg}（${n}条），点右边去回执页查看`
-        receiptRefreshKey.value++
-        ElMessage.success(`L-Port 回执已到（${n}条）`)
-        return
-      }
-      if (Date.now() < deadline) {
-        pushMsg.value = `已投递 ${pkg}，等待 L-Port 回执中…（暂无回执，5s 后再查）`
-        waitTimer = setTimeout(tick, 5000)
-      } else {
-        pushMsg.value = `已投递 ${pkg}，10 分钟仍无回执：到 L-Port story_text 载入 package.json 跑完后记得登记回执`
-      }
-    } catch {
-      if (Date.now() < deadline) waitTimer = setTimeout(tick, 5000)
-    }
+    const pend = pushes.value.filter(p => !p.done)
+    if (!pend.length) return
+    await Promise.all(pend.map(async (p) => {
+      if (Date.now() - p.at > PUSH_TTL) return
+      try {
+        const r: any = await api.receipts({ package_id: p.pkg })
+        const rows = (r as any)?.data ?? r ?? []
+        const n = Array.isArray(rows) ? rows.length : 0
+        if (n > 0) {
+          p.done = true
+          p.count = n
+          if (p.eid === store.episodeId) receiptRefreshKey.value++
+          ElMessage.success(`L-Port 回执已到 ${p.pkg}（${n}条）`)
+        }
+      } catch {}
+    }))
+    // 过期的静默清掉（界面不再显示），其余没到的继续等
+    pushes.value = pushes.value.filter(p => p.done || Date.now() - p.at < PUSH_TTL)
+    savePushes()
+    clearPushStorageIfEmpty()
+    if (pushes.value.some(p => !p.done)) waitTimer = setTimeout(tick, 5000)
   }
   if (immediate) tick()
   else waitTimer = setTimeout(tick, 5000)
 }
-function stopWait() {
-  clearTimeout(waitTimer)
-  pushedPkg.value = ''
-  pushMsg.value = ''
-  pushDone.value = false
-  clearPush()
+function clearPushStorageIfEmpty() {
+  if (!pushes.value.length) clearPushStorage()
 }
-// 刷新/切回本集：同集 + 10 分钟内的投递自动续等，回来立刻查一次；过期清掉，过集不管（切回去再续）
+function stopWait(pkg?: string) {
+  clearTimeout(waitTimer)
+  if (pkg) pushes.value = pushes.value.filter(p => p.pkg !== pkg)
+  else pushes.value = []
+  savePushes()
+  clearPushStorageIfEmpty()
+  ensurePoller()
+}
+// 刷新/切回：读回没过期的投递，后台轮询自动续上，回来立刻查一次
 function resumePush() {
   clearTimeout(waitTimer)
-  pushedPkg.value = ''
-  pushMsg.value = ''
-  pushDone.value = false
-  const d = loadPush()
-  if (!d) return
-  if (d.eid !== store.episodeId) return
-  if (Date.now() - d.at > PUSH_TTL) { clearPush(); return }
-  pushedPkg.value = d.pkg
-  pushMsg.value = `已投递 ${d.pkg}，等待 L-Port 回执中…（页面回来，续等）`
-  pollReceipts(d.pkg, d.at + PUSH_TTL, true)
+  pushes.value = loadPushes().filter(p => Date.now() - p.at < PUSH_TTL)
+  savePushes()
+  clearPushStorageIfEmpty()
+  ensurePoller(true)
 }
 watch(dtab, v => { if (v === 'receipt') receiptRefreshKey.value++ })
 watch(() => store.episodeId, () => { resumePush() })
@@ -665,14 +641,11 @@ watch(() => store.centralApplySeq, async (seq, prev) => {
   if (!seq || seq === prev) return
   const target = (store as any).centralApplyEpisode || store.episodeId
   if (target && target !== store.episodeId) store.episodeId = target
-  epInput.value = store.episodeId
   await loadScript()
   await refresh()
   await loadOutline()
 })
-watch(() => store.episodeId, v => { if (v && v !== epInput.value) epInput.value = v })
 onMounted(async () => {
-  epInput.value = store.episodeId
   try {
     const e = await api.directorEngines()
     const erows = ((e as any)?.data || e || []) as any[]

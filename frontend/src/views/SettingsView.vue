@@ -382,6 +382,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 与顶栏对齐：取消96rem居中限宽，铺满中央区 */
+.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
 @media (max-width: 900px) {
   .suli-grid-3{grid-template-columns:1fr !important}

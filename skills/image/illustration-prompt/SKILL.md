@@ -129,6 +129,11 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 - **融合保真句**：换背景/入人物必带 `match perspective, shadow direction, color temperature` + `change only X, keep everything else identical`，每轮重复preserve清单。多图编号：`Image 1: shape, Image 2: light only, do not copy objects from Image 2`。Mage Grok最多3张，无seed，靠文字锁构图。
 - **验收**：拿同深度家具量非常物（高÷凳背高×0.9米），倍数不符重出母版，不进派生。
 
+## V5 & Tsubaki 质量尾 (2026-10-16 argon 精华同步，升级版 skill 同源)
+
+- **NovelAI V5**：标准尾 `very aesthetic, masterpiece, high complexity, no text`；复杂度默认 `high complexity`；`depthness/location` 保留；Add Quality Tags 已追加的不重复；权重 `1.3::tag::`，无位置衰减。
+- **PixAI Tsubaki.3**：自然语言尾放末尾 `Clean anime illustration, high detail on costume and fabric folds, crisp lineart, cinematic color grading, high detail, masterpiece.`；开头不堆 tag 垃圾场；关闭 Prompt Helper 防转译。
+
 ## 配套手册
 
 - 机位/构图/光影/姿态/神态/细节/发型/体型全词表 + 图示 + 成品段落：`composition-camera.html`（220 卡片 · 19 区 + 活感工作台）。

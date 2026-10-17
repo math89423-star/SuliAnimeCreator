@@ -58,3 +58,13 @@ Read `references/ref-en.txt` for label rules, retention analysis, and complete e
 - Keep reference labels consistent (e.g. `<Picture 1>`, `<Video 1>`, `<Audio 1>`) across every section.
 - Prefer concrete visual and audio details over abstract words like "cinematic" or "beautiful".
 - When using keyframes (I2VA / FL2VA / L2VA), clearly state how the first and/or last frame connects to the timeline.
+
+## OSS 导演与禁词增补（ai-film-skills + shortfilm-prompts 蒸馏）
+
+- 先导演判断再写 H3：先定观众信息差 + 权力转折，再填 H3 字段；编译禁令：不补戏、不改光源、不改结局，台词逐字 + 绝对秒点。
+- 头上加 Stage1 Core theme tags（shot type → genre → aesthetic，`|` 分隔）做 H3 头锚，不动对齐行/落幅四步/锚点 carry。
+- 禁词沿用 pixai 侧 Rule1（禁 epic/stunning/4K/cinematic 等，换机身+镜头+物理细节）；每主体 ≥2 残缺锚治塑料感。
+- 空结尾治加爆点：末段加 `Just {{subject}}{{action}}, {{env}}.` + 三句 No（No dialogue / No explosion / No blinding light 按需改）。
+- 六模块外壳（H3 字段填入，不另起格式）：一任务 / 二主体 / 三场景（含世界锁） / 四情绪目标 / 五视觉风格 / 六分段脚本（对应 detailed_description）；一总时长默认一条母稿，不擅拆。
+- 反查：起中终三画框可还原 + 轴线（180°，换侧按 framing 规则）+ 尾帧连续；只剩标签（手持/特写/快慢结合/电影级）即打回修编译。
+- 详见 `../pixai-video-prompting/references/oss-5stage-and-negative.md` 与 `../../story/short-drama-storyboard/references/oss-director-package.md`（字段格式仍以本文件为准）。

@@ -1,6 +1,9 @@
 FROM python:3.11-slim
-# node24 + dsh CLI（dsh 入口依赖 import.meta.main，需 node>=22；与宿主 24.x 对齐）
-RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
+# 国内源：apt（debian官方/node源太慢，换清华；nodesource key仍走官方，只一次）+ pip（清华）
+ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+# node24 + dsh CLI（dsh 入口依赖 import.meta.main，需 node>=22；与宿主 24.x 对齐）+ ffmpeg（视频抽帧/转码，video-frames 工具用）
+RUN sed -i 's|deb.debian.org|mirrors.tuna.tsinghua.edu.cn|g; s|security.debian.org|mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; \
+ apt-get update && apt-get install -y --no-install-recommends ca-certificates curl gnupg ffmpeg \
  && mkdir -p /etc/apt/keyrings \
  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \

@@ -6,6 +6,21 @@ __pycache__/
 .run/*.pid
 .run/*.log
 .env
+# dsh 运行家（sessions/凭据/profiles 挂载目录）：含明文 API key，永不入库
+dsh-home/
+# 运行期数据/素材（容器写入、可能含敏感素材，不入库）
+backend/data/uploads/
+backend/data/traffic_out/
+backend/data/traffic_thumbs/
+backend/data/_orphan_backup_*/
+backend/data/director_push_db.json
+backend/data/dsh_runs.json
+backend/data/traffic_assets.json
+backend/data/outline_ep*.md
+backend/data/tsubaki_prompt*
+.dsh-file-claim.audit.jsonl
+*.bak
+*.bak-*
 .DS_Store
 *.local
 .run/

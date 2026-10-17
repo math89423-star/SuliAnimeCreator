@@ -1,6 +1,6 @@
 import { http } from './http'
 export const boardApi = {
-  saveScreenplay: (eid: string, md: string) => http.put(`/v1/scriptboard/screenplay/${eid}`, { screenplay_md: md }).then(r => r.data),
+  saveScreenplay: (eid: string, md: string, extra: any = {}) => http.put(`/v1/scriptboard/screenplay/${eid}`, { screenplay_md: md, ...extra }).then(r => r.data),
   getScreenplay: (eid: string) => http.get(`/v1/scriptboard/screenplay/${eid}`).then(r => r.data),
   uploadEpisodeImage: (eid: string, f: File) => { const fd = new FormData(); fd.append('file', f); return http.post(`/v1/scriptboard/episode/${eid}/image`, fd).then(r => r.data) },
   deleteEpisodeImage: (eid: string, name: string) => http.delete(`/v1/scriptboard/episode/${eid}/image/${name}`).then(r => r.data),
@@ -8,6 +8,9 @@ export const boardApi = {
   getOutline: (eid: string) => http.get(`/v1/scriptboard/outline/${eid}`).then(r => r.data),
   saveOutline: (eid: string, p: any) => http.put(`/v1/scriptboard/outline/${eid}`, p).then(r => r.data),
   outlineGenerate: (eid: string, p: any) => http.post(`/v1/scriptboard/outline/generate/${eid}`, p).then(r => r.data),
+  getEpisodeCast: (eid: string) => http.get(`/v1/scriptboard/cast/${eid}`).then(r => r.data),
+  setEpisodeCast: (eid: string, names: string[]) => http.put(`/v1/scriptboard/cast/${eid}`, { names }).then(r => r.data),
+  storyCast: (eid: string) => http.get(`/v1/story/cast/${eid}`).then(r => r.data),
   draftFromOutline: (eid: string, p: any = {}) => http.post(`/v1/scriptboard/draft/from-outline/${eid}`, p).then(r => r.data),
   autoSplit: (eid: string, story_md: string, use_llm = false) => http.post(`/v1/scriptboard/auto-split/${eid}`, { story_md, use_llm }).then(r => r.data),
   uploadFile: (f: File) => { const fd = new FormData(); fd.append('file', f); return http.post('/v1/uploads', fd).then(r => r.data) },

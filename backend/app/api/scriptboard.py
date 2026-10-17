@@ -20,20 +20,74 @@ _DB = load("scriptboard_db.json", {"eps": {}, "shots": {}})
 _EPS = _DB.get("eps", {})
 _SHOTS = _DB.get("shots", {})
 
+
 def _persist():
     save("scriptboard_db.json", {"eps": _EPS, "shots": _SHOTS})
 
 def ok(data):
     return jsonify({"code": 0, "data": data})
 
+
+def _save_cast(eid, raw_cast, text=""):
+    """记本集出镜角色（点名或正文说话人）。返回解析结果；占位不落盘。
+    显式点名会覆盖旧记忆；正文自动取角只在没有记忆时补。"""
+    from ..services import cast as _cast
+    ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    C = _cast.resolve_cast(raw_cast or ep.get("cast"), text, eid)
+    if C["anchored"]:
+        if raw_cast:
+            ep["cast"] = [{"id": c["id"], "name": c["name"]} for c in C["cast"]]
+        elif not (ep.get("cast") or []):
+            ep["cast"] = [{"id": c["id"], "name": c["name"]} for c in C["cast"]]
+        _persist()
+    return C
+
+
+@bp.get("/cast/<eid>")
+def get_cast(eid):
+    """本集出镜角色（只算不写）：cast=名1,名2 可临时试算。"""
+    from ..services import cast as _cast
+    raw = [n.strip() for n in (request.args.get("cast") or "").split(",") if n.strip()]
+    ep = _EPS.get(eid, {})
+    C = _cast.resolve_cast(raw or None, ep.get("screenplay_md", "") or "", eid)
+    return ok({"episode_id": eid, **C})
+
+
+@bp.put("/cast/<eid>")
+def set_cast(eid):
+    """手工点名：body {names:[...]} 或 {cast:[{id|name}]}；空数组=清空记忆、回到自动取角。"""
+    from ..services import cast as _cast
+    b = request.get_json(force=True, silent=True) or {}
+    ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    if "names" in b or "cast" in b:
+        rows = b.get("names") if "names" in b else b.get("cast")
+        rows = rows if isinstance(rows, list) else []
+        rows = [r for r in rows if (r if isinstance(r, dict) else str(r or "").strip())]
+        if rows:
+            ep["cast"] = [{"id": c["id"], "name": c["name"]} for c in _cast.resolve_cast(rows, "", eid)["cast"]]
+        else:
+            ep["cast"] = []
+        _persist()
+    C = _cast.resolve_cast(ep.get("cast"), ep.get("screenplay_md", "") or "", eid)
+    return ok({"episode_id": eid, **C})
+
 @bp.put("/screenplay/<eid>")
 def save_screenplay(eid):
     b = request.get_json(force=True)
     ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
-    ep["screenplay_md"] = b.get("screenplay_md", "")
+    md = b.get("screenplay_md", "")
+    old = ep.get("screenplay_md", "") or ""
+    # 空内容覆盖非空剧本 = 静默清库（2026-10-16 事故：切集/切页时 debounce 的自动保存把 2187 字稿冲空）。
+    # 要真清空必须显式带 force:true，前端手动清空会走二次确认 + force。
+    if not str(md).strip() and str(old).strip() and not b.get("force"):
+        return ok({"episode_id": eid, "chars": len(old), "kept": True,
+                   "msg": "拒绝用空内容覆盖已有剧本；确要清空请带 force:true"})
+    ep["screenplay_md"] = md
     ep["segs"] = []
-    _persist()
-    return ok({"episode_id": eid, "chars": len(ep["screenplay_md"])})
+    # 正文说话人即出镜名单：存稿时顺手记住（显式 cast 优先，别覆盖手工点名）
+    C = _save_cast(eid, b.get("cast"), md)
+    return ok({"episode_id": eid, "chars": len(ep["screenplay_md"]), "kept": False,
+               "cast": ep.get("cast") or [], "cast_source": C["source"]})
 
 @bp.get("/screenplay/<eid>")
 def get_screenplay(eid):
@@ -259,19 +313,27 @@ def _sync_screenplay_from_outline(ep, eid):
 def save_outline(eid):
     b = request.get_json(force=True) or {}
     ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    kept = False
     if "outline_md" in b:
-        ep["outline_md"] = b.get("outline_md", "")
+        new_md = b.get("outline_md", "")
+        old_md = ep.get("outline_md", "") or ""
+        # 同理：空大纲不许静默覆盖已有大纲（自动保存/切集踩过同类坑）
+        if not str(new_md).strip() and str(old_md).strip() and not b.get("force"):
+            kept = True
+        else:
+            ep["outline_md"] = new_md
     if "outline_image" in b:
         from pathlib import Path as _P
         ep["outline_image"] = _P(b.get("outline_image") or "").name
     synced = _sync_screenplay_from_outline(ep, eid)
     _persist()
-    return ok({"episode_id": eid, "chars": len(ep.get("outline_md", "")),
+    return ok({"episode_id": eid, "chars": len(ep.get("outline_md", "")), "kept": kept,
                "screenplay_synced": synced, "screenplay_chars": len(ep.get("screenplay_md", ""))})
 
 @bp.post("/outline/generate/<eid>")
 def outline_generate(eid):
-    """轻大纲：不走 dsh，直接调 services/draft（LLM 优先，模板回退）并落盘。"""
+    """轻大纲：不走 dsh，直接调 services/draft（LLM 优先，模板回退）并落盘。
+    出镜角色走角色库取角（body.cast 可点名覆盖），prompt 里不再写死人名。"""
     from ..services.draft import build_outline_md
     from pathlib import Path as _P
     b = request.get_json(force=True) or {}
@@ -280,15 +342,18 @@ def outline_generate(eid):
     tier = _norm_tier(b.get("tier"))
     hint = (b.get("hint") or b.get("screenplay_md") or "").strip()[:800]
     image = _P(b.get("image") or b.get("outline_image") or "").name
-    md, tag = build_outline_md(eid, total_s, engine, tier, hint, image)
     ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    raw_cast = b.get("cast") if b.get("cast") else None   # 空数组=没点名，别把记忆清掉
+    C = _save_cast(eid, raw_cast, hint or (ep.get("screenplay_md") or ""))
+    md, tag = build_outline_md(eid, total_s, engine, tier, hint, image, cast=C["cast"])
     ep["outline_md"] = md
     if image:
         ep["outline_image"] = image
     synced = _sync_screenplay_from_outline(ep, eid)
     _persist()
     return ok({"episode_id": eid, "outline_md": md, "outline_image": ep.get("outline_image", ""),
-               "engine": tag, "chars": len(md),
+               "engine": tag, "chars": len(md), "cast": ep.get("cast") or [],
+               "cast_source": C["source"],
                "screenplay_synced": synced, "screenplay_chars": len(ep.get("screenplay_md", ""))})
 
 @bp.post("/draft/from-outline/<eid>")
@@ -305,7 +370,16 @@ def draft_from_outline(eid):
         return jsonify({"code": 4001, "msg": "本集暂无大纲，先生成大纲"}), 400
     specs, tag = split_outline_to_shots(outline_md, eid, total_s, tier or "")
     # 幂等：先清本集旧草案（draft=True），保留已定稿镜，防止重复点击堆出 3+3+3…
-    for sid in [sid for sid, s in _SHOTS.items() if s.get("episode_id") == eid and s.get("draft")]:
+    # 另带走无内容空镜（duty/duty_en/sound 全空且无配图，多为分镜页“添加行”残留），免得“无内容”卡占时间轴
+    def _is_junk(s):
+        if s.get("episode_id") != eid:
+            return False
+        if (s.get("duty") or "").strip() or (s.get("duty_en") or "").strip() or (s.get("sound") or "").strip():
+            return False
+        if s.get("images") or s.get("image"):
+            return False
+        return True
+    for sid in [sid for sid, s in _SHOTS.items() if s.get("episode_id") == eid and (s.get("draft") or _is_junk(s))]:
         _SHOTS.pop(sid, None)
     own = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
     n = 1
@@ -457,6 +531,90 @@ def delete_shot(sid):
     _SHOTS.pop(sid, None)
     _persist()
     return ok({"deleted": sid})
+
+
+@bp.post("/shots/import")
+def import_shots():
+    """L-Port 回执批量收口（回程）：body {episode_id, shots[], mode=merge|replace, source}。
+
+    shots 同时兼容 anime 原生（id/duty/duration_s/camera/sound/tier）与
+    L-Port 6 字段（shot_id/purpose|duty_cn/duration_seconds/crop|framing/sound_cn）。
+    merge=按 id upsert（默认），replace=先清空本集再全量写入。
+    重型必填（source_refs/location_binding 等）不动，由 Suli 侧后续补。
+    """
+    b = request.get_json(force=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺少 episode_id"}), 400
+    raw = b.get("shots")
+    if not isinstance(raw, list) or not raw:
+        return jsonify({"code": 4001, "msg": "shots 为空数组"}), 400
+    if len(raw) > 64:
+        return jsonify({"code": 4001, "msg": "单次最多 64 镜"}), 400
+    mode = str(b.get("mode") or "merge").strip().lower()
+    source = str(b.get("source") or "lport")[:40]
+    if mode == "replace":
+        for sid in [k for k, s in _SHOTS.items() if s.get("episode_id") == eid]:
+            _SHOTS.pop(sid, None)
+    _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
+    created, updated = [], []
+    own = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
+    used = {s.get("id", "") for s in own}
+    top = max([s.get("ord", 0) for s in own] + [-1]) + 1
+    n = 1
+    for item in raw[:64]:
+        if not isinstance(item, dict):
+            continue
+        sid = str(item.get("id") or item.get("shot_id") or "").strip()
+        if not sid:
+            while True:
+                cand = f"SHOT-{eid[-4:]}-M{n:03d}"
+                n += 1
+                if cand not in used and cand not in _SHOTS:
+                    sid = cand
+                    break
+        duty = str(item.get("duty") or item.get("purpose") or item.get("duty_cn") or "").strip()[:500]
+        duty_en = str(item.get("duty_en") or "").strip()[:1000]
+        try:
+            dur = float(item.get("duration_s", item.get("duration_seconds", 5)) or 5)
+        except (TypeError, ValueError):
+            dur = 5
+        dur = min(max(dur, 1), 30)
+        cam = item.get("camera") if isinstance(item.get("camera"), dict) else {}
+        framing = item.get("framing") if isinstance(item.get("framing"), dict) else {}
+        crop = str(cam.get("crop") or item.get("crop") or framing.get("size") or "medium").strip() or "medium"
+        row = _SHOTS.get(sid)
+        if row and row.get("episode_id") == eid:
+            row["duty"] = duty or row.get("duty", "")
+            if duty_en:
+                row["duty_en"] = duty_en
+            row["duration_s"] = dur
+            row["camera"] = {**(row.get("camera") or {}), "crop": crop,
+                             "height": cam.get("height", (row.get("camera") or {}).get("height", "eye")),
+                             "movement": cam.get("movement", (row.get("camera") or {}).get("movement", "固定"))}
+            row["sound"] = str(item.get("sound", item.get("sound_cn", row.get("sound", ""))) or "")
+            row["key_text_en"] = str(item.get("key_text_en") or row.get("key_text_en", ""))[:2000]
+            row["tier"] = _norm_tier(item.get("tier", row.get("tier", "")))
+            row["draft"] = True
+            row["note"] = f"{source}回执"[:500]
+            updated.append(sid)
+        else:
+            if sid in _SHOTS:
+                continue
+            _SHOTS[sid] = {"id": sid, "episode_id": eid, "ord": top,
+                           "duty": duty, "duty_en": duty_en, "duration_s": dur,
+                           "camera": {"crop": crop, "height": cam.get("height", "eye"),
+                                      "movement": cam.get("movement", "固定")},
+                           "sound": str(item.get("sound", item.get("sound_cn", "")) or ""),
+                           "key_text_en": str(item.get("key_text_en") or "")[:2000],
+                           "note": f"{source}回执"[:500],
+                           "tier": _norm_tier(item.get("tier")), "draft": True}
+            used.add(sid)
+            top += 1
+            created.append(sid)
+    _persist()
+    return ok({"episode_id": eid, "mode": mode, "created": created,
+               "updated": updated, "count": len(created) + len(updated)})
 
 REF_ROLES = ("character", "outfit", "style", "face", "pose", "scene", "prop")
 
