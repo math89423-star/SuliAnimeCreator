@@ -45,6 +45,7 @@ their bodies stay pressed flush and move together in a single slow rhythm, skin 
 | 蜷趾 | `her toes curling against the sheet` |
 | 弓背 | `her back arching slightly, shoulder blades lifting` |
 | 咬唇 | `she bites down on her lower lip` |
+| 泪光（情绪外化） | `eyes glistening, a single tear tracking down her cheek` |
 | 高潮 | `her whole body holding taut for a beat before easing` |
 | 余韵 | `short, slowing breaths as her grip loosens` |
 | 体液（含蓄版） | `a faint wet sheen, catching the light` |
