@@ -8,11 +8,17 @@
         <span class="suli-muted" style="font-size:12px">抽帧走本项目 ffmpeg 工具；分析由 Agent 逐帧看图产出报告</span>
       </div>
       <div class="suli-muted" style="font-size:12px;margin-top:6px">
-        上传对标视频（或粘贴直链）→ 时间轴圈选片段 → 抽关键帧 → Agent 反推运镜 / 节奏 / 钩子。只借手法，不抄画面。
+        上传对标视频 / 粘贴直链 / 贴 H 站链接自动下载 → 时间轴圈选片段 → 抽关键帧 → Agent 反推运镜 / 节奏 / 钩子。只借手法，不抄画面。
+      </div>
+      <div style="margin-top:10px">
+        <el-radio-group v-model="tab" size="small">
+          <el-radio-button value="work">工作台</el-radio-button>
+          <el-radio-button value="lib">素材源</el-radio-button>
+        </el-radio-group>
       </div>
     </div>
 
-    <div class="cols">
+    <div v-show="tab === 'work'" class="cols">
       <!-- 左列：操作 -->
       <div class="col-left">
         <div class="suli-card sect">
@@ -43,6 +49,10 @@
           <div class="url-row">
             <el-input v-model="url" size="small" placeholder="或粘贴视频直链（http/https）…" clearable @keydown.enter="useUrl" />
             <el-button size="small" :disabled="!url.trim()" @click="useUrl">用直链</el-button>
+          </div>
+          <div class="url-row" style="margin-top:6px">
+            <el-input v-model="hurl" size="small" placeholder="贴 hanime1.me 观看页链接 / 视频 id（如 408633）→ 自动下载入库" clearable @keydown.enter="fetchHanime" />
+            <el-button size="small" type="primary" :disabled="!hurl.trim()" :loading="hfetching" @click="fetchHanime">{{ hfetching ? '下载中…' : 'H站下载' }}</el-button>
           </div>
           <input ref="fileInput" type="file" accept="video/*" hidden @change="onPick" />
         </div>
@@ -171,6 +181,34 @@
         </div>
       </div>
     </div>
+
+    <div v-show="tab === 'lib'" class="suli-card sect">
+      <div class="sect-title">
+        素材源
+        <span class="suli-muted" style="font-size:12px;font-weight:400">已拉好的素材都在这里（uploads 库）；点「载入拉片」直接进工作台，本地文件模式抽帧零拷贝</span>
+        <span style="flex:1" />
+        <el-button size="small" :loading="mediaLoading" @click="loadMedia">刷新</el-button>
+      </div>
+      <div v-if="!media.length && !mediaLoading" class="suli-muted" style="padding:20px 0;text-align:center;font-size:12.5px">
+        还没有素材——去「工作台」贴个 H 站链接或传个视频，拉好的都会出现在这里
+      </div>
+      <div v-else class="media-grid">
+        <div v-for="m in media" :key="m.name" class="media-card">
+          <video :src="m.url" muted playsinline preload="metadata" @loadedmetadata="onMediaMeta(m, $event)" />
+          <div class="media-name" :title="m.name">{{ m.name }}</div>
+          <div class="media-meta suli-muted">
+            <el-tag size="small" effect="plain" :type="m.name.startsWith('hanime1-') ? 'danger' : 'info'">{{ m.name.startsWith('hanime1-') ? 'H站' : '上传' }}</el-tag>
+            <span>{{ mb(m.bytes) }}</span>
+            <span>{{ m.dur ? m.dur.toFixed(1) + 's' : '…' }}</span>
+            <span>{{ fmtTime(m.mtime) }}</span>
+          </div>
+          <div class="row">
+            <el-button size="small" type="primary" @click="loadMaterial(m)">载入拉片</el-button>
+            <el-button size="small" text type="danger" @click="delMaterial(m)">删除</el-button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -182,7 +220,7 @@
  * 状态持久化 localStorage（刷新/切页不丢帧与报告）。
  */
 import { computed, onMounted, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { UploadFilled, VideoCamera, MagicStick, CaretRight, VideoPause, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
@@ -194,9 +232,12 @@ type Src = { name: string; path: string; url: string; dur: number; bytes: number
 
 const src = ref<Src>(null)
 const url = ref('')
+const hurl = ref('')
 const maxFrames = ref(12)
 const scene = ref(0.35)
 const framing = ref(false)
+const hfetching = ref(false)
+const tab = ref<'work' | 'lib'>('work')
 const frames = ref<{ name: string; url: string; time_s?: number }[]>([])
 const durationS = ref(0)
 const mode = ref('')
@@ -252,7 +293,7 @@ const LS_KEY = 'suli.videoLab.v1'
 function persist() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      src: src.value, url: url.value, maxFrames: maxFrames.value, scene: scene.value,
+      tab: tab.value, src: src.value, url: url.value, maxFrames: maxFrames.value, scene: scene.value,
       frames: frames.value, durationS: durationS.value, mode: mode.value, segInfo: segInfo.value,
       segStart: segStart.value, segEnd: segEnd.value, loopSeg: loopSeg.value,
       ask: ask.value, report: report.value, ts: Date.now(),
@@ -265,6 +306,7 @@ function restore() {
   try {
     const d = JSON.parse(localStorage.getItem(LS_KEY) || '{}')
     if (!d || typeof d !== 'object') return
+    if (d.tab === 'lib' || d.tab === 'work') tab.value = d.tab
     if (d.src && typeof d.src === 'object') src.value = d.src
     if (typeof d.url === 'string') url.value = d.url
     if (typeof d.maxFrames === 'number') maxFrames.value = Math.min(24, Math.max(4, d.maxFrames))
@@ -280,7 +322,50 @@ function restore() {
     if (typeof d.report === 'string') report.value = d.report
   } catch {}
 }
-watch([src, url, maxFrames, scene, frames, durationS, mode, segInfo, segStart, segEnd, loopSeg, ask, report], persistSoon, { deep: true })
+watch([tab, src, url, maxFrames, scene, frames, durationS, mode, segInfo, segStart, segEnd, loopSeg, ask, report], persistSoon, { deep: true })
+
+/* —— 素材源（拉片室已拉素材库：uploads 视频列表）—— */
+type MediaItem = { name: string; url: string; bytes: number; mtime: number; dur?: number }
+const media = ref<MediaItem[]>([])
+const mediaLoading = ref(false)
+function fmtTime(ts: number) {
+  const d = new Date(ts * 1000)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getMonth() + 1}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+async function loadMedia() {
+  mediaLoading.value = true
+  try {
+    const d: any = await api.mediaList()
+    media.value = ((d?.data || d || []) as any[]).map(x => ({ ...x, dur: 0 }))
+  } catch { ElMessage.error('素材列表加载失败') } finally { mediaLoading.value = false }
+}
+function onMediaMeta(m: MediaItem, e: Event) {
+  const v = e.target as HTMLVideoElement
+  const dd = v?.duration
+  if (isFinite(dd) && dd > 0) m.dur = dd
+}
+function loadMaterial(m: MediaItem) {
+  src.value = { name: m.name, path: m.name, url: m.url, dur: m.dur || 0, bytes: m.bytes }
+  frames.value = []; durationS.value = 0; mode.value = ''; segInfo.value = null
+  url.value = ''; videoErr.value = false; videoDur.value = 0; resetSeg()
+  tab.value = 'work'
+  ElMessage.success(`已载入：${m.name}`)
+}
+async function delMaterial(m: MediaItem) {
+  try {
+    await ElMessageBox.confirm(`删除素材「${m.name}」？文件会从 uploads 真删。`, '确认删除', { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' })
+  } catch { return }
+  try {
+    await api.mediaDelete(m.name)
+    media.value = media.value.filter(x => x.name !== m.name)
+    if (src.value?.path === m.name) clearSrc()
+    ElMessage.success('已删除')
+  } catch { ElMessage.error('删除失败') }
+}
+watch(tab, (v) => {
+  if (v === 'lib') { videoEl.value?.pause(); loadMedia() }
+})
 
 /* —— 视频源 —— */
 function pickFile() { fileInput.value?.click() }
@@ -313,6 +398,25 @@ function useUrl() {
   src.value = { name: decodeURIComponent(u.split('/').pop() || '直链视频').slice(0, 80), path: '', url: u, dur: 0, bytes: 0 }
   frames.value = []; durationS.value = 0; mode.value = ''; segInfo.value = null
   videoErr.value = false; videoDur.value = 0; resetSeg()
+}
+async function fetchHanime() {
+  const q = hurl.value.trim()
+  if (!q || hfetching.value) return
+  hfetching.value = true
+  try {
+    const d: any = await api.hanime1Fetch(q)
+    const row = d?.data || d
+    if (!row?.path) throw new Error(row?.msg || '下载失败')
+    src.value = { name: row.name || 'hanime1 视频', path: row.path, url: row.url, dur: row.duration_s || 0, bytes: row.bytes || 0 }
+    frames.value = []; durationS.value = 0; mode.value = ''; segInfo.value = null
+    url.value = ''; videoErr.value = false; videoDur.value = 0; resetSeg()
+    hurl.value = ''
+    ElMessage.success(`${row.cached ? '本地已有，直接复用' : '已下载入库'}：${row.name}${row.bytes ? '（' + mb(row.bytes) + '）' : ''}`)
+  } catch (e: any) {
+    ElMessage.error('H站下载失败：' + (e?.response?.data?.msg || e?.message || '未知错误'))
+  } finally {
+    hfetching.value = false
+  }
 }
 function clearSrc() {
   src.value = null; frames.value = []; durationS.value = 0; mode.value = ''; report.value = ''
@@ -542,6 +646,12 @@ onMounted(restore)
 .im { width: 100%; height: 100%; display: block; cursor: zoom-in; }
 .idx { position: absolute; left: 6px; top: 6px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; }
 .tm { position: absolute; left: 6px; bottom: 6px; background: rgba(0, 0, 0, .55); color: #fff; font-size: 11px; padding: 1px 6px; border-radius: 6px; }
+.media-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.media-card { border: 1px solid var(--suli-border); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; background: var(--suli-bg-2); }
+.media-card video { width: 100%; aspect-ratio: 16/9; object-fit: contain; background: #0b0b0d; border-radius: 8px; display: block; }
+.media-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.media-meta { font-size: 11.5px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.media-card .row { margin-top: 0; }
 @media (max-width: 900px) {
   .cols { flex-direction: column; }
   .col-left { width: 100%; }

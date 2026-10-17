@@ -38,7 +38,10 @@ services:
       - SEARXNG_URL=http://searxng:8080
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:-}
       - OPENCODE_BASE=${OPENCODE_BASE:-https://opencode.ai/zen/go/v1}
-      - OPENCODE_MODEL=${OPENCODE_MODEL:-opencode-go/muse-spark-1.3-contributor}
+      - OPENCODE_MODEL=${OPENCODE_MODEL:-opencode-go/deepseek-v4.1-flash}
+      # H站（hanime1.me）下载走宿主代理（容器直连该站被墙：DNS 污染/403）。
+      # 代理地址按自己环境换；留空则直连（能直连的环境不用配）。
+      - HANIME_PROXY=${HANIME_PROXY:-http://172.31.160.1:7897}
     env_file:
       - path: ./.env
         required: false

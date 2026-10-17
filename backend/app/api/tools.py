@@ -341,3 +341,120 @@ def video_frames():
                "start_s": round(start_s, 2), "end_s": round(end_s if end_s > start_s else total_d, 2),
                "count": len(frames),
                "frames": [{"name": p.name, "url": f"/api/images/{p.name}", "time_s": fmap.get(p.name)} for p in frames]})
+
+
+# ---- H站（hanime1.me）下载入库 ----
+# 观片页 <video><source> 直出 1080/720/480 三档 mp4（vdownload.hembed.com + secure token）。
+# 部分网络环境该站被墙（宿主裸连 403 / 容器 DNS 污染直连 ENETUNREACH）：
+# 容器里配 HANIME_PROXY 走代理（docker-compose 已带默认），留空则直连。
+_HANIME_UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"}
+_HANIME_ID_RE = re.compile(r"^(\d{4,12})$")
+_HANIME_URL_RE = re.compile(r"hanime1\.me/watch\?v=(\d{4,12})", re.I)
+_HANIME_ALLOW_HOSTS = ("hembed.com", "hanime1.me")
+
+
+def _hanime_opener():
+    pxy = (os.getenv("HANIME_PROXY") or os.getenv("HTTPS_PROXY") or os.getenv("https_proxy") or "").strip()
+    if pxy:
+        return urllib.request.build_opener(urllib.request.ProxyHandler({"http": pxy, "https": pxy}))
+    return urllib.request.build_opener()
+
+
+def _slugify(s, n=40):
+    s = re.sub(r"[^0-9A-Za-z]+", "-", s or "").strip("-")
+    return s[:n].strip("-")
+
+
+@bp.post("/hanime1-fetch")
+def hanime1_fetch():
+    """H站观片页 → 解析直出 mp4（1080/720/480）→ 下载进 data/uploads；同名已存在直接复用。
+    body: {url: "https://hanime1.me/watch?v=408633" 或 "408633", quality?: best|1080p|720p|480p}
+    返回（与上传接口同形）：{name, path, url, bytes, duration_s, quality, cached}
+    """
+    from pathlib import Path as _P
+    b = request.get_json(force=True, silent=True) or {}
+    raw = (b.get("url") or "").strip()
+    want = (b.get("quality") or "best").strip().lower()
+    m = _HANIME_URL_RE.search(raw)
+    if m:
+        vid = m.group(1)
+    elif _HANIME_ID_RE.match(raw):
+        vid = raw
+    else:
+        return jsonify({"code": 4001, "msg": "给 hanime1.me 观片页链接，或纯数字视频 id"}), 400
+    page_url = "https://hanime1.me/watch?v=%s" % vid
+    op = _hanime_opener()
+    hdr = dict(_HANIME_UA)
+    hdr["Referer"] = "https://hanime1.me/"
+    try:
+        with op.open(urllib.request.Request(page_url, headers=hdr), timeout=30) as r:
+            html = r.read().decode("utf-8", "ignore")
+    except Exception as e:
+        return jsonify({"code": 5001, "msg": "打不开观片页（视频不存在、被墙或代理未配）：%s" % str(e)[:160]}), 502
+    title = ""
+    mt = re.search(r'<meta property="og:title" content="([^"]*)"', html)
+    if mt:
+        title = _html.unescape(mt.group(1))
+    else:
+        mt = re.search(r"<title>([^<]*)</title>", html)
+        if mt:
+            title = _html.unescape(mt.group(1))
+    title = re.sub(r"\s*[-–—]\s*Hanime1\.me\s*$", "", title, flags=re.I).strip(" -\u00a0")
+    opts = []  # [(画质数字, url)]
+    for tag in re.findall(r"<source\b[^>]*>", html):
+        mu = re.search(r'src="([^"]+\.mp4[^"]*)"', tag)
+        mq = re.search(r'size="(\d+)"', tag)
+        if mu and mq:
+            opts.append((int(mq.group(1)), _html.unescape(mu.group(1))))
+    if not opts:  # 兜底：页面任意带 secure 的 mp4 直链（如 <link rel="preload">）
+        for u in re.findall(r'https://[^"<>\s]+?\.mp4\?secure=[^"<>\s]+', html):
+            u = _html.unescape(u)
+            mq = re.search(r"-(\d{3,4})p\.mp4", u)
+            opts.append((int(mq.group(1)) if mq else 720, u))
+    if not opts:
+        return jsonify({"code": 4004, "msg": "页面里没解析到 mp4 直链（视频不存在或页面结构变了）"}), 404
+    if want in ("1080p", "720p", "480p"):
+        q = int(want[:-1])
+        cand = [o for o in opts if o[0] == q] or opts
+    else:
+        cand = opts
+    qual, mp4 = max(cand, key=lambda o: o[0])
+    host = (urllib.parse.urlsplit(mp4).hostname or "").lower()
+    if not any(host == h or host.endswith("." + h) for h in _HANIME_ALLOW_HOSTS):
+        return jsonify({"code": 4003, "msg": "直链域名不在白名单：%s" % host}), 400
+    root = _P(__file__).resolve().parents[2] / "data" / "uploads"
+    root.mkdir(parents=True, exist_ok=True)
+    slug = _slugify(title)
+    fname = "hanime1-%s%s-%dp.mp4" % (vid, ("-" + slug) if slug else "", qual)
+    dest = root / fname
+    cached = dest.is_file() and dest.stat().st_size > 0
+    if not cached:
+        try:
+            with op.open(urllib.request.Request(mp4, headers=hdr), timeout=60) as r, open(dest, "wb") as f:
+                limit = _MAX_VIDEO_BYTES
+                total = int(r.headers.get("Content-Length") or 0)
+                if total and total > limit:
+                    raise ValueError("视频超过 %dMB 上限" % (limit // 1024 // 1024))
+                while True:
+                    chunk = r.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    limit -= len(chunk)
+                    if limit < 0:
+                        raise ValueError("视频超过 %dMB 上限" % (_MAX_VIDEO_BYTES // 1024 // 1024))
+                    f.write(chunk)
+                if f.tell() == 0:
+                    raise ValueError("下载到 0 字节")
+        except Exception as e:
+            try:
+                dest.unlink()
+            except Exception:
+                pass
+            return jsonify({"code": 5001, "msg": "视频下载失败：%s" % str(e)[:160]}), 502
+    size = dest.stat().st_size
+    dur = 0.0
+    exe = _ffmpeg_bin()
+    if exe:
+        dur = _ff_duration(exe, str(dest))
+    return ok({"name": fname, "path": fname, "url": "/api/images/%s" % urllib.parse.quote(fname),
+               "bytes": size, "duration_s": round(dur, 2), "quality": "%dp" % qual, "cached": cached})

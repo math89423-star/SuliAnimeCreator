@@ -2,6 +2,7 @@
 from flask import Blueprint, request, jsonify, send_from_directory
 from pathlib import Path
 import os
+import urllib.parse
 import uuid
 
 bp = Blueprint("uploads", __name__, url_prefix="/api/v1")
@@ -60,3 +61,36 @@ def upload():
 @bp.get("/images/<name>")
 def serve(name):
     return send_from_directory(ROOT, name)
+
+
+# ---- 素材源（拉片室）：uploads 里的视频素材列表 / 删除 ----
+
+@bp.get("/uploads/media")
+def media_list():
+    """拉片室「素材源」：列 uploads 里的视频素材（mtime 倒序）。"""
+    items = []
+    for p in ROOT.iterdir():
+        try:
+            if not p.is_file() or p.suffix.lower() not in _VIDEO_EXTS:
+                continue
+            st = p.stat()
+        except OSError:
+            continue
+        items.append({"name": p.name, "url": f"/api/images/{urllib.parse.quote(p.name)}",
+                      "bytes": st.st_size, "mtime": int(st.st_mtime)})
+    items.sort(key=lambda x: -x["mtime"])
+    return ok(items)
+
+
+@bp.delete("/uploads/media/<name>")
+def media_delete(name):
+    """删 uploads 里的视频素材（只认视频扩展名，防误删/路径穿越）。"""
+    nm = Path(name or "").name
+    p = ROOT / nm
+    if not nm or p.suffix.lower() not in _VIDEO_EXTS or not p.is_file():
+        return jsonify({"code": 4004, "msg": "没有这个视频素材"}), 404
+    try:
+        p.unlink()
+    except Exception as e:
+        return jsonify({"code": 5001, "msg": "删除失败：%s" % str(e)[:120]}), 500
+    return ok({"deleted": nm})

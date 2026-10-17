@@ -34,9 +34,11 @@
    找片方向（按档位走，不混）：
    - 常规/sfw：只去一般素材站，检索词后加站定语（三选一）：`site:pexels.com` / `site:pixabay.com` /
      `site:coverr.co OR site:mixkit.co`。这几家的直链（images.pexels.com、cdn.pixabay.com…）可直接抽帧。
-   - 成人向/nsfw：**不指定视频站**——成人站全是 JS/登录/会话签名直链，纯下载走不通，不要浪费轮次去试；
-     改走用户上传视频抽帧，或图文站找灵感（booru tag wiki 确认读法+看示例图，见 NSFW 查词链）。
-     用户给了站内链接也不要硬下，下不动就直接说要他传文件。
+   - 成人向/nsfw：hanime1.me 观片页链接（或纯数字 id）**可直接下载入库**，别再让用户传文件：
+     `curl -s -X POST http://127.0.0.1:5001/api/v1/tools/hanime1-fetch -H 'Content-Type: application/json' -d '{"url":"https://hanime1.me/watch?v=408633"}'`
+     → 返回 `{name, path, url, bytes, duration_s}`，随后按第 2 步以 `{"path":"<name>"}` 抽帧；
+     前端拉片室有「H站下载」输入框，同款流程（走宿主代理，见 compose HANIME_PROXY）。
+     其他成人站的 JS/登录/会话签名直链不要硬解，改走用户上传视频抽帧，或图文站找灵感（booru tag wiki 确认读法+看示例图，见 NSFW 查词链）。
 2. 抽帧：`curl -s -X POST "http://127.0.0.1:5001/api/v1/tools/video-frames" \
    -H 'Content-Type: application/json' -d '{"url":"<直链>","max_frames":12}'`
    （已上传改 `{"path":"<basename>"}`；可加 `"start_s"/"end_s"` 只抽区间，前端时间轴圈选用）。
