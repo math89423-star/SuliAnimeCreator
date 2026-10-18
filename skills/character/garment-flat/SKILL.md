@@ -82,9 +82,9 @@ adstronaut/flat 规范取线型语义与视图完整性，不取黑白印刷限�
 
 ## §9 · 与其它 skill/文档的关系
 
-- 本 skill 是设计执行层；`AGENT.md` 的 Human-in-loop 门禁（GATE-1/GATE-2）在上游拍板命题与冻结。
+- 本 skill 是设计执行层；`AGENTS.md` 的 Human-in-loop 门禁（GATE-1/GATE-2）在上游拍板命题与冻结。
 - 后端 `pack.json` 产物规范见 `docs/立项文档.md §8`；本 skill 产出的是其中视觉规格的设定输入。
-- 禁止事项遵 `AGENT.md §8`：不接绘图/本地模型，不碰密钥。
+- 禁止事项遵 `AGENTS.md §8`：不接绘图/本地模型，不碰密钥。
 
 ---
 *版本 v1.2：通用版型库＋空白实例模板，管线改为通用→实例两步；既有六件降格为实例。
