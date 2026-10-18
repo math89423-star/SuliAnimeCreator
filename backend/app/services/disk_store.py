@@ -2,6 +2,7 @@
 
 本模块是全仓唯一的 JSON 持久化出口：
 - 原子写：先写 tmp 再 rename，避免半截 JSON；
+- 落盘后固定 0644：mkstemp 默认 0600，容器内以 root 写会让宿主的 git / 工具读不了；
 - 读失败回 default，不抛。
 业务蓝图不要自己拼 Path，一律走 load/save。
 """
@@ -38,6 +39,12 @@ def save(name, obj):
             except Exception:
                 pass
         os.replace(tmp, p)
+        # mkstemp 默认 0600：容器内 root 写出来的文件宿主读不了（git status/diff 直接报
+        # Permission denied）。这些是工作台数据、不含凭据，落盘后统一放宽到 0644。
+        try:
+            os.chmod(p, 0o644)
+        except OSError:
+            pass
     finally:
         try:
             if os.path.exists(tmp):
