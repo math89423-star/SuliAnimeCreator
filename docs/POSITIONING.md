@@ -1,8 +1,8 @@
-# SuliAnimeCreator × L-Port 职责对齐（2026-10-12 修订，YG 裁定）
+# SuliAnimeCreator × L-Port 职责对齐
 
 > 一句话：SuliAnimeCreator 负责**起草方案与敲定方向**（做规划），L-Port 负责**创意发散与自评审迭代**，
 > **最终成品保存在 L-Port 内**。暂且由人工手动搬运成果，两边互通以后再打通。
-> 2026-10-12 YG 裁定替代 2026-10-11 版 §1 分工表；A向（审计/执行大方向）仍然有效。call-YG 已关闭。
+> A 向（审计/执行大方向）仍然有效。
 
 ## 1. 各管什么
 
@@ -50,7 +50,7 @@ L-Port `story_text` 插件输入已写明"接 Suli 交付包：`package_json` �
 | 提示词 | `prompts/<shot_id>.<engine>.txt` + `prompts.json` | txt：粘贴即用全文（pixai/h3 分引擎）；json：机器字段（engine/video_model/ref_mode/duration/tier/refs） | Translator 译参，或人工粘贴（PixAI 无视频 API，只能人贴） |
 
 命名纪律：我们给的带 `_draft`（草案），它产出的无后缀（成稿），后缀即方向标记。
-参考方式归属（2026-10-15 敲定）：一个 seg 用首尾帧还是多图参考，**由 Suli 定，按 seg 生效，L-Port 只执行**。
+参考方式归属：一个 seg 用首尾帧还是多图参考，**由 Suli 定，按 seg 生效，L-Port 只执行**。
 规则：v3.x/v2.7 只认首帧（硬约束）；锁开场构图/姿势 → Start Frame；只保身份、动作去新场景 → `@image1` 多图参考；两者互斥。
 出包时 `ref_mode_default` 记页面请求值，每镜 `ref_mode` 记组装结算值（模型能力 + 有无额外参考图逐镜修正）；
 L-Port 包里没标才走保底（有首帧按 startframe、无图按 t2v，且留痕上报），不得静默改判。
@@ -79,10 +79,10 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 回执只存**事实**供审计（哪镜、何时、用什么引擎出了什么图），不触发重生成。
 成品本体留在 L-Port，本项目只存回执指针；视频回执扩展字段（video_model/ref_mode/duration_s/refs_used）见组装层返回。
 
-**远期互通 TODO**（现在不建）：方案包直传、成品与回执自动回流、媒体 sha 对账自动化。
+**远期互通目标**（未建）：方案包直传、成品与回执自动回流、媒体 sha 对账自动化。
 互通建成前，人工搬运只做复制：sha 对不上→停手上报，不猜不补。
 
-### 草案直投（2026-10-16 已建：去程自动、回程轮询）
+### 草案直投（去程自动、回程轮询）
 
 导演草案页「直投 L-Port」调 `POST /v1/director/push-lport`
 （body：`episode_id` + 可选 `project_id/character_id/engine/pixai_model/tier/ref_mode/note`，
@@ -98,7 +98,7 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 L-Port 侧仍需人工一步：在 story_text 插件载入 `package.json` 跑完分镜后，
 调 `push-shots-to-suli` 回写分镜并在本项目登记回执（带该 `package_id`）。
 
-### 详细提示词回传（2026-10-18 已建：L-Port 细化产物回流）
+### 详细提示词回传（L-Port 细化产物回流）
 
 story_text 回写分镜之后，L-Port 文本工作区再点「写详细提示词并回传」：
 跑 `seg_prompt`（一镜一 seg，中文导演式提示词 + 相机句 + 英文关键帧句）→
@@ -110,6 +110,26 @@ story_text 回写分镜之后，L-Port 文本工作区再点「写详细提示�
 规则：只写已存在的镜，缺镜回报 `missing` 不造镜（造镜归 `shots/import`）；空提示词条目不落
 （防假回执）；同一镜重传即覆盖（当前版本语义）。
 查看口：导演页「提示词」页签（逐镜复制 / 复制全部）+ 草案页分镜卡内嵌块。
+
+### 单图创作（art plan：方案在 Suli，发散翻译精修在 L-Port）
+
+Suli 「单图创作」页（`/studio`）起草单图方案：意图文本 + 目标引擎（可多选）+ 可选参考图（≤6）+
+改图指令；「与 agent 讨论方案」走本仓 dsh（agent 定稿后调 `POST /api/v1/art/plans` 落库）。
+「直投 L-Port」写进同一收件箱 `suli_packages/<pkg_id>/`（`art_plan.json` + `manifest.json` + 参考图 zip），
+包型 `kind: "art_plan"`（口径：`plan_id/title/intent_text/engines/reference_images/user_image_instruction`）。
+
+L-Port 「单图方案」页（`/art-plan`）列出收件箱方案，一键跑链：
+`intent_divergence`（意图 → 全景视觉叙事）→ `intent_blueprint`（→ 15 维 SlimBlueprintIR）
+→ `blueprint_to_<引擎>`（anima / novelai / seedream / gpt_image / flux / sdxl / pony / cloud）。
+参考图由 L-Port 从包里解到本地后喂 `intent_divergence`（走 VLM 看图，仅一张）。
+
+回程：`POST /api/pipeline/push-art-prompts-to-suli`（代理层轻转）→ 本项目
+`POST /api/v1/art/prompts/import` 逐引擎写进方案 `prompts`
+（`source/package_id/at` + `positive/negative/params/note`，另可带 `blueprint`）。
+
+规则：只认已存在的方案（`plan_id`/`package_id` 归位，不新建，防假回执）；空正文条目不落；
+同一引擎重传即覆盖（当前版本语义）；引擎没有对应蓝图翻译器时 L-Port 跳过并回报 `skipped`。
+查看口：Suli 单图创作页右侧（逐家复制 / 复制全部）。方案数据落 `backend/data/art_db.json`。
 
 ## 3. 本项目要改的（后续任务池）
 

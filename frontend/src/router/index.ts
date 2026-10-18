@@ -24,6 +24,7 @@ export const routes = [
   { path: '/video', component: withChunkRecovery(() => import('../views/VideoLabView.vue')), meta: { title: '拉片室', icon: 'VideoPlay' } },
   { path: '/traffic', component: withChunkRecovery(() => import('../views/TrafficView.vue')), meta: { title: '投流批量', icon: 'Present' } },
   { path: '/art', component: withChunkRecovery(() => import('../views/ArtView.vue')), meta: { title: '美术工具', icon: 'Picture' } },
+  { path: '/studio', component: withChunkRecovery(() => import('../views/ArtStudioView.vue')), meta: { title: '单图创作', icon: 'MagicStick' } },
   { path: '/settings', component: withChunkRecovery(() => import('../views/SettingsView.vue')), meta: { title: '设置', icon: 'Setting' } },
 ]
 
