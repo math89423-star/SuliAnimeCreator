@@ -616,6 +616,90 @@ def import_shots():
     return ok({"episode_id": eid, "mode": mode, "created": created,
                "updated": updated, "count": len(created) + len(updated)})
 
+
+# ── L-Port 详细提示词回传（提示词收口，2026-10-18）─────────────────────
+# 与 shots/import（分镜回执）分两口：这边只把提示词写进"已存在的镜"，
+# 不由提示词造镜（造镜归 shots/import）；缺镜只报告 missing，不静默丢。
+
+_LP_PROMPT_CAP = {
+    "seg_id": 40, "director_cn": 2000, "camera_note": 300,
+    "key_text_en": 2000, "dialogue_cn": 500, "crop": 40, "ref_status": 40,
+}
+
+
+def _norm_prompt_item(item):
+    """单条回传提示词归一（纯函数）：无 shot_id 或无正文返回 None。"""
+    if not isinstance(item, dict):
+        return None
+    sid = str(item.get("shot_id") or item.get("id") or "").strip()[:64]
+    if not sid:
+        return None
+    row = {}
+    for k, cap in _LP_PROMPT_CAP.items():
+        v = item.get(k)
+        if isinstance(v, str) and v.strip():
+            row[k] = v.strip()[:cap]
+    rm = item.get("ref_missing")
+    if isinstance(rm, list):
+        rm = [str(x).strip()[:100] for x in rm if str(x).strip()][:8]
+        if rm:
+            row["ref_missing"] = rm
+    d = item.get("duration_s")
+    try:
+        d = float(d) if d is not None else None
+    except (TypeError, ValueError):
+        d = None
+    if d and d > 0:
+        row["duration_s"] = round(d, 1)
+    # 空提示词不落：只带回 seg_id/labels 的条目不写库（避免假回执）
+    if not any(row.get(k) for k in ("director_cn", "camera_note", "key_text_en", "dialogue_cn")):
+        return None
+    return sid, row
+
+
+@bp.post("/shots/prompts/import")
+def import_shot_prompts():
+    """L-Port 详细提示词回传（回程）：body {episode_id, prompts[], source?, package_id?}。
+
+    prompts 每项 {shot_id, seg_id?, director_cn?, camera_note?, key_text_en?,
+    dialogue_cn?, ref_status?, ref_missing?, duration_s?, crop?}，
+    按 shot_id 写进该镜的 lport_prompts（当前版本，覆盖旧的）；只写本集已存在的镜，
+    缺镜报告 missing 不造镜。"""
+    import datetime as _dt
+    b = request.get_json(force=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺少 episode_id"}), 400
+    raw = b.get("prompts")
+    if not isinstance(raw, list) or not raw:
+        return jsonify({"code": 4001, "msg": "prompts 为空数组"}), 400
+    if len(raw) > 64:
+        return jsonify({"code": 4001, "msg": "单次最多 64 镜"}), 400
+    source = str(b.get("source") or "lport")[:40]
+    pkg_id = str(b.get("package_id") or "")[:64]
+    updated, missing, skipped = [], [], 0
+    for item in raw[:64]:
+        norm = _norm_prompt_item(item)
+        if not norm:
+            skipped += 1
+            continue
+        sid, row = norm
+        s = _SHOTS.get(sid)
+        if not s or s.get("episode_id") != eid:
+            missing.append(sid)
+            continue
+        s["lport_prompts"] = {
+            "source": source,
+            "package_id": pkg_id,
+            "at": _dt.datetime.now().isoformat(timespec="seconds"),
+            **row,
+        }
+        updated.append(sid)
+    _persist()
+    return ok({"episode_id": eid, "updated": updated, "missing": missing,
+               "skipped": skipped, "count": len(updated), "source": source})
+
+
 REF_ROLES = ("character", "outfit", "style", "face", "pose", "scene", "prop")
 
 

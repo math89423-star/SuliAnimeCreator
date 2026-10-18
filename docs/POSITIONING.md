@@ -98,6 +98,19 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 L-Port 侧仍需人工一步：在 story_text 插件载入 `package.json` 跑完分镜后，
 调 `push-shots-to-suli` 回写分镜并在本项目登记回执（带该 `package_id`）。
 
+### 详细提示词回传（2026-10-18 已建：L-Port 细化产物回流）
+
+story_text 回写分镜之后，L-Port 文本工作区再点「写详细提示词并回传」：
+跑 `seg_prompt`（一镜一 seg，中文导演式提示词 + 相机句 + 英文关键帧句）→
+`POST /api/pipeline/push-prompts-to-suli`
+（body：`episode_id` + `prompts[]` + 可选 `package_id/source`；代理层轻转后转发）→
+本项目 `POST /api/v1/scriptboard/shots/prompts/import` 逐镜写进 `shot.lport_prompts`
+（`source/package_id/at` + `director_cn/camera_note/key_text_en/dialogue_cn/ref_status/ref_missing`）。
+
+规则：只写已存在的镜，缺镜回报 `missing` 不造镜（造镜归 `shots/import`）；空提示词条目不落
+（防假回执）；同一镜重传即覆盖（当前版本语义）。
+查看口：导演页「提示词」页签（逐镜复制 / 复制全部）+ 草案页分镜卡内嵌块。
+
 ## 3. 本项目要改的（后续任务池）
 
 1. 方案包格式冻结：episode/方向级 freeze + 交付包快照（含版本号，不可改）。

@@ -150,6 +150,40 @@
     </template>
     <!-- 8-block 静帧：折叠面板，默认收起，不占版面 -->
       </el-tab-pane>
+      <el-tab-pane label="提示词" name="prompts">
+        <div class="prompt-head">
+          <span class="suli-muted" style="font-size:12px">
+            L-Port 细化后回传的逐镜详细提示词（已回传 {{ lpDoneCount }}/{{ store.shots.length }} 镜）
+          </span>
+          <span style="flex:1" />
+          <el-button size="small" @click="reloadPrompts" :loading="promptRefreshing">刷新</el-button>
+          <el-button size="small" type="primary" plain :disabled="!lpDoneCount" @click="copyAllPrompts">复制全部</el-button>
+        </div>
+        <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
+          <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页生成草案</el-button>
+        </el-empty>
+        <div v-else class="prompt-list">
+          <div v-for="(r, i) in promptRows" :key="r.id" class="prompt-row">
+            <div class="pr-left">
+              <span class="pr-no tnum">{{ String(i + 1).padStart(2, '0') }}</span>
+              <span class="pr-sid">{{ r.id }}</span>
+              <span class="tnum pr-dur">{{ r.duration_s }}s</span>
+              <el-tag size="small" :type="r.lp ? 'success' : 'info'">{{ r.lp ? '已回传' : '未回传' }}</el-tag>
+            </div>
+            <div v-if="r.lp" class="pr-body">
+              <div class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
+              <div v-if="r.lp.camera_note" class="pr-line"><b class="pr-k">镜头</b><span class="pr-v">{{ r.lp.camera_note }}</span></div>
+              <div v-if="r.lp.key_text_en" class="pr-line"><b class="pr-k">英文关键帧</b><span class="pr-v">{{ r.lp.key_text_en }}</span></div>
+              <div v-if="(r.lp.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
+              <div class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
+            </div>
+            <div v-else class="pr-body pr-empty">这镜还没有回传提示词：L-Port 文本工作区点「写详细提示词并回传」后在这里亮</div>
+            <div class="pr-right">
+              <el-button v-if="r.lp" size="small" @click="copyPrompt(r)">复制</el-button>
+            </div>
+          </div>
+        </div>
+      </el-tab-pane>
       <el-tab-pane label="回执" name="receipt">
         <ReceiptPanel :episode-id="store.episodeId" :project-id="store.projectId" :project-name="currentProjectName" :refresh-key="receiptRefreshKey" />
       </el-tab-pane>
@@ -302,6 +336,36 @@ const totalS = computed(() => Math.round((store.shots || []).reduce((a: number, 
 
 async function refresh() {
   try { const r = await api.listShots(store.episodeId); store.shots = (r as any).data } catch {}
+}
+
+// 提示词回传页：L-Port 逐镜详细提示词（scriptboard shots[].lport_prompts，seg_prompt 回传）
+const promptRefreshing = ref(false)
+const promptRows = computed(() => (store.shots as any[]).map((s: any) => ({ ...s, lp: s.lport_prompts || null })))
+const lpDoneCount = computed(() => promptRows.value.filter((r: any) => r.lp && (r.lp.director_cn || r.lp.key_text_en)).length)
+async function reloadPrompts() {
+  promptRefreshing.value = true
+  try { await refresh() } catch {} finally { promptRefreshing.value = false }
+}
+function promptText(r: any): string {
+  const lp = r.lp
+  if (!lp) return ''
+  const L: string[] = [`【${r.id}】${r.duration_s}秒`]
+  if (lp.director_cn) L.push(String(lp.director_cn))
+  if (lp.camera_note) L.push(`镜头：${lp.camera_note}`)
+  if (lp.key_text_en) L.push(`Key frame: ${lp.key_text_en}`)
+  return L.join('\n')
+}
+async function copyPrompt(r: any) {
+  const text = promptText(r)
+  if (!text) return
+  try { await navigator.clipboard.writeText(text); ElMessage.success('已复制') }
+  catch { ElMessage.warning('复制失败，手动选中吧') }
+}
+async function copyAllPrompts() {
+  const chunks = promptRows.value.filter((r: any) => r.lp).map(promptText).filter(Boolean)
+  if (!chunks.length) return
+  try { await navigator.clipboard.writeText(chunks.join('\n\n')); ElMessage.success(`已复制 ${chunks.length} 镜提示词`) }
+  catch { ElMessage.warning('复制失败，手动选中吧') }
 }
 
 // 顶部切换 + 清理已移至全局顶栏与各页签内按钮，此处仅保留数据刷新函数
@@ -471,7 +535,7 @@ function resumePush() {
   clearPushStorageIfEmpty()
   ensurePoller(true)
 }
-watch(dtab, v => { if (v === 'receipt') receiptRefreshKey.value++ })
+watch(dtab, v => { if (v === 'receipt') receiptRefreshKey.value++; if (v === 'prompts') refresh() })
 watch(() => store.episodeId, () => { resumePush() })
 
 // 单图Agent导演域（抽到 composable，大纲 brief 留在视图）
@@ -719,6 +783,21 @@ onMounted(async () => {
 .outline-rz::after { content: ''; width: 56px; height: 4px; border-radius: 999px; background: var(--el-border-color); }
 .outline-rz:hover::after { background: var(--suli-primary); }
 .shot-prompt { font-size: 13px; white-space: pre-wrap; background: var(--el-fill-color-lighter); border-radius: 8px; padding: 10px; }
+/* 提示词回传页（L-Port seg_prompt 逐镜回传） */
+.prompt-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0 10px; }
+.prompt-list { display: flex; flex-direction: column; gap: 8px; }
+.prompt-row { display: flex; gap: 12px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--suli-border); border-radius: 10px; background: var(--suli-surface); }
+.pr-left { display: flex; flex-direction: column; gap: 4px; align-items: center; flex-shrink: 0; width: 132px; }
+.pr-no { width: 26px; height: 26px; border-radius: 50%; background: var(--suli-primary); color: #fff; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+.pr-sid { font-family: var(--suli-mono); font-size: 11px; word-break: break-all; text-align: center; }
+.pr-dur { font-size: 12px; color: var(--suli-text-2); }
+.pr-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pr-empty { color: var(--suli-text-3); font-size: 12px; }
+.pr-line { display: flex; gap: 8px; font-size: 13px; line-height: 1.6; }
+.pr-k { flex-shrink: 0; width: 74px; color: var(--suli-text-2); font-weight: 600; }
+.pr-v { min-width: 0; white-space: pre-wrap; word-break: break-word; }
+.pr-meta { font-size: 11px; color: var(--suli-text-3); }
+.pr-right { flex-shrink: 0; }
 @media (max-width: 900px) {
   .outline-thumb { width: 170px; }
   .outline-text { max-height: 340px; }

@@ -256,6 +256,21 @@ def test_director_push_contracts():
     assert "refreshKey" in panel, "回执面板缺 refreshKey（回执到了不会自动刷）"
 
 
+def test_lport_prompt_return_contracts():
+    """详细提示词回传闭环（2026-10-18）：Suli 收口端点 + 导演页「提示词」页签 +
+    分镜卡嵌块必须同时在（L-Port 侧 push-prompts-to-suli 对端，跨库静态夹在两侧测试）。"""
+    sb = (ROOT / "backend" / "app" / "api" / "scriptboard.py").read_text()
+    assert '@bp.post("/shots/prompts/import")' in sb, "后端缺 POST /scriptboard/shots/prompts/import"
+    assert "_norm_prompt_item" in sb and "lport_prompts" in sb, "收口缺字段归一/落位"
+    dv = (ROOT / "frontend" / "src" / "views" / "DirectorView.vue").read_text()
+    for frag in ('label="提示词"', "lport_prompts", "copyAllPrompts", "reloadPrompts", "写详细提示词并回传"):
+        assert frag in dv, f"导演页缺提示词回传页签：{frag}"
+    card = (ROOT / "frontend" / "src" / "components" / "director" / "ShotCard.vue").read_text()
+    assert "lport_prompts" in card and "copyLp" in card, "分镜卡缺回传提示词嵌块"
+    pos = (ROOT / "docs" / "POSITIONING.md").read_text()
+    assert "push-prompts-to-suli" in pos and "shots/prompts/import" in pos, "POSITIONING 缺回传契约"
+
+
 def test_lib_head_buttons_stop_propagation():
     """素材库 header 整行是折叠开关，行内按钮必须 .stop，否则一点删除就折叠空白。"""
     src = (ROOT / "frontend" / "src" / "views" / "TrafficView.vue").read_text()

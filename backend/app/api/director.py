@@ -520,7 +520,7 @@ def push_lport():
         "shot_count": len(built["package_json"]["shots"]),
         "receipt_count": len(built["receipt_rows"]),
         "missing": built["missing"],
-        "hint": "已落 L-Port 收件箱 suli_packages/%s：L-Port 侧在 story_text 插件载入 package.json 跑完分镜后，调 push-shots-to-suli 回写分镜，并在本项目回执页登记回执（package_id=%s），这边轮询即亮。" % (pkg_id, pkg_id),
+        "hint": "已落 L-Port 收件箱 suli_packages/%s：L-Port 侧在 story_text 插件载入 package.json 跑完分镜后，调 push-shots-to-suli 回写分镜，并在本项目回执页登记回执（package_id=%s），这边轮询即亮。要详细提示词，L-Port 文本工作区再点「写详细提示词并回传」（seg_prompt → push-prompts-to-suli），导演页「提示词」页签即可看到。" % (pkg_id, pkg_id),
     })
 
 
