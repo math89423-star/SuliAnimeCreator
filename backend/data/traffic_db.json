@@ -1,11 +1,1084 @@
 {
   "packages": {
+    "PKG-TRAFFIC-EP-81695F-1015": {
+      "package_id": "PKG-TRAFFIC-EP-81695F-1015",
+      "mother_id": "EP-81695F",
+      "created_at": 1792071774432,
+      "lib_source": "lport-index(40)+episode(3)",
+      "library": [
+        {
+          "id": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "file": "videos/demo_04_bbb_action.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "file": "videos/demo_02_jelly_calma.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "file": "videos/反差_图书馆微笑女孩_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "file": "videos/demo_01_bbb_fun.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "file": "videos/悬念提问_女孩微笑藏着什么_21.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_01",
+          "desc": "demo 01",
+          "file": "videos/assembled_demo_01.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "file": "videos/冲突直给_厨房争吵_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "file": "videos/demo_03_sintel_epic.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "file": "videos/反差_女子放衣洗衣_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 16.9,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "file": "videos/demo_06_sintel_face.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_拆开信封_01",
+          "desc": "悬念提问 拆开信封 01",
+          "file": "videos/悬念提问_拆开信封_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_02",
+          "desc": "demo 02",
+          "file": "videos/assembled_demo_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_情侣激烈争吵_01",
+          "desc": "冲突直给 情侣激烈争吵 01",
+          "file": "videos/冲突直给_情侣激烈争吵_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 23.4,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_05_jelly_dream",
+          "desc": "jelly dream",
+          "file": "videos/demo_05_jelly_dream.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_小猫舔爪误会揭晓_27",
+          "desc": "反差 小猫舔爪误会揭晓 27",
+          "file": "videos/反差_小猫舔爪误会揭晓_27.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "反差",
+          "cool": "打脸"
+        },
+        {
+          "id": "台词爆点_电话里吵架_01",
+          "desc": "台词爆点 电话里吵架 01",
+          "file": "videos/台词爆点_电话里吵架_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.9,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_挑衣间选哪件_24",
+          "desc": "悬念提问 挑衣间选哪件 24",
+          "file": "videos/悬念提问_挑衣间选哪件_24.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.9,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_03",
+          "desc": "demo 03",
+          "file": "videos/assembled_demo_03.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_背对背冷战_03",
+          "desc": "冲突直给 背对背冷战 03",
+          "file": "videos/冲突直给_背对背冷战_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 11.3,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜景车流_01",
+          "desc": "动作奇观 城市夜景车流 01",
+          "file": "videos/动作奇观_城市夜景车流_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 25.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_少女闻花特写_02",
+          "desc": "反差 少女闻花特写 02",
+          "file": "videos/反差_少女闻花特写_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "台词爆点_西装创业成功时刻_23",
+          "desc": "台词爆点 西装创业成功时刻 23",
+          "file": "videos/台词爆点_西装创业成功时刻_23.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 10.5,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_焦虑独居女人_01",
+          "desc": "悬念提问 焦虑独居女人 01",
+          "file": "videos/悬念提问_焦虑独居女人_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 17.4,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_04",
+          "desc": "demo 04",
+          "file": "videos/assembled_demo_04.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜空俯瞰_03",
+          "desc": "动作奇观 城市夜空俯瞰 03",
+          "file": "videos/动作奇观_城市夜空俯瞰_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.6,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_新年喜庆装饰_01",
+          "desc": "反差 新年喜庆装饰 01",
+          "file": "videos/反差_新年喜庆装饰_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_狗狗求撸名场面_26",
+          "desc": "悬念提问 狗狗求撸名场面 26",
+          "file": "videos/悬念提问_狗狗求撸名场面_26.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.3,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_05",
+          "desc": "demo 05",
+          "file": "videos/assembled_demo_05.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_夜游街头_02",
+          "desc": "动作奇观 夜游街头 02",
+          "file": "videos/动作奇观_夜游街头_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.2,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_早餐打蛋小确幸_20",
+          "desc": "反差 早餐打蛋小确幸 20",
+          "file": "videos/反差_早餐打蛋小确幸_20.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 7.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_花园全家福故事_18",
+          "desc": "悬念提问 花园全家福故事 18",
+          "file": "videos/悬念提问_花园全家福故事_18.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_06",
+          "desc": "demo 06",
+          "file": "videos/assembled_demo_06.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_大厨爆炒火光逆袭_19",
+          "desc": "动作奇观 大厨爆炒火光逆袭 19",
+          "file": "videos/动作奇观_大厨爆炒火光逆袭_19.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 28.8,
+          "hook": "动作奇观",
+          "cool": "逆袭"
+        },
+        {
+          "id": "反差_洗衣机滚筒_01",
+          "desc": "反差 洗衣机滚筒 01",
+          "file": "videos/反差_洗衣机滚筒_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_落日下全家去哪儿_16",
+          "desc": "悬念提问 落日下全家去哪儿 16",
+          "file": "videos/悬念提问_落日下全家去哪儿_16.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 24.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_晨跑打脸懒惰_30",
+          "desc": "动作奇观 晨跑打脸懒惰 30",
+          "file": "videos/动作奇观_晨跑打脸懒惰_30.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 12.5,
+          "hook": "动作奇观",
+          "cool": "打脸"
+        },
+        {
+          "id": "反差_海边落日团圆反转_17",
+          "desc": "反差 海边落日团圆反转 17",
+          "file": "videos/反差_海边落日团圆反转_17.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 31.7,
+          "hook": "反差",
+          "cool": "反转"
+        },
+        {
+          "id": "动作奇观_湖面雨幕来袭_28",
+          "desc": "动作奇观 湖面雨幕来袭 28",
+          "file": "videos/动作奇观_湖面雨幕来袭_28.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_街头小哥微笑逆袭_22",
+          "desc": "反差 街头小哥微笑逆袭 22",
+          "file": "videos/反差_街头小哥微笑逆袭_22.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.0,
+          "hook": "反差",
+          "cool": "逆袭"
+        },
+        {
+          "id": "动作奇观_黄昏高空巡游_04",
+          "desc": "动作奇观 黄昏高空巡游 04",
+          "file": "videos/动作奇观_黄昏高空巡游_04.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "SHOT-695F-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "id": "SHOT-695F-M002",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "id": "SHOT-695F-M003",
+          "desc": "蒋姨亮证据反转离场"
+        }
+      ],
+      "tasks": [
+        {
+          "desc": "双类回归",
+          "mode": "lib",
+          "category": "红包点击",
+          "count": 3,
+          "refVideo": "",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          }
+        }
+      ],
+      "highlights": [
+        {
+          "id": "H001",
+          "variant_id": "T1-V01",
+          "source": "library",
+          "ref": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "duration_s": 4
+        },
+        {
+          "id": "H002",
+          "variant_id": "T1-V02",
+          "source": "library",
+          "ref": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "duration_s": 4
+        },
+        {
+          "id": "H003",
+          "variant_id": "T1-V03",
+          "source": "library",
+          "ref": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "duration_s": 4
+        }
+      ],
+      "copy_draft": [
+        {
+          "variant_id": "T1-V01",
+          "hypothesis": "测试冲突直给钩子能否提升红包点击意愿",
+          "hook": "冲突直给｜bbb action｜「这红包你还敢不点」",
+          "title": "红包不点就亏大了",
+          "cta": "快点红包领福利"
+        },
+        {
+          "variant_id": "T1-V02",
+          "hypothesis": "测试悬念提问钩子能否激发红包点击好奇",
+          "hook": "悬念提问｜jelly calma｜「点一下能多领十倍」",
+          "title": "点红包翻十倍攻略",
+          "cta": "点击抢翻倍红包"
+        },
+        {
+          "variant_id": "T1-V03",
+          "hypothesis": "测试反差钩子能否提升红包点击转化",
+          "hook": "反差｜反差 图书馆微笑女孩 01｜「没点红包亏了一个亿」",
+          "title": "双回归红包点击秘籍",
+          "cta": "马上点领大红包"
+        }
+      ],
+      "splice_plan": [
+        {
+          "order": 1,
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "bbb action",
+          "cta": "快点红包领福利",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:红包点击"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920"
+        },
+        {
+          "order": 2,
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "jelly calma",
+          "cta": "点击抢翻倍红包",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:红包点击"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920"
+        },
+        {
+          "order": 3,
+          "variant_id": "T1-V03",
+          "highlight_id": "H003",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "反差",
+          "body": "反差 图书馆微笑女孩 01",
+          "cta": "马上点领大红包",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:红包点击"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "竖裁中段1080x1920"
+        }
+      ],
+      "materials": [
+        {
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "ref": "demo_04_bbb_action",
+          "file": "PKG-TRAFFIC-EP-81695F-1015_T1-V01_H001_1080x1920.mp4",
+          "source": "library",
+          "desc": "bbb action",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "src_asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "ref": "demo_02_jelly_calma",
+          "file": "PKG-TRAFFIC-EP-81695F-1015_T1-V02_H002_1080x1920.mp4",
+          "source": "library",
+          "desc": "jelly calma",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "src_asset": "videos/demo_02_jelly_calma.mp4"
+        },
+        {
+          "variant_id": "T1-V03",
+          "highlight_id": "H003",
+          "ref": "反差_图书馆微笑女孩_01",
+          "file": "PKG-TRAFFIC-EP-81695F-1015_T1-V03_H003_1080x1920.mp4",
+          "source": "library",
+          "desc": "反差 图书馆微笑女孩 01",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "src_asset": "videos/反差_图书馆微笑女孩_01.mp4"
+        }
+      ],
+      "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
+      "checks": {
+        "skill": "skills/traffic/traffic-batch/SKILL.md",
+        "skill_version": 1792069555780374551,
+        "engine": "llm",
+        "lib_source": "lport-index(40)+episode(3)",
+        "testable": true,
+        "deduped": true,
+        "executable": true,
+        "mount_ok": true,
+        "naming_ok": true,
+        "materials_ok": true
+      },
+      "variants": [
+        {
+          "variant_id": "T1-V01",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给钩子能否提升红包点击意愿",
+          "hook_text": "冲突直给｜bbb action｜「这红包你还敢不点」",
+          "hl_id": "H001",
+          "hl_desc": "bbb action",
+          "title": "红包不点就亏大了",
+          "cta_text": "快点红包领福利",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "file_name": "PKG-TRAFFIC-EP-81695F-1015_T1-V01_H001_1080x1920.mp4",
+          "asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问钩子能否激发红包点击好奇",
+          "hook_text": "悬念提问｜jelly calma｜「点一下能多领十倍」",
+          "hl_id": "H002",
+          "hl_desc": "jelly calma",
+          "title": "点红包翻十倍攻略",
+          "cta_text": "点击抢翻倍红包",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "file_name": "PKG-TRAFFIC-EP-81695F-1015_T1-V02_H002_1080x1920.mp4",
+          "asset": "videos/demo_02_jelly_calma.mp4"
+        },
+        {
+          "variant_id": "T1-V03",
+          "task_id": 1,
+          "hypothesis": "测试反差钩子能否提升红包点击转化",
+          "hook_text": "反差｜反差 图书馆微笑女孩 01｜「没点红包亏了一个亿」",
+          "hl_id": "H003",
+          "hl_desc": "反差 图书馆微笑女孩 01",
+          "title": "双回归红包点击秘籍",
+          "cta_text": "马上点领大红包",
+          "mount": {
+            "search_word": "",
+            "app_name": "",
+            "overlay_text": ""
+          },
+          "file_name": "PKG-TRAFFIC-EP-81695F-1015_T1-V03_H003_1080x1920.mp4",
+          "asset": "videos/反差_图书馆微笑女孩_01.mp4"
+        }
+      ]
+    },
     "PKG-TRAFFIC-EP-DEMO01-1015": {
       "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
       "mother_id": "EP-DEMO01",
-      "created_at": 1792036102722,
-      "lib_source": "episode",
+      "created_at": 1792077549404,
+      "lib_source": "lport-index(40)+episode(3)",
       "library": [
+        {
+          "id": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "file": "videos/demo_04_bbb_action.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "file": "videos/demo_02_jelly_calma.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "file": "videos/反差_图书馆微笑女孩_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "file": "videos/demo_01_bbb_fun.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "file": "videos/悬念提问_女孩微笑藏着什么_21.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_01",
+          "desc": "demo 01",
+          "file": "videos/assembled_demo_01.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "file": "videos/冲突直给_厨房争吵_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "file": "videos/demo_03_sintel_epic.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "file": "videos/反差_女子放衣洗衣_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 16.9,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "file": "videos/demo_06_sintel_face.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_拆开信封_01",
+          "desc": "悬念提问 拆开信封 01",
+          "file": "videos/悬念提问_拆开信封_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_02",
+          "desc": "demo 02",
+          "file": "videos/assembled_demo_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_情侣激烈争吵_01",
+          "desc": "冲突直给 情侣激烈争吵 01",
+          "file": "videos/冲突直给_情侣激烈争吵_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 23.4,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_05_jelly_dream",
+          "desc": "jelly dream",
+          "file": "videos/demo_05_jelly_dream.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_小猫舔爪误会揭晓_27",
+          "desc": "反差 小猫舔爪误会揭晓 27",
+          "file": "videos/反差_小猫舔爪误会揭晓_27.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "反差",
+          "cool": "打脸"
+        },
+        {
+          "id": "台词爆点_电话里吵架_01",
+          "desc": "台词爆点 电话里吵架 01",
+          "file": "videos/台词爆点_电话里吵架_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.9,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_挑衣间选哪件_24",
+          "desc": "悬念提问 挑衣间选哪件 24",
+          "file": "videos/悬念提问_挑衣间选哪件_24.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.9,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_03",
+          "desc": "demo 03",
+          "file": "videos/assembled_demo_03.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_背对背冷战_03",
+          "desc": "冲突直给 背对背冷战 03",
+          "file": "videos/冲突直给_背对背冷战_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 11.3,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜景车流_01",
+          "desc": "动作奇观 城市夜景车流 01",
+          "file": "videos/动作奇观_城市夜景车流_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 25.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_少女闻花特写_02",
+          "desc": "反差 少女闻花特写 02",
+          "file": "videos/反差_少女闻花特写_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "台词爆点_西装创业成功时刻_23",
+          "desc": "台词爆点 西装创业成功时刻 23",
+          "file": "videos/台词爆点_西装创业成功时刻_23.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 10.5,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_焦虑独居女人_01",
+          "desc": "悬念提问 焦虑独居女人 01",
+          "file": "videos/悬念提问_焦虑独居女人_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 17.4,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_04",
+          "desc": "demo 04",
+          "file": "videos/assembled_demo_04.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜空俯瞰_03",
+          "desc": "动作奇观 城市夜空俯瞰 03",
+          "file": "videos/动作奇观_城市夜空俯瞰_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.6,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_新年喜庆装饰_01",
+          "desc": "反差 新年喜庆装饰 01",
+          "file": "videos/反差_新年喜庆装饰_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_狗狗求撸名场面_26",
+          "desc": "悬念提问 狗狗求撸名场面 26",
+          "file": "videos/悬念提问_狗狗求撸名场面_26.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.3,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_05",
+          "desc": "demo 05",
+          "file": "videos/assembled_demo_05.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_夜游街头_02",
+          "desc": "动作奇观 夜游街头 02",
+          "file": "videos/动作奇观_夜游街头_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.2,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_早餐打蛋小确幸_20",
+          "desc": "反差 早餐打蛋小确幸 20",
+          "file": "videos/反差_早餐打蛋小确幸_20.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 7.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_花园全家福故事_18",
+          "desc": "悬念提问 花园全家福故事 18",
+          "file": "videos/悬念提问_花园全家福故事_18.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_06",
+          "desc": "demo 06",
+          "file": "videos/assembled_demo_06.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_大厨爆炒火光逆袭_19",
+          "desc": "动作奇观 大厨爆炒火光逆袭 19",
+          "file": "videos/动作奇观_大厨爆炒火光逆袭_19.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 28.8,
+          "hook": "动作奇观",
+          "cool": "逆袭"
+        },
+        {
+          "id": "反差_洗衣机滚筒_01",
+          "desc": "反差 洗衣机滚筒 01",
+          "file": "videos/反差_洗衣机滚筒_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_落日下全家去哪儿_16",
+          "desc": "悬念提问 落日下全家去哪儿 16",
+          "file": "videos/悬念提问_落日下全家去哪儿_16.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 24.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_晨跑打脸懒惰_30",
+          "desc": "动作奇观 晨跑打脸懒惰 30",
+          "file": "videos/动作奇观_晨跑打脸懒惰_30.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 12.5,
+          "hook": "动作奇观",
+          "cool": "打脸"
+        },
+        {
+          "id": "反差_海边落日团圆反转_17",
+          "desc": "反差 海边落日团圆反转 17",
+          "file": "videos/反差_海边落日团圆反转_17.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 31.7,
+          "hook": "反差",
+          "cool": "反转"
+        },
+        {
+          "id": "动作奇观_湖面雨幕来袭_28",
+          "desc": "动作奇观 湖面雨幕来袭 28",
+          "file": "videos/动作奇观_湖面雨幕来袭_28.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_街头小哥微笑逆袭_22",
+          "desc": "反差 街头小哥微笑逆袭 22",
+          "file": "videos/反差_街头小哥微笑逆袭_22.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.0,
+          "hook": "反差",
+          "cool": "逆袭"
+        },
+        {
+          "id": "动作奇观_黄昏高空巡游_04",
+          "desc": "动作奇观 黄昏高空巡游 04",
+          "file": "videos/动作奇观_黄昏高空巡游_04.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
         {
           "id": "SHOT-MO01-M001",
           "desc": "沈禾夜入洗衣房对峙取衣牌"
@@ -21,11 +1094,16 @@
       ],
       "tasks": [
         {
-          "desc": "引导点击红包广告：星璃登场",
+          "desc": "全量测试混剪卡点",
           "mode": "lib",
           "category": "红包点击",
-          "count": 15,
-          "refVideo": ""
+          "count": 2,
+          "refVideo": "",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          }
         }
       ],
       "highlights": [
@@ -33,228 +1111,33 @@
           "id": "H001",
           "variant_id": "T1-V01",
           "source": "library",
-          "ref": "SHOT-MO01-M001",
-          "desc": "沈禾夜入洗衣房对峙取衣牌",
+          "ref": "demo_04_bbb_action",
+          "desc": "bbb action",
           "duration_s": 4
         },
         {
           "id": "H002",
           "variant_id": "T1-V02",
           "source": "library",
-          "ref": "SHOT-MO01-M002",
-          "desc": "烘干机骤停全场静默",
-          "duration_s": 4
-        },
-        {
-          "id": "H003",
-          "variant_id": "T1-V03",
-          "source": "library",
-          "ref": "SHOT-MO01-M003",
-          "desc": "蒋姨亮证据反转离场",
-          "duration_s": 4
-        },
-        {
-          "id": "H004",
-          "variant_id": "T1-V04",
-          "source": "library",
-          "ref": "SHOT-MO01-M001",
-          "desc": "沈禾夜入洗衣房对峙取衣牌",
-          "duration_s": 4
-        },
-        {
-          "id": "H005",
-          "variant_id": "T1-V05",
-          "source": "library",
-          "ref": "SHOT-MO01-M002",
-          "desc": "烘干机骤停全场静默",
-          "duration_s": 4
-        },
-        {
-          "id": "H006",
-          "variant_id": "T1-V06",
-          "source": "library",
-          "ref": "SHOT-MO01-M003",
-          "desc": "蒋姨亮证据反转离场",
-          "duration_s": 4
-        },
-        {
-          "id": "H007",
-          "variant_id": "T1-V07",
-          "source": "library",
-          "ref": "SHOT-MO01-M001",
-          "desc": "沈禾夜入洗衣房对峙取衣牌",
-          "duration_s": 4
-        },
-        {
-          "id": "H008",
-          "variant_id": "T1-V08",
-          "source": "library",
-          "ref": "SHOT-MO01-M002",
-          "desc": "烘干机骤停全场静默",
-          "duration_s": 4
-        },
-        {
-          "id": "H009",
-          "variant_id": "T1-V09",
-          "source": "library",
-          "ref": "SHOT-MO01-M003",
-          "desc": "蒋姨亮证据反转离场",
-          "duration_s": 4
-        },
-        {
-          "id": "H010",
-          "variant_id": "T1-V10",
-          "source": "library",
-          "ref": "SHOT-MO01-M001",
-          "desc": "沈禾夜入洗衣房对峙取衣牌",
-          "duration_s": 4
-        },
-        {
-          "id": "H011",
-          "variant_id": "T1-V11",
-          "source": "library",
-          "ref": "SHOT-MO01-M002",
-          "desc": "烘干机骤停全场静默",
-          "duration_s": 4
-        },
-        {
-          "id": "H012",
-          "variant_id": "T1-V12",
-          "source": "library",
-          "ref": "SHOT-MO01-M003",
-          "desc": "蒋姨亮证据反转离场",
-          "duration_s": 4
-        },
-        {
-          "id": "H013",
-          "variant_id": "T1-V13",
-          "source": "library",
-          "ref": "SHOT-MO01-M001",
-          "desc": "沈禾夜入洗衣房对峙取衣牌",
-          "duration_s": 4
-        },
-        {
-          "id": "H014",
-          "variant_id": "T1-V14",
-          "source": "library",
-          "ref": "SHOT-MO01-M002",
-          "desc": "烘干机骤停全场静默",
-          "duration_s": 4
-        },
-        {
-          "id": "H015",
-          "variant_id": "T1-V15",
-          "source": "library",
-          "ref": "SHOT-MO01-M003",
-          "desc": "蒋姨亮证据反转离场",
+          "ref": "demo_02_jelly_calma",
+          "desc": "jelly calma",
           "duration_s": 4
         }
       ],
       "copy_draft": [
         {
           "variant_id": "T1-V01",
-          "hypothesis": "测试冲突直给开场测衣牌对峙能否提升红包点击",
-          "hook": "冲突直给｜沈禾夜入洗衣房对峙取衣牌｜「还我衣牌否则别想走」",
-          "title": "星璃登场红包来了",
-          "cta": "点击红包看反转"
+          "hypothesis": "测试冲突直给混剪卡点能否提升红包点击留存",
+          "hook": "冲突直给｜bbb action｜「别吵了先抢红包再说」",
+          "title": "吵架不如先抢红包",
+          "cta": "点击领红包别错过"
         },
         {
           "variant_id": "T1-V02",
-          "hypothesis": "测试悬念提问测骤停静默悬念能否提升点击留存",
-          "hook": "悬念提问｜烘干机骤停全场静默｜「烘干机停了藏着啥」",
-          "title": "烘干机骤停有秘密",
-          "cta": "点红包揭开真相"
-        },
-        {
-          "variant_id": "T1-V03",
-          "hypothesis": "测试反差萌测洗衣房与红包雨反差能否促点击",
-          "hook": "反差｜蒋姨亮证据反转离场｜「洗衣房竟藏红包雨」",
-          "title": "星璃空降发红包",
-          "cta": "点击领取星璃包"
-        },
-        {
-          "variant_id": "T1-V04",
-          "hypothesis": "测试台词爆点测星璃宣言台词能否带动点击",
-          "hook": "台词爆点｜沈禾夜入洗衣房对峙取衣牌｜「这衣牌我替星璃收」",
-          "title": "一句台词全场炸了",
-          "cta": "点红包看星璃来"
-        },
-        {
-          "variant_id": "T1-V05",
-          "hypothesis": "测试动作奇观测撕牌奇观动作能否提升点击",
-          "hook": "动作奇观｜烘干机骤停全场静默｜「她撕碎衣牌扔烘干机」",
-          "title": "星璃霸气登场时刻",
-          "cta": "点击见证登场"
-        },
-        {
-          "variant_id": "T1-V06",
-          "hypothesis": "测试冲突直给测蒋姨反转离场冲突能否促点击",
-          "hook": "冲突直给｜蒋姨亮证据反转离场｜「蒋姨亮证据别跑」",
-          "title": "蒋姨反转星璃现身",
-          "cta": "点击红包看离场"
-        },
-        {
-          "variant_id": "T1-V07",
-          "hypothesis": "测试悬念提问测衣牌失踪疑问能否提升好奇点击",
-          "hook": "悬念提问｜沈禾夜入洗衣房对峙取衣牌｜「谁动了星璃的衣牌」",
-          "title": "衣牌失踪真相是",
-          "cta": "点红包查真相"
-        },
-        {
-          "variant_id": "T1-V08",
-          "hypothesis": "测试反差感测洗衣小事与大红包反差能否拉点击",
-          "hook": "反差｜烘干机骤停全场静默｜「洗衣服洗出大红包」",
-          "title": "洗衣房变红包雨",
-          "cta": "点击抢星璃包"
-        },
-        {
-          "variant_id": "T1-V09",
-          "hypothesis": "测试台词爆点测星璃登场宣言能否刺激点击",
-          "hook": "台词爆点｜蒋姨亮证据反转离场｜「星璃到红包就到」",
-          "title": "星璃一句话封神",
-          "cta": "点击听爆点台词"
-        },
-        {
-          "variant_id": "T1-V10",
-          "hypothesis": "测试动作奇观测烘干机奇观特效能否带动点击",
-          "hook": "动作奇观｜沈禾夜入洗衣房对峙取衣牌｜「烘干机炸出红包雨」",
-          "title": "红包雨空降洗衣房",
-          "cta": "点击抢红包雨"
-        },
-        {
-          "variant_id": "T1-V11",
-          "hypothesis": "测试冲突直给测沈禾夜入对峙能否提升点击欲",
-          "hook": "冲突直给｜烘干机骤停全场静默｜「夜闯洗衣房为星璃」",
-          "title": "沈禾硬刚为星璃",
-          "cta": "点击看星璃登场"
-        },
-        {
-          "variant_id": "T1-V12",
-          "hypothesis": "测试悬念提问测离场悬念能否延长停留促点击",
-          "hook": "悬念提问｜蒋姨亮证据反转离场｜「蒋姨离场前说了啥」",
-          "title": "离场前一句藏玄机",
-          "cta": "点红包看结局"
-        },
-        {
-          "variant_id": "T1-V13",
-          "hypothesis": "测试反差策略测穷富反差能否激发红包点击",
-          "hook": "反差｜沈禾夜入洗衣房对峙取衣牌｜「最穷洗衣房最豪包」",
-          "title": "反差星璃发大包",
-          "cta": "点击领豪华包"
-        },
-        {
-          "variant_id": "T1-V14",
-          "hypothesis": "测试台词爆点测加倍补偿台词能否提高点击",
-          "hook": "台词爆点｜烘干机骤停全场静默｜「我来迟红包加倍」",
-          "title": "星璃登场红包翻倍",
-          "cta": "点击翻倍领取"
-        },
-        {
-          "variant_id": "T1-V15",
-          "hypothesis": "测试动作奇观测星璃登场奇观能否引爆点击",
-          "hook": "动作奇观｜蒋姨亮证据反转离场｜「星璃踏光走出雾气」",
-          "title": "星璃登场全场静默",
-          "cta": "点击迎接星璃"
+          "hypothesis": "测试悬念提问卡点节奏能否提升红包点击转化",
+          "hook": "悬念提问｜jelly calma｜「女孩微笑背后藏红包」",
+          "title": "微笑女孩藏红包秘密",
+          "cta": "点我拆红包惊喜"
         }
       ],
       "splice_plan": [
@@ -265,8 +1148,24 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "冲突直给",
-          "body": "沈禾夜入洗衣房对峙取衣牌",
-          "cta": "点击红包看反转"
+          "body": "bbb action",
+          "cta": "点击领红包别错过",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920"
         },
         {
           "order": 2,
@@ -275,8 +1174,1506 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "悬念提问",
-          "body": "烘干机骤停全场静默",
-          "cta": "点红包揭开真相"
+          "body": "jelly calma",
+          "cta": "点我拆红包惊喜",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920"
+        }
+      ],
+      "materials": [
+        {
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "ref": "demo_04_bbb_action",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4",
+          "source": "library",
+          "desc": "bbb action",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "src_asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "ref": "demo_02_jelly_calma",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4",
+          "source": "library",
+          "desc": "jelly calma",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "src_asset": "videos/demo_02_jelly_calma.mp4"
+        }
+      ],
+      "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
+      "checks": {
+        "skill": "skills/traffic/traffic-batch/SKILL.md",
+        "skill_version": 1792069555780374551,
+        "engine": "llm",
+        "lib_source": "lport-index(40)+episode(3)",
+        "testable": true,
+        "deduped": true,
+        "executable": true,
+        "mount_ok": true,
+        "naming_ok": true,
+        "materials_ok": true
+      },
+      "variants": [
+        {
+          "variant_id": "T1-V01",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给混剪卡点能否提升红包点击留存",
+          "hook_text": "冲突直给｜bbb action｜「别吵了先抢红包再说」",
+          "hl_id": "H001",
+          "hl_desc": "bbb action",
+          "title": "吵架不如先抢红包",
+          "cta_text": "点击领红包别错过",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4",
+          "asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问卡点节奏能否提升红包点击转化",
+          "hook_text": "悬念提问｜jelly calma｜「女孩微笑背后藏红包」",
+          "hl_id": "H002",
+          "hl_desc": "jelly calma",
+          "title": "微笑女孩藏红包秘密",
+          "cta_text": "点我拆红包惊喜",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4",
+          "asset": "videos/demo_02_jelly_calma.mp4"
+        }
+      ]
+    },
+    "PKG-TRAFFIC-EP-DEMO01-1016": {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "mother_id": "EP-DEMO01",
+      "created_at": 1792131582674,
+      "lib_source": "lport-index(40)+episode(3)",
+      "library": [
+        {
+          "id": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "file": "videos/demo_04_bbb_action.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "file": "videos/demo_02_jelly_calma.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "file": "videos/反差_图书馆微笑女孩_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "file": "videos/demo_01_bbb_fun.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "file": "videos/悬念提问_女孩微笑藏着什么_21.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_01",
+          "desc": "demo 01",
+          "file": "videos/assembled_demo_01.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "file": "videos/冲突直给_厨房争吵_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "file": "videos/demo_03_sintel_epic.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "file": "videos/反差_女子放衣洗衣_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 16.9,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "file": "videos/demo_06_sintel_face.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_拆开信封_01",
+          "desc": "悬念提问 拆开信封 01",
+          "file": "videos/悬念提问_拆开信封_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_02",
+          "desc": "demo 02",
+          "file": "videos/assembled_demo_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_情侣激烈争吵_01",
+          "desc": "冲突直给 情侣激烈争吵 01",
+          "file": "videos/冲突直给_情侣激烈争吵_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 23.4,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_05_jelly_dream",
+          "desc": "jelly dream",
+          "file": "videos/demo_05_jelly_dream.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_小猫舔爪误会揭晓_27",
+          "desc": "反差 小猫舔爪误会揭晓 27",
+          "file": "videos/反差_小猫舔爪误会揭晓_27.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "反差",
+          "cool": "打脸"
+        },
+        {
+          "id": "台词爆点_电话里吵架_01",
+          "desc": "台词爆点 电话里吵架 01",
+          "file": "videos/台词爆点_电话里吵架_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.9,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_挑衣间选哪件_24",
+          "desc": "悬念提问 挑衣间选哪件 24",
+          "file": "videos/悬念提问_挑衣间选哪件_24.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.9,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_03",
+          "desc": "demo 03",
+          "file": "videos/assembled_demo_03.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_背对背冷战_03",
+          "desc": "冲突直给 背对背冷战 03",
+          "file": "videos/冲突直给_背对背冷战_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 11.3,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜景车流_01",
+          "desc": "动作奇观 城市夜景车流 01",
+          "file": "videos/动作奇观_城市夜景车流_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 25.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_少女闻花特写_02",
+          "desc": "反差 少女闻花特写 02",
+          "file": "videos/反差_少女闻花特写_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "台词爆点_西装创业成功时刻_23",
+          "desc": "台词爆点 西装创业成功时刻 23",
+          "file": "videos/台词爆点_西装创业成功时刻_23.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 10.5,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_焦虑独居女人_01",
+          "desc": "悬念提问 焦虑独居女人 01",
+          "file": "videos/悬念提问_焦虑独居女人_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 17.4,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_04",
+          "desc": "demo 04",
+          "file": "videos/assembled_demo_04.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜空俯瞰_03",
+          "desc": "动作奇观 城市夜空俯瞰 03",
+          "file": "videos/动作奇观_城市夜空俯瞰_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.6,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_新年喜庆装饰_01",
+          "desc": "反差 新年喜庆装饰 01",
+          "file": "videos/反差_新年喜庆装饰_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_狗狗求撸名场面_26",
+          "desc": "悬念提问 狗狗求撸名场面 26",
+          "file": "videos/悬念提问_狗狗求撸名场面_26.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.3,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_05",
+          "desc": "demo 05",
+          "file": "videos/assembled_demo_05.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_夜游街头_02",
+          "desc": "动作奇观 夜游街头 02",
+          "file": "videos/动作奇观_夜游街头_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.2,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_早餐打蛋小确幸_20",
+          "desc": "反差 早餐打蛋小确幸 20",
+          "file": "videos/反差_早餐打蛋小确幸_20.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 7.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_花园全家福故事_18",
+          "desc": "悬念提问 花园全家福故事 18",
+          "file": "videos/悬念提问_花园全家福故事_18.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_06",
+          "desc": "demo 06",
+          "file": "videos/assembled_demo_06.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_大厨爆炒火光逆袭_19",
+          "desc": "动作奇观 大厨爆炒火光逆袭 19",
+          "file": "videos/动作奇观_大厨爆炒火光逆袭_19.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 28.8,
+          "hook": "动作奇观",
+          "cool": "逆袭"
+        },
+        {
+          "id": "反差_洗衣机滚筒_01",
+          "desc": "反差 洗衣机滚筒 01",
+          "file": "videos/反差_洗衣机滚筒_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_落日下全家去哪儿_16",
+          "desc": "悬念提问 落日下全家去哪儿 16",
+          "file": "videos/悬念提问_落日下全家去哪儿_16.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 24.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_晨跑打脸懒惰_30",
+          "desc": "动作奇观 晨跑打脸懒惰 30",
+          "file": "videos/动作奇观_晨跑打脸懒惰_30.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 12.5,
+          "hook": "动作奇观",
+          "cool": "打脸"
+        },
+        {
+          "id": "反差_海边落日团圆反转_17",
+          "desc": "反差 海边落日团圆反转 17",
+          "file": "videos/反差_海边落日团圆反转_17.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 31.7,
+          "hook": "反差",
+          "cool": "反转"
+        },
+        {
+          "id": "动作奇观_湖面雨幕来袭_28",
+          "desc": "动作奇观 湖面雨幕来袭 28",
+          "file": "videos/动作奇观_湖面雨幕来袭_28.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_街头小哥微笑逆袭_22",
+          "desc": "反差 街头小哥微笑逆袭 22",
+          "file": "videos/反差_街头小哥微笑逆袭_22.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.0,
+          "hook": "反差",
+          "cool": "逆袭"
+        },
+        {
+          "id": "动作奇观_黄昏高空巡游_04",
+          "desc": "动作奇观 黄昏高空巡游 04",
+          "file": "videos/动作奇观_黄昏高空巡游_04.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "SHOT-MO01-M001",
+          "desc": "沈禾夜入洗衣房对峙取衣牌"
+        },
+        {
+          "id": "SHOT-MO01-M002",
+          "desc": "烘干机骤停全场静默"
+        },
+        {
+          "id": "SHOT-MO01-M003",
+          "desc": "蒋姨亮证据反转离场"
+        }
+      ],
+      "tasks": [
+        {
+          "desc": "全量测试混剪卡点",
+          "mode": "lib",
+          "category": "红包点击",
+          "count": 2,
+          "refVideo": "",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          }
+        }
+      ],
+      "highlights": [
+        {
+          "id": "H001",
+          "variant_id": "T1-V01",
+          "source": "library",
+          "ref": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H002",
+          "variant_id": "T1-V02",
+          "source": "library",
+          "ref": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        }
+      ],
+      "copy_draft": [
+        {
+          "variant_id": "T1-V01",
+          "hypothesis": "测试冲突直给混剪卡点能否提升红包点击前3s留存",
+          "hook": "冲突直给｜bbb action｜「你敢抢我红包试试！」",
+          "title": "红包大战一触即发",
+          "cta": "点击领红包看结局"
+        },
+        {
+          "variant_id": "T1-V02",
+          "hypothesis": "测试悬念提问卡点能否提升红包点击完播率",
+          "hook": "悬念提问｜jelly calma｜「这红包里到底藏了啥？」",
+          "title": "红包背后藏着秘密",
+          "cta": "点红包揭晓真相"
+        }
+      ],
+      "splice_plan": [
+        {
+          "order": 1,
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "bbb action",
+          "cta": "点击领红包看结局",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "order": 2,
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "jelly calma",
+          "cta": "点红包揭晓真相",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        }
+      ],
+      "materials": [
+        {
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "ref": "demo_04_bbb_action",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1016_T1-V01_H001_1080x1920.mp4",
+          "source": "library",
+          "desc": "bbb action",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "ref": "demo_02_jelly_calma",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1016_T1-V02_H002_1080x1920.mp4",
+          "source": "library",
+          "desc": "jelly calma",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_02_jelly_calma.mp4"
+        }
+      ],
+      "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
+      "checks": {
+        "skill": "skills/traffic/traffic-batch/SKILL.md",
+        "skill_version": 1792069555780374551,
+        "engine": "llm",
+        "lib_source": "lport-index(40)+episode(3)",
+        "testable": true,
+        "deduped": true,
+        "executable": true,
+        "mount_ok": true,
+        "naming_ok": true,
+        "materials_ok": true
+      },
+      "variants": [
+        {
+          "variant_id": "T1-V01",
+          "task_id": 1,
+          "hypothesis": "测试冲突直给混剪卡点能否提升红包点击前3s留存",
+          "hook_text": "冲突直给｜bbb action｜「你敢抢我红包试试！」",
+          "hl_id": "H001",
+          "hl_desc": "bbb action",
+          "title": "红包大战一触即发",
+          "cta_text": "点击领红包看结局",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1016_T1-V01_H001_1080x1920.mp4",
+          "asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问卡点能否提升红包点击完播率",
+          "hook_text": "悬念提问｜jelly calma｜「这红包里到底藏了啥？」",
+          "hl_id": "H002",
+          "hl_desc": "jelly calma",
+          "title": "红包背后藏着秘密",
+          "cta_text": "点红包揭晓真相",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1016_T1-V02_H002_1080x1920.mp4",
+          "asset": "videos/demo_02_jelly_calma.mp4"
+        }
+      ]
+    },
+    "PKG-TRAFFIC-EP-81695F-1016": {
+      "package_id": "PKG-TRAFFIC-EP-81695F-1016",
+      "mother_id": "EP-81695F",
+      "created_at": 1792134539014,
+      "lib_source": "lport-index(40)+episode(25)",
+      "library": [
+        {
+          "id": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "file": "videos/demo_04_bbb_action.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "file": "videos/demo_02_jelly_calma.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "file": "videos/反差_图书馆微笑女孩_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "file": "videos/demo_01_bbb_fun.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "file": "videos/悬念提问_女孩微笑藏着什么_21.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_01",
+          "desc": "demo 01",
+          "file": "videos/assembled_demo_01.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "file": "videos/冲突直给_厨房争吵_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "file": "videos/demo_03_sintel_epic.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "file": "videos/反差_女子放衣洗衣_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 16.9,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "file": "videos/demo_06_sintel_face.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_拆开信封_01",
+          "desc": "悬念提问 拆开信封 01",
+          "file": "videos/悬念提问_拆开信封_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_02",
+          "desc": "demo 02",
+          "file": "videos/assembled_demo_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_情侣激烈争吵_01",
+          "desc": "冲突直给 情侣激烈争吵 01",
+          "file": "videos/冲突直给_情侣激烈争吵_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 23.4,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_05_jelly_dream",
+          "desc": "jelly dream",
+          "file": "videos/demo_05_jelly_dream.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_小猫舔爪误会揭晓_27",
+          "desc": "反差 小猫舔爪误会揭晓 27",
+          "file": "videos/反差_小猫舔爪误会揭晓_27.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "反差",
+          "cool": "打脸"
+        },
+        {
+          "id": "台词爆点_电话里吵架_01",
+          "desc": "台词爆点 电话里吵架 01",
+          "file": "videos/台词爆点_电话里吵架_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.9,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_挑衣间选哪件_24",
+          "desc": "悬念提问 挑衣间选哪件 24",
+          "file": "videos/悬念提问_挑衣间选哪件_24.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.9,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_03",
+          "desc": "demo 03",
+          "file": "videos/assembled_demo_03.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_背对背冷战_03",
+          "desc": "冲突直给 背对背冷战 03",
+          "file": "videos/冲突直给_背对背冷战_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 11.3,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜景车流_01",
+          "desc": "动作奇观 城市夜景车流 01",
+          "file": "videos/动作奇观_城市夜景车流_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 25.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_少女闻花特写_02",
+          "desc": "反差 少女闻花特写 02",
+          "file": "videos/反差_少女闻花特写_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "台词爆点_西装创业成功时刻_23",
+          "desc": "台词爆点 西装创业成功时刻 23",
+          "file": "videos/台词爆点_西装创业成功时刻_23.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 10.5,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_焦虑独居女人_01",
+          "desc": "悬念提问 焦虑独居女人 01",
+          "file": "videos/悬念提问_焦虑独居女人_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 17.4,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_04",
+          "desc": "demo 04",
+          "file": "videos/assembled_demo_04.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜空俯瞰_03",
+          "desc": "动作奇观 城市夜空俯瞰 03",
+          "file": "videos/动作奇观_城市夜空俯瞰_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.6,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_新年喜庆装饰_01",
+          "desc": "反差 新年喜庆装饰 01",
+          "file": "videos/反差_新年喜庆装饰_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_狗狗求撸名场面_26",
+          "desc": "悬念提问 狗狗求撸名场面 26",
+          "file": "videos/悬念提问_狗狗求撸名场面_26.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.3,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_05",
+          "desc": "demo 05",
+          "file": "videos/assembled_demo_05.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_夜游街头_02",
+          "desc": "动作奇观 夜游街头 02",
+          "file": "videos/动作奇观_夜游街头_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.2,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_早餐打蛋小确幸_20",
+          "desc": "反差 早餐打蛋小确幸 20",
+          "file": "videos/反差_早餐打蛋小确幸_20.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 7.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_花园全家福故事_18",
+          "desc": "悬念提问 花园全家福故事 18",
+          "file": "videos/悬念提问_花园全家福故事_18.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_06",
+          "desc": "demo 06",
+          "file": "videos/assembled_demo_06.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_大厨爆炒火光逆袭_19",
+          "desc": "动作奇观 大厨爆炒火光逆袭 19",
+          "file": "videos/动作奇观_大厨爆炒火光逆袭_19.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 28.8,
+          "hook": "动作奇观",
+          "cool": "逆袭"
+        },
+        {
+          "id": "反差_洗衣机滚筒_01",
+          "desc": "反差 洗衣机滚筒 01",
+          "file": "videos/反差_洗衣机滚筒_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_落日下全家去哪儿_16",
+          "desc": "悬念提问 落日下全家去哪儿 16",
+          "file": "videos/悬念提问_落日下全家去哪儿_16.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 24.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_晨跑打脸懒惰_30",
+          "desc": "动作奇观 晨跑打脸懒惰 30",
+          "file": "videos/动作奇观_晨跑打脸懒惰_30.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 12.5,
+          "hook": "动作奇观",
+          "cool": "打脸"
+        },
+        {
+          "id": "反差_海边落日团圆反转_17",
+          "desc": "反差 海边落日团圆反转 17",
+          "file": "videos/反差_海边落日团圆反转_17.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 31.7,
+          "hook": "反差",
+          "cool": "反转"
+        },
+        {
+          "id": "动作奇观_湖面雨幕来袭_28",
+          "desc": "动作奇观 湖面雨幕来袭 28",
+          "file": "videos/动作奇观_湖面雨幕来袭_28.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_街头小哥微笑逆袭_22",
+          "desc": "反差 街头小哥微笑逆袭 22",
+          "file": "videos/反差_街头小哥微笑逆袭_22.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.0,
+          "hook": "反差",
+          "cool": "逆袭"
+        },
+        {
+          "id": "动作奇观_黄昏高空巡游_04",
+          "desc": "动作奇观 黄昏高空巡游 04",
+          "file": "videos/动作奇观_黄昏高空巡游_04.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "SHOT-695F-M001",
+          "desc": "SC001-① 圣所七盏星灯空镜：六盏亮、第七盏铜罩下是黑的，霜阶压低夜色"
+        },
+        {
+          "id": "SHOT-695F-M002",
+          "desc": "SC001-② 冷开场：薇拉跪在最高一级石阶，摊开掌心，一捧发亮的星砂混着血"
+        },
+        {
+          "id": "SHOT-695F-M003",
+          "desc": "SC001-③ 星砂漏下石阶，把刻着的铭文烫穿一个冒烟的洞（[SFX] 钟楼第一声）"
+        },
+        {
+          "id": "SHOT-695F-M004",
+          "desc": "SC001-④ 嬷嬷与两名举火炬卫兵走上星阶，当众宣布坠星夜提前"
+        },
+        {
+          "id": "SHOT-695F-M005",
+          "desc": "SC001-⑤ 嬷嬷把教条翻到末页：卡伦的资格今天注销，候补引星人已经上阶"
+        },
+        {
+          "id": "SHOT-695F-M006",
+          "desc": "SC001-⑥ 薇拉站起来质问：第七颗星核落进灯里是什么"
+        },
+        {
+          "id": "SHOT-695F-M007",
+          "desc": "SC001-⑦ 她把掌心的星砂按上教条，烧穿纸面，纸背透出被刮掉的旧条款"
+        },
+        {
+          "id": "SHOT-695F-M008",
+          "desc": "SC001-⑧ 钟楼第二声，薇拉赤足下阶，宝石鞋留在最高一级石阶上"
+        },
+        {
+          "id": "SHOT-695F-M009",
+          "desc": "SC002-① 地窖石室门上三道锁，走廊火炬光从门缝里漏进来"
+        },
+        {
+          "id": "SHOT-695F-M010",
+          "desc": "SC002-② 薇拉用掌心的星砂烫断第二道锁，推门进去（[SFX] 锁芯烧断）"
+        },
+        {
+          "id": "SHOT-695F-M011",
+          "desc": "SC002-③ 卡伦坐在石床上，右腕铁链扣在墙上；左腕六道星痕在暗处发低光"
+        },
+        {
+          "id": "SHOT-695F-M012",
+          "desc": "SC002-④ 薇拉蹲下，先看铁链再看他的脸：你去签注销书了"
+        },
+        {
+          "id": "SHOT-695F-M013",
+          "desc": "SC002-⑤ 卡伦把脸转开，把「护幕再亮七年」的账说成合算"
+        },
+        {
+          "id": "SHOT-695F-M014",
+          "desc": "SC002-⑥ 她把烧穿的教条拍在他膝上，读出纸背那行旧条款"
+        },
+        {
+          "id": "SHOT-695F-M015",
+          "desc": "SC002-⑦ 她把掌心按在他左腕第一道星痕上，星砂顺着伤口亮起来"
+        },
+        {
+          "id": "SHOT-695F-M016",
+          "desc": "SC002-⑧ 她用他腰间的钥匙开锁，铁链落在地上（[SFX] 铁链落地）"
+        },
+        {
+          "id": "SHOT-695F-M017",
+          "desc": "SC003-① 咏星殿穹顶裂开一道缝，变红的星核压下来；第七盏星灯的铜罩空着"
+        },
+        {
+          "id": "SHOT-695F-M018",
+          "desc": "SC003-② 门外嬷嬷催门，薇拉把三道锁从里面落下（[SFX] 三道锁落下）"
+        },
+        {
+          "id": "SHOT-695F-M019",
+          "desc": "SC003-③ 她把圣袍一侧肩带推下肩，宝石坠子滚落地砖；白色蕾丝过膝袜与赤足（L2）"
+        },
+        {
+          "id": "SHOT-695F-M020",
+          "desc": "SC003-④ 星核压到殿中央；她跨坐到卡伦腿上，圣袍堆在腰上，双手按住他胸口（锁位句）"
+        },
+        {
+          "id": "SHOT-695F-M021",
+          "desc": "SC003-⑤ 共辉主体：一次缓慢下沉里贴合处压深，星辉顺左腕逐道点亮六道星痕、第七道新开（L3）"
+        },
+        {
+          "id": "SHOT-695F-M022",
+          "desc": "SC003-⑥ 星核从穹顶缝砸进她后背被收进胸腔；第七盏星灯自亮、六盏灭，全城钟响（[SFX] 全城钟响）"
+        },
+        {
+          "id": "SHOT-695F-M023",
+          "desc": "SC003-⑦ 她从地砖上起身，一线白浊顺着大腿内侧滑到袜口；抬眼像看陌生人（L3）"
+        },
+        {
+          "id": "SHOT-695F-M024",
+          "desc": "SC003-⑧ 卡伦把蓝紫石珠串套到她手腕上；她的手没察觉地把他的手背扣回掌心；门外三道锁被撬开（[SFX] 门外撬锁）"
+        }
+      ],
+      "tasks": [
+        {
+          "desc": "红包广告投流",
+          "mode": "lib",
+          "category": "红包点击",
+          "count": 10,
+          "refVideo": "",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          }
+        }
+      ],
+      "highlights": [
+        {
+          "id": "H001",
+          "variant_id": "T1-V01",
+          "source": "library",
+          "ref": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H002",
+          "variant_id": "T1-V02",
+          "source": "library",
+          "ref": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H003",
+          "variant_id": "T1-V03",
+          "source": "library",
+          "ref": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 5.8,
+          "src_dur_s": 5.8,
+          "window_note": "素材5.8s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H004",
+          "variant_id": "T1-V04",
+          "source": "library",
+          "ref": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H005",
+          "variant_id": "T1-V05",
+          "source": "library",
+          "ref": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 8.6,
+          "src_dur_s": 8.6,
+          "window_note": "素材8.6s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H006",
+          "variant_id": "T1-V06",
+          "source": "library",
+          "ref": "assembled_demo_01",
+          "desc": "demo 01",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H007",
+          "variant_id": "T1-V07",
+          "source": "library",
+          "ref": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "duration_s": 4,
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 19.9,
+          "window_note": "跳过片头1.2s"
+        },
+        {
+          "id": "H008",
+          "variant_id": "T1-V08",
+          "source": "library",
+          "ref": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H009",
+          "variant_id": "T1-V09",
+          "source": "library",
+          "ref": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "duration_s": 4,
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 16.9,
+          "window_note": "跳过片头1.2s"
+        },
+        {
+          "id": "H010",
+          "variant_id": "T1-V10",
+          "source": "library",
+          "ref": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        }
+      ],
+      "copy_draft": [
+        {
+          "variant_id": "T1-V01",
+          "hypothesis": "测试冲突直给强拦截话术能否提升红包点击率",
+          "hook": "冲突直给｜bbb action｜「别划走红包马上没了」",
+          "title": "红包雨来袭点就拿",
+          "cta": "点击领大额红包"
+        },
+        {
+          "variant_id": "T1-V02",
+          "hypothesis": "测试悬念提问留金额悬念能否提高点击意愿",
+          "hook": "悬念提问｜jelly calma｜「红包里到底藏了多少？」",
+          "title": "红包金额你猜多少",
+          "cta": "点一下立即揭晓"
+        },
+        {
+          "variant_id": "T1-V03",
+          "hypothesis": "测试反差前后对比能否刺激红包点击转化",
+          "hook": "反差｜反差 图书馆微笑女孩 01｜「前一秒素人后一秒暴富」",
+          "title": "素人领红包逆袭了",
+          "cta": "点击复制好运气"
+        },
+        {
+          "variant_id": "T1-V04",
+          "hypothesis": "测试台词爆点金句能否增强红包点击冲动",
+          "hook": "台词爆点｜bbb fun｜「这红包我替全家领了」",
+          "title": "全家红包我包了",
+          "cta": "点我领团圆红包"
+        },
+        {
+          "variant_id": "T1-V05",
+          "hypothesis": "测试动作奇观红包雨特效能否提升首秒停留点击",
+          "hook": "动作奇观｜悬念提问 女孩微笑藏着什么 21｜「红包雨从天上砸下来」",
+          "title": "天降红包雨快抢",
+          "cta": "伸手接住大红包"
+        },
+        {
+          "variant_id": "T1-V06",
+          "hypothesis": "测试冲突直给稀缺施压能否提升点击紧迫感",
+          "hook": "冲突直给｜demo 01｜「再不点红包就清零了」",
+          "title": "红包清零前快点",
+          "cta": "马上点领回红包"
+        },
+        {
+          "variant_id": "T1-V07",
+          "hypothesis": "测试悬念提问从众疑问能否带动跟风点击",
+          "hook": "悬念提问｜冲突直给 厨房争吵 02｜「为什么人人都在点？」",
+          "title": "人人都在领红包",
+          "cta": "点看你能领多少"
+        },
+        {
+          "variant_id": "T1-V08",
+          "hypothesis": "测试反差小额预期反转能否提高点击完成率",
+          "hook": "反差｜sintel epic｜「以为是1毛结果上千」",
+          "title": "1毛变千元红包",
+          "cta": "点击领取大反转"
+        },
+        {
+          "variant_id": "T1-V09",
+          "hypothesis": "测试台词爆点自信断言能否增强点击信任",
+          "hook": "台词爆点｜反差 女子放衣洗衣 02｜「点了这个包你会谢我」",
+          "title": "领到红包谢我吧",
+          "cta": "不服点我试试"
+        },
+        {
+          "variant_id": "T1-V10",
+          "hypothesis": "测试动作奇观金币炸屏能否刺激冲动点击",
+          "hook": "动作奇观｜sintel face｜「金币炸屏红包刷爆了」",
+          "title": "金币炸屏抢红包",
+          "cta": "点击接住金币雨"
+        }
+      ],
+      "splice_plan": [
+        {
+          "order": 1,
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "bbb action",
+          "cta": "点击领大额红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "order": 2,
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "jelly calma",
+          "cta": "点一下立即揭晓",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
         },
         {
           "order": 3,
@@ -285,8 +2682,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "反差",
-          "body": "蒋姨亮证据反转离场",
-          "cta": "点击领取星璃包"
+          "body": "反差 图书馆微笑女孩 01",
+          "cta": "点击复制好运气",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "竖裁中段1080x1920",
+          "start_s": 0.0,
+          "end_s": 5.8,
+          "src_dur_s": 5.8,
+          "window_note": "素材5.8s<计划15s：全用+循环补帧"
         },
         {
           "order": 4,
@@ -295,8 +2712,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "台词爆点",
-          "body": "沈禾夜入洗衣房对峙取衣牌",
-          "cta": "点红包看星璃来"
+          "body": "bbb fun",
+          "cta": "点我领团圆红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
         },
         {
           "order": 5,
@@ -305,8 +2742,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "动作奇观",
-          "body": "烘干机骤停全场静默",
-          "cta": "点击见证登场"
+          "body": "悬念提问 女孩微笑藏着什么 21",
+          "cta": "伸手接住大红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "竖裁中段1080x1920",
+          "start_s": 0.0,
+          "end_s": 8.6,
+          "src_dur_s": 8.6,
+          "window_note": "素材8.6s<计划15s：全用+循环补帧"
         },
         {
           "order": 6,
@@ -315,8 +2772,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "冲突直给",
-          "body": "蒋姨亮证据反转离场",
-          "cta": "点击红包看离场"
+          "body": "demo 01",
+          "cta": "马上点领回红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
         },
         {
           "order": 7,
@@ -325,8 +2802,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "悬念提问",
-          "body": "沈禾夜入洗衣房对峙取衣牌",
-          "cta": "点红包查真相"
+          "body": "冲突直给 厨房争吵 02",
+          "cta": "点看你能领多少",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "竖裁中段1080x1920",
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 19.9,
+          "window_note": "跳过片头1.2s"
         },
         {
           "order": 8,
@@ -335,8 +2832,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "反差",
-          "body": "烘干机骤停全场静默",
-          "cta": "点击抢星璃包"
+          "body": "sintel epic",
+          "cta": "点击领取大反转",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
         },
         {
           "order": 9,
@@ -345,8 +2862,28 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "台词爆点",
-          "body": "蒋姨亮证据反转离场",
-          "cta": "点击听爆点台词"
+          "body": "反差 女子放衣洗衣 02",
+          "cta": "不服点我试试",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "竖裁中段1080x1920",
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 16.9,
+          "window_note": "跳过片头1.2s"
         },
         {
           "order": 10,
@@ -355,191 +2892,202 @@
           "copy_seg": "hook(4s)+body+cta(3s)",
           "duration_s": 15,
           "hook": "动作奇观",
-          "body": "沈禾夜入洗衣房对峙取衣牌",
-          "cta": "点击抢红包雨"
-        },
-        {
-          "order": 11,
-          "variant_id": "T1-V11",
-          "highlight_id": "H011",
-          "copy_seg": "hook(4s)+body+cta(3s)",
-          "duration_s": 15,
-          "hook": "冲突直给",
-          "body": "烘干机骤停全场静默",
-          "cta": "点击看星璃登场"
-        },
-        {
-          "order": 12,
-          "variant_id": "T1-V12",
-          "highlight_id": "H012",
-          "copy_seg": "hook(4s)+body+cta(3s)",
-          "duration_s": 15,
-          "hook": "悬念提问",
-          "body": "蒋姨亮证据反转离场",
-          "cta": "点红包看结局"
-        },
-        {
-          "order": 13,
-          "variant_id": "T1-V13",
-          "highlight_id": "H013",
-          "copy_seg": "hook(4s)+body+cta(3s)",
-          "duration_s": 15,
-          "hook": "反差",
-          "body": "沈禾夜入洗衣房对峙取衣牌",
-          "cta": "点击领豪华包"
-        },
-        {
-          "order": 14,
-          "variant_id": "T1-V14",
-          "highlight_id": "H014",
-          "copy_seg": "hook(4s)+body+cta(3s)",
-          "duration_s": 15,
-          "hook": "台词爆点",
-          "body": "烘干机骤停全场静默",
-          "cta": "点击翻倍领取"
-        },
-        {
-          "order": 15,
-          "variant_id": "T1-V15",
-          "highlight_id": "H015",
-          "copy_seg": "hook(4s)+body+cta(3s)",
-          "duration_s": 15,
-          "hook": "动作奇观",
-          "body": "蒋姨亮证据反转离场",
-          "cta": "点击迎接星璃"
+          "body": "sintel face",
+          "cta": "点击接住金币雨",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:星灯短剧"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
         }
       ],
       "materials": [
         {
           "variant_id": "T1-V01",
           "highlight_id": "H001",
-          "ref": "SHOT-MO01-M001",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4",
+          "ref": "demo_04_bbb_action",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V01_H001_1080x1920.mp4",
           "source": "library",
-          "desc": "沈禾夜入洗衣房对峙取衣牌"
+          "desc": "bbb action",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_04_bbb_action.mp4"
         },
         {
           "variant_id": "T1-V02",
           "highlight_id": "H002",
-          "ref": "SHOT-MO01-M002",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4",
+          "ref": "demo_02_jelly_calma",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V02_H002_1080x1920.mp4",
           "source": "library",
-          "desc": "烘干机骤停全场静默"
+          "desc": "jelly calma",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_02_jelly_calma.mp4"
         },
         {
           "variant_id": "T1-V03",
           "highlight_id": "H003",
-          "ref": "SHOT-MO01-M003",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V03_H003_1080x1920.mp4",
+          "ref": "反差_图书馆微笑女孩_01",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V03_H003_1080x1920.mp4",
           "source": "library",
-          "desc": "蒋姨亮证据反转离场"
+          "desc": "反差 图书馆微笑女孩 01",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 5.8,
+          "src_asset": "videos/反差_图书馆微笑女孩_01.mp4"
         },
         {
           "variant_id": "T1-V04",
           "highlight_id": "H004",
-          "ref": "SHOT-MO01-M001",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V04_H004_1080x1920.mp4",
+          "ref": "demo_01_bbb_fun",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V04_H004_1080x1920.mp4",
           "source": "library",
-          "desc": "沈禾夜入洗衣房对峙取衣牌"
+          "desc": "bbb fun",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_01_bbb_fun.mp4"
         },
         {
           "variant_id": "T1-V05",
           "highlight_id": "H005",
-          "ref": "SHOT-MO01-M002",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V05_H005_1080x1920.mp4",
+          "ref": "悬念提问_女孩微笑藏着什么_21",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V05_H005_1080x1920.mp4",
           "source": "library",
-          "desc": "烘干机骤停全场静默"
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 8.6,
+          "src_asset": "videos/悬念提问_女孩微笑藏着什么_21.mp4"
         },
         {
           "variant_id": "T1-V06",
           "highlight_id": "H006",
-          "ref": "SHOT-MO01-M003",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V06_H006_1080x1920.mp4",
+          "ref": "assembled_demo_01",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V06_H006_1080x1920.mp4",
           "source": "library",
-          "desc": "蒋姨亮证据反转离场"
+          "desc": "demo 01",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/assembled_demo_01.mp4"
         },
         {
           "variant_id": "T1-V07",
           "highlight_id": "H007",
-          "ref": "SHOT-MO01-M001",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V07_H007_1080x1920.mp4",
+          "ref": "冲突直给_厨房争吵_02",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V07_H007_1080x1920.mp4",
           "source": "library",
-          "desc": "沈禾夜入洗衣房对峙取衣牌"
+          "desc": "冲突直给 厨房争吵 02",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_asset": "videos/冲突直给_厨房争吵_02.mp4"
         },
         {
           "variant_id": "T1-V08",
           "highlight_id": "H008",
-          "ref": "SHOT-MO01-M002",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V08_H008_1080x1920.mp4",
+          "ref": "demo_03_sintel_epic",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V08_H008_1080x1920.mp4",
           "source": "library",
-          "desc": "烘干机骤停全场静默"
+          "desc": "sintel epic",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_03_sintel_epic.mp4"
         },
         {
           "variant_id": "T1-V09",
           "highlight_id": "H009",
-          "ref": "SHOT-MO01-M003",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V09_H009_1080x1920.mp4",
+          "ref": "反差_女子放衣洗衣_02",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V09_H009_1080x1920.mp4",
           "source": "library",
-          "desc": "蒋姨亮证据反转离场"
+          "desc": "反差 女子放衣洗衣 02",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_asset": "videos/反差_女子放衣洗衣_02.mp4"
         },
         {
           "variant_id": "T1-V10",
           "highlight_id": "H010",
-          "ref": "SHOT-MO01-M001",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V10_H010_1080x1920.mp4",
+          "ref": "demo_06_sintel_face",
+          "file": "PKG-TRAFFIC-EP-81695F-1016_T1-V10_H010_1080x1920.mp4",
           "source": "library",
-          "desc": "沈禾夜入洗衣房对峙取衣牌"
-        },
-        {
-          "variant_id": "T1-V11",
-          "highlight_id": "H011",
-          "ref": "SHOT-MO01-M002",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V11_H011_1080x1920.mp4",
-          "source": "library",
-          "desc": "烘干机骤停全场静默"
-        },
-        {
-          "variant_id": "T1-V12",
-          "highlight_id": "H012",
-          "ref": "SHOT-MO01-M003",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V12_H012_1080x1920.mp4",
-          "source": "library",
-          "desc": "蒋姨亮证据反转离场"
-        },
-        {
-          "variant_id": "T1-V13",
-          "highlight_id": "H013",
-          "ref": "SHOT-MO01-M001",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V13_H013_1080x1920.mp4",
-          "source": "library",
-          "desc": "沈禾夜入洗衣房对峙取衣牌"
-        },
-        {
-          "variant_id": "T1-V14",
-          "highlight_id": "H014",
-          "ref": "SHOT-MO01-M002",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V14_H014_1080x1920.mp4",
-          "source": "library",
-          "desc": "烘干机骤停全场静默"
-        },
-        {
-          "variant_id": "T1-V15",
-          "highlight_id": "H015",
-          "ref": "SHOT-MO01-M003",
-          "file": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V15_H015_1080x1920.mp4",
-          "source": "library",
-          "desc": "蒋姨亮证据反转离场"
+          "desc": "sintel face",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_06_sintel_face.mp4"
         }
       ],
       "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
       "checks": {
         "skill": "skills/traffic/traffic-batch/SKILL.md",
-        "skill_version": 1791970824673516390,
+        "skill_version": 1792069555780374551,
         "engine": "llm",
-        "lib_source": "episode",
+        "lib_source": "lport-index(40)+episode(25)",
         "testable": true,
         "deduped": true,
         "executable": true,
+        "mount_ok": true,
         "naming_ok": true,
         "materials_ok": true
       },
@@ -547,167 +3095,829 @@
         {
           "variant_id": "T1-V01",
           "task_id": 1,
-          "hypothesis": "测试冲突直给开场测衣牌对峙能否提升红包点击",
-          "hook_text": "冲突直给｜沈禾夜入洗衣房对峙取衣牌｜「还我衣牌否则别想走」",
+          "hypothesis": "测试冲突直给强拦截话术能否提升红包点击率",
+          "hook_text": "冲突直给｜bbb action｜「别划走红包马上没了」",
           "hl_id": "H001",
-          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
-          "title": "星璃登场红包来了",
-          "cta_text": "点击红包看反转",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V01_H001_1080x1920.mp4"
+          "hl_desc": "bbb action",
+          "title": "红包雨来袭点就拿",
+          "cta_text": "点击领大额红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V01_H001_1080x1920.mp4",
+          "asset": "videos/demo_04_bbb_action.mp4"
         },
         {
           "variant_id": "T1-V02",
           "task_id": 1,
-          "hypothesis": "测试悬念提问测骤停静默悬念能否提升点击留存",
-          "hook_text": "悬念提问｜烘干机骤停全场静默｜「烘干机停了藏着啥」",
+          "hypothesis": "测试悬念提问留金额悬念能否提高点击意愿",
+          "hook_text": "悬念提问｜jelly calma｜「红包里到底藏了多少？」",
           "hl_id": "H002",
-          "hl_desc": "烘干机骤停全场静默",
-          "title": "烘干机骤停有秘密",
-          "cta_text": "点红包揭开真相",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V02_H002_1080x1920.mp4"
+          "hl_desc": "jelly calma",
+          "title": "红包金额你猜多少",
+          "cta_text": "点一下立即揭晓",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V02_H002_1080x1920.mp4",
+          "asset": "videos/demo_02_jelly_calma.mp4"
         },
         {
           "variant_id": "T1-V03",
           "task_id": 1,
-          "hypothesis": "测试反差萌测洗衣房与红包雨反差能否促点击",
-          "hook_text": "反差｜蒋姨亮证据反转离场｜「洗衣房竟藏红包雨」",
+          "hypothesis": "测试反差前后对比能否刺激红包点击转化",
+          "hook_text": "反差｜反差 图书馆微笑女孩 01｜「前一秒素人后一秒暴富」",
           "hl_id": "H003",
-          "hl_desc": "蒋姨亮证据反转离场",
-          "title": "星璃空降发红包",
-          "cta_text": "点击领取星璃包",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V03_H003_1080x1920.mp4"
+          "hl_desc": "反差 图书馆微笑女孩 01",
+          "title": "素人领红包逆袭了",
+          "cta_text": "点击复制好运气",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 5.8,
+          "src_dur_s": 5.8,
+          "window_note": "素材5.8s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V03_H003_1080x1920.mp4",
+          "asset": "videos/反差_图书馆微笑女孩_01.mp4"
         },
         {
           "variant_id": "T1-V04",
           "task_id": 1,
-          "hypothesis": "测试台词爆点测星璃宣言台词能否带动点击",
-          "hook_text": "台词爆点｜沈禾夜入洗衣房对峙取衣牌｜「这衣牌我替星璃收」",
+          "hypothesis": "测试台词爆点金句能否增强红包点击冲动",
+          "hook_text": "台词爆点｜bbb fun｜「这红包我替全家领了」",
           "hl_id": "H004",
-          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
-          "title": "一句台词全场炸了",
-          "cta_text": "点红包看星璃来",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V04_H004_1080x1920.mp4"
+          "hl_desc": "bbb fun",
+          "title": "全家红包我包了",
+          "cta_text": "点我领团圆红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V04_H004_1080x1920.mp4",
+          "asset": "videos/demo_01_bbb_fun.mp4"
         },
         {
           "variant_id": "T1-V05",
           "task_id": 1,
-          "hypothesis": "测试动作奇观测撕牌奇观动作能否提升点击",
-          "hook_text": "动作奇观｜烘干机骤停全场静默｜「她撕碎衣牌扔烘干机」",
+          "hypothesis": "测试动作奇观红包雨特效能否提升首秒停留点击",
+          "hook_text": "动作奇观｜悬念提问 女孩微笑藏着什么 21｜「红包雨从天上砸下来」",
           "hl_id": "H005",
-          "hl_desc": "烘干机骤停全场静默",
-          "title": "星璃霸气登场时刻",
-          "cta_text": "点击见证登场",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V05_H005_1080x1920.mp4"
+          "hl_desc": "悬念提问 女孩微笑藏着什么 21",
+          "title": "天降红包雨快抢",
+          "cta_text": "伸手接住大红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 8.6,
+          "src_dur_s": 8.6,
+          "window_note": "素材8.6s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V05_H005_1080x1920.mp4",
+          "asset": "videos/悬念提问_女孩微笑藏着什么_21.mp4"
         },
         {
           "variant_id": "T1-V06",
           "task_id": 1,
-          "hypothesis": "测试冲突直给测蒋姨反转离场冲突能否促点击",
-          "hook_text": "冲突直给｜蒋姨亮证据反转离场｜「蒋姨亮证据别跑」",
+          "hypothesis": "测试冲突直给稀缺施压能否提升点击紧迫感",
+          "hook_text": "冲突直给｜demo 01｜「再不点红包就清零了」",
           "hl_id": "H006",
-          "hl_desc": "蒋姨亮证据反转离场",
-          "title": "蒋姨反转星璃现身",
-          "cta_text": "点击红包看离场",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V06_H006_1080x1920.mp4"
+          "hl_desc": "demo 01",
+          "title": "红包清零前快点",
+          "cta_text": "马上点领回红包",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V06_H006_1080x1920.mp4",
+          "asset": "videos/assembled_demo_01.mp4"
         },
         {
           "variant_id": "T1-V07",
           "task_id": 1,
-          "hypothesis": "测试悬念提问测衣牌失踪疑问能否提升好奇点击",
-          "hook_text": "悬念提问｜沈禾夜入洗衣房对峙取衣牌｜「谁动了星璃的衣牌」",
+          "hypothesis": "测试悬念提问从众疑问能否带动跟风点击",
+          "hook_text": "悬念提问｜冲突直给 厨房争吵 02｜「为什么人人都在点？」",
           "hl_id": "H007",
-          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
-          "title": "衣牌失踪真相是",
-          "cta_text": "点红包查真相",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V07_H007_1080x1920.mp4"
+          "hl_desc": "冲突直给 厨房争吵 02",
+          "title": "人人都在领红包",
+          "cta_text": "点看你能领多少",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 19.9,
+          "window_note": "跳过片头1.2s",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V07_H007_1080x1920.mp4",
+          "asset": "videos/冲突直给_厨房争吵_02.mp4"
         },
         {
           "variant_id": "T1-V08",
           "task_id": 1,
-          "hypothesis": "测试反差感测洗衣小事与大红包反差能否拉点击",
-          "hook_text": "反差｜烘干机骤停全场静默｜「洗衣服洗出大红包」",
+          "hypothesis": "测试反差小额预期反转能否提高点击完成率",
+          "hook_text": "反差｜sintel epic｜「以为是1毛结果上千」",
           "hl_id": "H008",
-          "hl_desc": "烘干机骤停全场静默",
-          "title": "洗衣房变红包雨",
-          "cta_text": "点击抢星璃包",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V08_H008_1080x1920.mp4"
+          "hl_desc": "sintel epic",
+          "title": "1毛变千元红包",
+          "cta_text": "点击领取大反转",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V08_H008_1080x1920.mp4",
+          "asset": "videos/demo_03_sintel_epic.mp4"
         },
         {
           "variant_id": "T1-V09",
           "task_id": 1,
-          "hypothesis": "测试台词爆点测星璃登场宣言能否刺激点击",
-          "hook_text": "台词爆点｜蒋姨亮证据反转离场｜「星璃到红包就到」",
+          "hypothesis": "测试台词爆点自信断言能否增强点击信任",
+          "hook_text": "台词爆点｜反差 女子放衣洗衣 02｜「点了这个包你会谢我」",
           "hl_id": "H009",
-          "hl_desc": "蒋姨亮证据反转离场",
-          "title": "星璃一句话封神",
-          "cta_text": "点击听爆点台词",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V09_H009_1080x1920.mp4"
+          "hl_desc": "反差 女子放衣洗衣 02",
+          "title": "领到红包谢我吧",
+          "cta_text": "不服点我试试",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 1.2,
+          "end_s": 16.2,
+          "src_dur_s": 16.9,
+          "window_note": "跳过片头1.2s",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V09_H009_1080x1920.mp4",
+          "asset": "videos/反差_女子放衣洗衣_02.mp4"
         },
         {
           "variant_id": "T1-V10",
           "task_id": 1,
-          "hypothesis": "测试动作奇观测烘干机奇观特效能否带动点击",
-          "hook_text": "动作奇观｜沈禾夜入洗衣房对峙取衣牌｜「烘干机炸出红包雨」",
+          "hypothesis": "测试动作奇观金币炸屏能否刺激冲动点击",
+          "hook_text": "动作奇观｜sintel face｜「金币炸屏红包刷爆了」",
           "hl_id": "H010",
-          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
-          "title": "红包雨空降洗衣房",
-          "cta_text": "点击抢红包雨",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V10_H010_1080x1920.mp4"
+          "hl_desc": "sintel face",
+          "title": "金币炸屏抢红包",
+          "cta_text": "点击接住金币雨",
+          "mount": {
+            "search_word": "星灯短剧",
+            "app_name": "星灯短剧",
+            "overlay_text": "星灯短剧"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-81695F-1016_T1-V10_H010_1080x1920.mp4",
+          "asset": "videos/demo_06_sintel_face.mp4"
+        }
+      ]
+    },
+    "PKG-TRAFFIC-EP-DEMO01-1017": {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1017",
+      "mother_id": "EP-DEMO01",
+      "created_at": 1792224220341,
+      "lib_source": "lport-index(40)",
+      "library": [
+        {
+          "id": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "file": "videos/demo_04_bbb_action.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "冲突直给",
+          "cool": ""
         },
         {
-          "variant_id": "T1-V11",
-          "task_id": 1,
-          "hypothesis": "测试冲突直给测沈禾夜入对峙能否提升点击欲",
-          "hook_text": "冲突直给｜烘干机骤停全场静默｜「夜闯洗衣房为星璃」",
-          "hl_id": "H011",
-          "hl_desc": "烘干机骤停全场静默",
-          "title": "沈禾硬刚为星璃",
-          "cta_text": "点击看星璃登场",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V11_H011_1080x1920.mp4"
+          "id": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "file": "videos/demo_02_jelly_calma.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
         },
         {
-          "variant_id": "T1-V12",
-          "task_id": 1,
-          "hypothesis": "测试悬念提问测离场悬念能否延长停留促点击",
-          "hook_text": "悬念提问｜蒋姨亮证据反转离场｜「蒋姨离场前说了啥」",
-          "hl_id": "H012",
-          "hl_desc": "蒋姨亮证据反转离场",
-          "title": "离场前一句藏玄机",
-          "cta_text": "点红包看结局",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V12_H012_1080x1920.mp4"
+          "id": "反差_图书馆微笑女孩_01",
+          "desc": "反差 图书馆微笑女孩 01",
+          "file": "videos/反差_图书馆微笑女孩_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "反差",
+          "cool": ""
         },
         {
-          "variant_id": "T1-V13",
-          "task_id": 1,
-          "hypothesis": "测试反差策略测穷富反差能否激发红包点击",
-          "hook_text": "反差｜沈禾夜入洗衣房对峙取衣牌｜「最穷洗衣房最豪包」",
-          "hl_id": "H013",
-          "hl_desc": "沈禾夜入洗衣房对峙取衣牌",
-          "title": "反差星璃发大包",
-          "cta_text": "点击领豪华包",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V13_H013_1080x1920.mp4"
+          "id": "demo_01_bbb_fun",
+          "desc": "bbb fun",
+          "file": "videos/demo_01_bbb_fun.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
         },
         {
-          "variant_id": "T1-V14",
-          "task_id": 1,
-          "hypothesis": "测试台词爆点测加倍补偿台词能否提高点击",
-          "hook_text": "台词爆点｜烘干机骤停全场静默｜「我来迟红包加倍」",
-          "hl_id": "H014",
-          "hl_desc": "烘干机骤停全场静默",
-          "title": "星璃登场红包翻倍",
-          "cta_text": "点击翻倍领取",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V14_H014_1080x1920.mp4"
+          "id": "悬念提问_女孩微笑藏着什么_21",
+          "desc": "悬念提问 女孩微笑藏着什么 21",
+          "file": "videos/悬念提问_女孩微笑藏着什么_21.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.6,
+          "hook": "悬念提问",
+          "cool": ""
         },
         {
-          "variant_id": "T1-V15",
+          "id": "assembled_demo_01",
+          "desc": "demo 01",
+          "file": "videos/assembled_demo_01.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_厨房争吵_02",
+          "desc": "冲突直给 厨房争吵 02",
+          "file": "videos/冲突直给_厨房争吵_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_03_sintel_epic",
+          "desc": "sintel epic",
+          "file": "videos/demo_03_sintel_epic.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_女子放衣洗衣_02",
+          "desc": "反差 女子放衣洗衣 02",
+          "file": "videos/反差_女子放衣洗衣_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 16.9,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "demo_06_sintel_face",
+          "desc": "sintel face",
+          "file": "videos/demo_06_sintel_face.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_拆开信封_01",
+          "desc": "悬念提问 拆开信封 01",
+          "file": "videos/悬念提问_拆开信封_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 8.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_02",
+          "desc": "demo 02",
+          "file": "videos/assembled_demo_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_情侣激烈争吵_01",
+          "desc": "冲突直给 情侣激烈争吵 01",
+          "file": "videos/冲突直给_情侣激烈争吵_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 23.4,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "demo_05_jelly_dream",
+          "desc": "jelly dream",
+          "file": "videos/demo_05_jelly_dream.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_小猫舔爪误会揭晓_27",
+          "desc": "反差 小猫舔爪误会揭晓 27",
+          "file": "videos/反差_小猫舔爪误会揭晓_27.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 19.9,
+          "hook": "反差",
+          "cool": "打脸"
+        },
+        {
+          "id": "台词爆点_电话里吵架_01",
+          "desc": "台词爆点 电话里吵架 01",
+          "file": "videos/台词爆点_电话里吵架_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.9,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_挑衣间选哪件_24",
+          "desc": "悬念提问 挑衣间选哪件 24",
+          "file": "videos/悬念提问_挑衣间选哪件_24.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.9,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_03",
+          "desc": "demo 03",
+          "file": "videos/assembled_demo_03.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "冲突直给_背对背冷战_03",
+          "desc": "冲突直给 背对背冷战 03",
+          "file": "videos/冲突直给_背对背冷战_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 11.3,
+          "hook": "冲突直给",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜景车流_01",
+          "desc": "动作奇观 城市夜景车流 01",
+          "file": "videos/动作奇观_城市夜景车流_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 25.4,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_少女闻花特写_02",
+          "desc": "反差 少女闻花特写 02",
+          "file": "videos/反差_少女闻花特写_02.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 9.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "台词爆点_西装创业成功时刻_23",
+          "desc": "台词爆点 西装创业成功时刻 23",
+          "file": "videos/台词爆点_西装创业成功时刻_23.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 10.5,
+          "hook": "台词爆点",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_焦虑独居女人_01",
+          "desc": "悬念提问 焦虑独居女人 01",
+          "file": "videos/悬念提问_焦虑独居女人_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 17.4,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_04",
+          "desc": "demo 04",
+          "file": "videos/assembled_demo_04.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_城市夜空俯瞰_03",
+          "desc": "动作奇观 城市夜空俯瞰 03",
+          "file": "videos/动作奇观_城市夜空俯瞰_03.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.6,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_新年喜庆装饰_01",
+          "desc": "反差 新年喜庆装饰 01",
+          "file": "videos/反差_新年喜庆装饰_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_狗狗求撸名场面_26",
+          "desc": "悬念提问 狗狗求撸名场面 26",
+          "file": "videos/悬念提问_狗狗求撸名场面_26.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.3,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_05",
+          "desc": "demo 05",
+          "file": "videos/assembled_demo_05.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_夜游街头_02",
+          "desc": "动作奇观 夜游街头 02",
+          "file": "videos/动作奇观_夜游街头_02.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.2,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_早餐打蛋小确幸_20",
+          "desc": "反差 早餐打蛋小确幸 20",
+          "file": "videos/反差_早餐打蛋小确幸_20.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 7.2,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_花园全家福故事_18",
+          "desc": "悬念提问 花园全家福故事 18",
+          "file": "videos/悬念提问_花园全家福故事_18.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 5.8,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "assembled_demo_06",
+          "desc": "demo 06",
+          "file": "videos/assembled_demo_06.mp4",
+          "w": 720,
+          "h": 1280,
+          "dur": 10.0,
+          "hook": "",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_大厨爆炒火光逆袭_19",
+          "desc": "动作奇观 大厨爆炒火光逆袭 19",
+          "file": "videos/动作奇观_大厨爆炒火光逆袭_19.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 28.8,
+          "hook": "动作奇观",
+          "cool": "逆袭"
+        },
+        {
+          "id": "反差_洗衣机滚筒_01",
+          "desc": "反差 洗衣机滚筒 01",
+          "file": "videos/反差_洗衣机滚筒_01.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 21.0,
+          "hook": "反差",
+          "cool": ""
+        },
+        {
+          "id": "悬念提问_落日下全家去哪儿_16",
+          "desc": "悬念提问 落日下全家去哪儿 16",
+          "file": "videos/悬念提问_落日下全家去哪儿_16.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 24.6,
+          "hook": "悬念提问",
+          "cool": ""
+        },
+        {
+          "id": "动作奇观_晨跑打脸懒惰_30",
+          "desc": "动作奇观 晨跑打脸懒惰 30",
+          "file": "videos/动作奇观_晨跑打脸懒惰_30.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 12.5,
+          "hook": "动作奇观",
+          "cool": "打脸"
+        },
+        {
+          "id": "反差_海边落日团圆反转_17",
+          "desc": "反差 海边落日团圆反转 17",
+          "file": "videos/反差_海边落日团圆反转_17.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 31.7,
+          "hook": "反差",
+          "cool": "反转"
+        },
+        {
+          "id": "动作奇观_湖面雨幕来袭_28",
+          "desc": "动作奇观 湖面雨幕来袭 28",
+          "file": "videos/动作奇观_湖面雨幕来袭_28.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 15.0,
+          "hook": "动作奇观",
+          "cool": ""
+        },
+        {
+          "id": "反差_街头小哥微笑逆袭_22",
+          "desc": "反差 街头小哥微笑逆袭 22",
+          "file": "videos/反差_街头小哥微笑逆袭_22.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.0,
+          "hook": "反差",
+          "cool": "逆袭"
+        },
+        {
+          "id": "动作奇观_黄昏高空巡游_04",
+          "desc": "动作奇观 黄昏高空巡游 04",
+          "file": "videos/动作奇观_黄昏高空巡游_04.mp4",
+          "w": 1280,
+          "h": 720,
+          "dur": 14.4,
+          "hook": "动作奇观",
+          "cool": ""
+        }
+      ],
+      "tasks": [
+        {
+          "desc": "全量测试混剪卡点",
+          "mode": "lib",
+          "category": "红包点击",
+          "count": 2,
+          "refVideo": "",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          }
+        }
+      ],
+      "highlights": [
+        {
+          "id": "H001",
+          "variant_id": "T1-V01",
+          "source": "library",
+          "ref": "demo_04_bbb_action",
+          "desc": "bbb action",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "id": "H002",
+          "variant_id": "T1-V02",
+          "source": "library",
+          "ref": "demo_02_jelly_calma",
+          "desc": "jelly calma",
+          "duration_s": 4,
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        }
+      ],
+      "copy_draft": [
+        {
+          "variant_id": "T1-V01",
+          "hypothesis": "测试冲突直给开场能否提升红包点击率与卡点完播",
+          "hook": "冲突直给｜bbb action｜「红包点开前先吵翻了」",
+          "title": "红包卡点先吵后抢",
+          "cta": "点开红包别眨眼"
+        },
+        {
+          "variant_id": "T1-V02",
+          "hypothesis": "测试悬念提问开场能否提升混剪卡点完播与红包点击",
+          "hook": "悬念提问｜jelly calma｜「这红包里到底藏了啥」",
+          "title": "混剪卡点红包悬念",
+          "cta": "点开看红包真相"
+        }
+      ],
+      "splice_plan": [
+        {
+          "order": 1,
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "冲突直给",
+          "body": "bbb action",
+          "cta": "点开红包别眨眼",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        },
+        {
+          "order": 2,
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "copy_seg": "hook(4s)+body+cta(3s)",
+          "duration_s": 15,
+          "hook": "悬念提问",
+          "body": "jelly calma",
+          "cta": "点开看红包真相",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "inserts": [
+            {
+              "t": "0s",
+              "what": "贴片:点击左下角观看"
+            },
+            {
+              "t": "3s",
+              "what": "红包图/特写插入（钩子转场处）"
+            }
+          ],
+          "crop": "直出1080x1920",
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧"
+        }
+      ],
+      "materials": [
+        {
+          "variant_id": "T1-V01",
+          "highlight_id": "H001",
+          "ref": "demo_04_bbb_action",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1017_T1-V01_H001_1080x1920.mp4",
+          "source": "library",
+          "desc": "bbb action",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "highlight_id": "H002",
+          "ref": "demo_02_jelly_calma",
+          "file": "PKG-TRAFFIC-EP-DEMO01-1017_T1-V02_H002_1080x1920.mp4",
+          "source": "library",
+          "desc": "jelly calma",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_asset": "videos/demo_02_jelly_calma.mp4"
+        }
+      ],
+      "naming_rule": "{package}_{variant}_{highlight}_1080x1920.mp4｜跑量档720x1280",
+      "checks": {
+        "skill": "skills/traffic/traffic-batch/SKILL.md",
+        "skill_version": 1792069555780374551,
+        "engine": "llm",
+        "lib_source": "lport-index(40)",
+        "testable": true,
+        "deduped": true,
+        "executable": true,
+        "mount_ok": true,
+        "naming_ok": true,
+        "materials_ok": true
+      },
+      "variants": [
+        {
+          "variant_id": "T1-V01",
           "task_id": 1,
-          "hypothesis": "测试动作奇观测星璃登场奇观能否引爆点击",
-          "hook_text": "动作奇观｜蒋姨亮证据反转离场｜「星璃踏光走出雾气」",
-          "hl_id": "H015",
-          "hl_desc": "蒋姨亮证据反转离场",
-          "title": "星璃登场全场静默",
-          "cta_text": "点击迎接星璃",
-          "file_name": "PKG-TRAFFIC-EP-DEMO01-1015_T1-V15_H015_1080x1920.mp4"
+          "hypothesis": "测试冲突直给开场能否提升红包点击率与卡点完播",
+          "hook_text": "冲突直给｜bbb action｜「红包点开前先吵翻了」",
+          "hl_id": "H001",
+          "hl_desc": "bbb action",
+          "title": "红包卡点先吵后抢",
+          "cta_text": "点开红包别眨眼",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1017_T1-V01_H001_1080x1920.mp4",
+          "asset": "videos/demo_04_bbb_action.mp4"
+        },
+        {
+          "variant_id": "T1-V02",
+          "task_id": 1,
+          "hypothesis": "测试悬念提问开场能否提升混剪卡点完播与红包点击",
+          "hook_text": "悬念提问｜jelly calma｜「这红包里到底藏了啥」",
+          "hl_id": "H002",
+          "hl_desc": "jelly calma",
+          "title": "混剪卡点红包悬念",
+          "cta_text": "点开看红包真相",
+          "mount": {
+            "search_word": "测试剧",
+            "app_name": "测试小程序",
+            "overlay_text": "点击左下角观看"
+          },
+          "start_s": 0.0,
+          "end_s": 10.0,
+          "src_dur_s": 10.0,
+          "window_note": "素材10.0s<计划15s：全用+循环补帧",
+          "file_name": "PKG-TRAFFIC-EP-DEMO01-1017_T1-V02_H002_1080x1920.mp4",
+          "asset": "videos/demo_02_jelly_calma.mp4"
         }
       ]
     }
@@ -716,10 +3926,194 @@
     {
       "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
       "variant_id": "T1-V01",
-      "ctr": 0.12,
-      "keep3s": 0.45,
-      "cvr": 0.0,
-      "created_at": 1792035932719
+      "ctr": 0.08,
+      "keep3s": 0.62,
+      "cvr": 0.012,
+      "created_at": 1792076926344
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792077177305
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792077240562
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792077296108
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1015",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792077549420
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792117607661
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792118598780
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792119427998
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792120164607
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792120605926
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792121574867
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792121710048
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792121846604
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792121970551
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792122334454
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-81695F-1016",
+      "variant_id": "T1-V02",
+      "ctr": 7.4,
+      "keep3s": 41.2,
+      "cvr": 2.8,
+      "created_at": 1792123900414
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792126614282
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792128586113
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792131477730
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1016",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792131582689
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1017",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792221316150
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1017",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792223226519
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1017",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792223698898
+    },
+    {
+      "package_id": "PKG-TRAFFIC-EP-DEMO01-1017",
+      "variant_id": "T1-V01",
+      "ctr": 0.08,
+      "keep3s": 0.6,
+      "cvr": 0.01,
+      "created_at": 1792224220359
     }
   ]
 }

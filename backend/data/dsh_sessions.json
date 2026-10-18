@@ -2,11 +2,47 @@
   "sessions": [
     {
       "scope": "episode",
-      "key": "EP-81695F",
+      "key": "EP-DEMO01",
+      "dsh_session_id": "session-df11f9e0-90fb-48a7-8cdf-d6f4d4e2f618",
+      "created_at": 1792168422645,
+      "last_active": 1792230720540,
+      "note": "lazy: dsh_session_id 落在首次 run 后"
+    },
+    {
+      "scope": "lab",
+      "key": "video-lab",
       "dsh_session_id": "",
-      "created_at": 1792038392380,
+      "created_at": 1792214471504,
       "last_active": 0,
       "note": "lazy: dsh_session_id 落在首次 run 后"
+    },
+    {
+      "scope": "lab",
+      "key": "model-test",
+      "dsh_session_id": "session-e9049bb4-9298-4710-84a1-a4298d454ee9",
+      "created_at": 1792218961934,
+      "last_active": 1792218961934
+    },
+    {
+      "scope": "lab",
+      "key": "vision-smoke",
+      "dsh_session_id": "session-4a68e74f-1d77-4310-8d7c-48e42241c28c",
+      "created_at": 1792225630774,
+      "last_active": 1792225630774
+    },
+    {
+      "scope": "lab",
+      "key": "deep-full",
+      "dsh_session_id": "session-af38a03e-7500-4929-b066-1a76c0e72c77",
+      "created_at": 1792232388923,
+      "last_active": 1792232388923
+    },
+    {
+      "scope": "lab",
+      "key": "rewrite-direct",
+      "dsh_session_id": "session-b2bd3d07-9a89-4c3f-9912-2487accc93bf",
+      "created_at": 1792246035050,
+      "last_active": 1792246035050
     }
   ]
 }

@@ -160,8 +160,11 @@ Add special sound effects for scene transitions.
 - PixAI 视频有**两种内容模式**：`Normal`（**仅 SFW**）与 `Enhanced / Professional`（面向专业创作者，
   **Plus+ 会员**才可用）。也就是说 **PixAI 视频的成人向通道是 Enhanced/Professional，且需要 Plus+ 订阅**；
   Normal 档下投直白内容必然被挡。
-- 因此本项目出稿规矩：**同一镜出两版提示词**——`explicit` 原版给本地/Enhanced 通道，
-  按 `video/nsfw-directing` 第 7 节替换表出的**等长降级版**给 Normal 档；两版同镜号，执行侧挑。
+- 出稿规矩（2026-10-17 修订）：**默认只出直白原版**——Enhanced/Professional 通道直接吃露骨描述
+  （NovelAI / Tsubaki 同原理）；**只有**明确要走 Normal 档时才补一份按 `video/nsfw-directing` 第 7 节替换表的
+  **等长降级版**（同镜号，执行侧挑）。**不要把降级版当默认产物**。
+- 露骨词照 `video/nsfw-directing/references/acts-lexicon.md` §9 直白词表写（`penetration / penis / cum / cowgirl position`…），
+  不写「结合部 / 亲密」这类回避语——含糊只会让画面收敛成 SFW。
 - 参考图本身有内容分级限制：成人向参考图请走 Enhanced/Professional；`V4.0 Preview` 仍是 Preview 模型，
   官方明确写了"部分内容类型暂不支持，跑不出就换素材或改提示词"——被挡时先降级，不要死磕。
 - 档位、体位、行为、连续性的写法一律回到 `video/nsfw-directing`（本文件不重复定义）。

@@ -50,6 +50,42 @@ his right hand holds her thigh, and her right calf is hooked over his lower back
 
 ---
 
+### 1.1 tag 轨的词形收敛（booru canonical · 2026-10 抓取核实）
+
+上表是**自然语言轨**（I2VA / 视频提示词）用的名字；**tag 轨**（NovelAI 等）必须换用 booru canonical 词形——
+拼错、或拼成同名异物，等于没写。热度 = `post_count`（同义写法取热度高的）。证据条与别名全表见 `references/kb/positions-extra.md`。
+
+| # | 上表名 | booru canonical | 别名（中 / 日） | 热度 |
+|---|---|---|---|---|
+| 1 | missionary | `missionary` | 正常位/传教士位 · 正常位 | 50.5k |
+| 2 | cowgirl / girl on top | `cowgirl_position` | 骑乘位/对面骑乘位 · 騎乗位 | 57k |
+| 3 | reverse cowgirl | `reverse_cowgirl_position` | 背面骑乘位 · 背面騎乗位 | 12.5k |
+| 4 | doggystyle | `doggystyle` | 后背位 · ドギースタイル | 43k |
+| 5 | prone bone | `prone_bone` | 俯卧后入 · 寝バック | 6.8k |
+| 6 | spooning | `spooning` | 侧位/侧躺 · つばめ返し | 3.8k |
+| 7 | standing against wall | `against_wall` / `standing_sex` | 靠墙 · 立ちバック | 20.2k / 24k |
+| 8 | mating press | `mating_press` | 种付位 · 種付けプレス | 6.5k |
+| 9 | lotus / facing sit | **`upright_straddle`** | 对面座位 · 対面座位 | 8.0k |
+| 10 | suspended / carried | `suspended_congress` | 火车便当 · 駅弁 | 3.2k |
+| 11 | bent over edge | `bent_over`（＋`on_bed` 等承载物） | 前屈/弯腰 · 前かがみ | 85.8k |
+| 12 | 69 | **无可用 canonical**（见下注） | — | — |
+| 13 | fellatio | `fellatio` | 口交 · フェラ | 100.5k |
+| 14 | cunnilingus | `cunnilingus` | 舔阴 · クンニ | 16.8k |
+| 15 | handjob / fingering | `handjob` / `fingering` | 手コキ / 手マン | 54k / 48k |
+| 16 | paizuri | `paizuri` | 乳交 · パイズリ | 61k |
+| 17 | frottage / grinding | `frottage`（另 `crotch_rub` 3.2k / `dry_humping` 1.2k / `pussyjob` 5.6k） | 素股/裆部摩擦 | 2.5k |
+| 18 | thighjob | `thigh_sex` | 素股/大腿交 · 太ももコキ | 5.7k |
+| 19 | footjob | `footjob` | 足交 · 足コキ | 11.8k |
+| 20 | masturbation | `masturbation`（女向细化 `female_masturbation` 37k） | 自慰 · オナニー | 51.9k |
+| 21 | aftercare | `after_sex` / `afterglow` | 事后 · 事後 | 53k / — |
+
+**三个实测踩坑（别凭记忆写）**：
+
+- `lotus` 在 booru 是**荷花**（植物），`69` 是 **3D 渲染**（medium）——照抄上表名字进 tag 轨，画面会变成荷花 / 3D 图。
+- **69 位没有可用 tag**（`six_nine` 是空 tag，0 帖）：tag 轨用 `fellatio` + `cunnilingus` 叠加，或走自然语言 "69"。
+- `grinding` 是**歧义 tag**（wiki 指向 crotch_rub / dry_humping / frottage / pussyjob）——tag 轨取具体子词。
+- `leg_lock`（6.4k，双腿勾住对方躯干，常配 missionary）是加"贴合感"的低成本细节词。
+
 ## 2 换体位（转场矩阵）
 
 5 秒单镜**不许换体位**（换一次等于两张画面，必糊）。要换 → 用切镜，且只在下面这些"物理成立"的组合间换：

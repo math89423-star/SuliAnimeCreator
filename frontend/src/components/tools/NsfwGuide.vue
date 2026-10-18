@@ -90,6 +90,24 @@
                   </tr>
                 </table>
               </div>
+              <div v-if="c.id === 'nsfw-pos'" class="tbl-wrap">
+                <table class="grid-tbl">
+                  <tr><th>中文</th><th>标准 tag</th><th>帖数</th><th>tag 轨写法（SDXL / NovelAI）</th><th>自然语言写法（Tsubaki / 视频）</th></tr>
+                  <tr v-for="r in nsfwPosRows" :key="'np' + r.cn">
+                    <td>{{ r.cn }}</td><td><code class="c">{{ r.tag }}</code></td>
+                    <td>{{ r.count }}</td><td><code class="c">{{ r.sdxl }}</code></td><td>{{ r.nat }}</td>
+                  </tr>
+                </table>
+              </div>
+              <div v-if="c.id === 'nsfw-play'" class="tbl-wrap">
+                <table class="grid-tbl">
+                  <tr><th>中文</th><th>标准 tag</th><th>帖数</th><th>tag 轨写法（SDXL / NovelAI）</th><th>自然语言写法（Tsubaki / 视频）</th></tr>
+                  <tr v-for="r in nsfwPlayRows" :key="'nw' + r.cn">
+                    <td>{{ r.cn }}</td><td><code class="c">{{ r.tag }}</code></td>
+                    <td>{{ r.count }}</td><td><code class="c">{{ r.sdxl }}</code></td><td>{{ r.nat }}</td>
+                  </tr>
+                </table>
+              </div>
               <div class="detail-actions">
                 <el-button size="small" @click.stop="copyDetailBody(c)">复制正文</el-button>
                 <el-button type="primary" size="small" @click.stop="copyDetailTpl(c)">复制模板</el-button>
@@ -242,7 +260,56 @@ const poseRows: PoseRow[] = [
   { cn: '并肩', tag: 'shoulder-to-shoulder', count: '477', sdxl: '2girls, shoulder-to-shoulder', flux: 'standing shoulder to shoulder' },
 ]
 
-const cats: string[] = ['全部', '九槽公式', '模型分流', 'Negative', '成年合规', '人体修复', '镜头光影', '参数', '翻车对照', '复制模板', '联动', '姿势库']
+interface NsfwRow { cn: string; tag: string; count: string; sdxl: string; nat: string }
+
+// 数据源：skills/video/nsfw-directing/references/kb/*.md（2026-10 从 booru wiki 抓取核实）
+// 帖数 = post_count；sdxl = tag 轨写法（NovelAI/Pony）；nat = 自然语言轨写法（Tsubaki.3 / PixAI 视频 / Seedream）
+const nsfwPosRows: NsfwRow[] = [
+  { cn: '骑乘位', tag: 'cowgirl_position', count: '57k', sdxl: 'cowgirl_position, sex, vaginal, penis', nat: 'she straddles him and sinks down slowly, hands braced on his chest' },
+  { cn: '背面骑乘位', tag: 'reverse_cowgirl_position', count: '12.5k', sdxl: 'reverse_cowgirl_position, sex, from_behind', nat: 'she rides him facing away, back arched, hands on his knees' },
+  { cn: '正常位 / 传教士', tag: 'missionary', count: '50.5k', sdxl: 'missionary, sex, leg_lock', nat: 'they face each other, her legs locked around his waist' },
+  { cn: '后入·跪姿', tag: 'doggystyle', count: '43k', sdxl: 'doggystyle, sex, all_fours', nat: 'she kneels on all fours as he takes her from behind, gripping her hip' },
+  { cn: '后入（总称）', tag: 'sex_from_behind', count: '110k', sdxl: 'sex_from_behind, sex, bent_over', nat: 'taking her from behind' },
+  { cn: '俯卧后入', tag: 'prone_bone', count: '6.8k', sdxl: 'prone_bone, sex, on_stomach', nat: 'she lies flat on her stomach as he presses his weight down on her back' },
+  { cn: '侧位', tag: 'spooning', count: '3.8k', sdxl: 'spooning, sex, on_side', nat: 'lying on their sides, he enters her from behind, one arm under her' },
+  { cn: '立位靠墙', tag: 'against_wall, standing_sex', count: '20.2k / 24k', sdxl: 'against_wall, standing_sex, leg_up', nat: 'pressed against the wall, one leg lifted and hooked on his arm' },
+  { cn: '种付位', tag: 'mating_press', count: '6.5k', sdxl: 'mating_press, sex, leg_up', nat: 'he folds her legs up and presses his whole weight down, kissing her' },
+  { cn: '对面座位', tag: 'upright_straddle', count: '8.0k', sdxl: 'upright_straddle, sitting, sex', nat: 'she sits astride him face to face, arms around his neck' },
+  { cn: '火车便当', tag: 'suspended_congress', count: '3.2k', sdxl: 'suspended_congress, sex, carrying', nat: 'he holds her up off the ground, legs wrapped around his waist' },
+  { cn: '床沿前倾', tag: 'bent_over, on_bed', count: '85.8k', sdxl: 'bent_over, sex, from_behind, on_bed', nat: 'she bends over the bed edge, hands braced, hips lifted' },
+  { cn: '口交', tag: 'fellatio', count: '100.5k', sdxl: 'fellatio, oral, penis, saliva', nat: 'she takes his cock into her mouth on her knees' },
+  { cn: '深喉', tag: 'deepthroat, fellatio', count: '8.2k', sdxl: 'deepthroat, fellatio, saliva, tears', nat: 'she takes him all the way down, throat bulging, tears at the corner of her eyes' },
+  { cn: '被挺入（口内）', tag: 'irrumatio', count: '8.3k', sdxl: 'irrumatio, fellatio, penis', nat: 'he holds the back of her head and thrusts into her mouth' },
+  { cn: '舔阴', tag: 'cunnilingus', count: '16.8k', sdxl: 'cunnilingus, oral, pussy, spread_legs', nat: 'his face between her thighs, tongue on her clit, her back arching' },
+  { cn: '手交 / 指交', tag: 'handjob / fingering', count: '54k / 48k', sdxl: 'handjob, penis, cum; fingering, pussy_juice', nat: 'her hand wrapped around his shaft, stroking slowly' },
+  { cn: '乳交', tag: 'paizuri', count: '61k', sdxl: 'paizuri, breasts, penis, cum_on_breasts', nat: 'his cock between her pressed-together breasts, tip showing' },
+  { cn: '腿交 / 素股', tag: 'thigh_sex', count: '5.7k', sdxl: 'thigh_sex, cum_on_thighs', nat: 'she clenches her thighs around his cock, sliding against it' },
+  { cn: '足交', tag: 'footjob', count: '11.8k', sdxl: 'footjob, feet, penis', nat: 'her foot slides along the length of his cock' },
+  { cn: '自慰', tag: 'female_masturbation', count: '37k', sdxl: 'female_masturbation, spread_legs, pussy_juice', nat: 'her own fingers between her legs, hips lifting' },
+  { cn: '颜射 / 内射', tag: 'facial / cum_in_pussy', count: '62k / 147k', sdxl: 'facial, cum, cum_on_face; cum_in_pussy, cumdrip', nat: 'he finishes across her face / deep inside her, then pulls out and cum drips out' },
+]
+
+const nsfwPlayRows: NsfwRow[] = [
+  { cn: '捆绑', tag: 'bondage, bound', count: '76k / 114k', sdxl: 'bondage, bound, rope', nat: 'silk rope looped around her wrists, loose enough to slip' },
+  { cn: '受束（动不了）', tag: 'restrained', count: '72k', sdxl: 'restrained, bound, arms_up', nat: 'her wrists bound above her head, body unable to move' },
+  { cn: '绳缚（日式纹样）', tag: 'shibari', count: '25k', sdxl: 'shibari, rope, bondage, crotch_rope', nat: 'interlocking rope pattern across her torso and thighs' },
+  { cn: '项圈 / 牵绳', tag: 'collar / leash', count: '—', sdxl: 'collar, leash, kneeling', nat: 'a collar around her neck with the leash in his hand' },
+  { cn: '震动器', tag: 'vibrator, sex_toy', count: '33k / 76k', sdxl: 'vibrator, sex_toy, pussy, spread_legs', nat: 'a vibrator pressed against her clit, her thighs trembling' },
+  { cn: '假阳具', tag: 'dildo', count: '32k', sdxl: 'dildo, vaginal, object_insertion', nat: 'she rides a suction-cupped dildo' },
+  { cn: '肛交', tag: 'anal', count: '76k', sdxl: 'anal, anus, sex, from_behind', nat: 'anal penetration, her hands gripping the sheets' },
+  { cn: '肛珠', tag: 'anal_beads', count: '—', sdxl: 'anal_beads, anal, anus', nat: 'a string of beads sliding in one by one' },
+  { cn: '3P', tag: 'threesome', count: '45k', sdxl: 'threesome, 1girl, 2boys, group_sex', nat: 'she takes two partners at once, one at each end' },
+  { cn: '群交', tag: 'group_sex', count: '84k', sdxl: 'group_sex, multiple_boys, 1girl', nat: 'surrounded by several partners, hands everywhere' },
+  { cn: '串刺', tag: 'spitroast', count: '7k', sdxl: 'spitroast, threesome, fellatio, sex', nat: 'one at her mouth, one behind her, both moving together' },
+  { cn: '磨阴（女女）', tag: 'tribadism', count: '—', sdxl: 'tribadism, 2girls, pussy, spread_legs', nat: 'two women grinding their pussies together, hands braced' },
+  { cn: '露出', tag: 'exhibitionism', count: '11k', sdxl: 'exhibitionism, outdoors, nude', nat: 'exposed in a public place, tense expression, passersby implied' },
+  { cn: '内射 / 拔后外流', tag: 'cum_in_pussy / cumdrip', count: '147k / 44k', sdxl: 'cum_in_pussy, sex → cumdrip, cum_string', nat: 'still inside / after he pulls out, cum dripping down her thigh' },
+  { cn: '体内溢出', tag: 'cum_overflow', count: '42k', sdxl: 'cum_overflow, sex, cum_in_pussy', nat: 'still inside her, cum spilling out around his cock' },
+  { cn: '阿黑颜', tag: 'ahegao, rolling_eyes, tongue_out', count: '29k / 24k / 429k', sdxl: 'ahegao, rolling_eyes, tongue_out, sweat', nat: 'a fucked-silly face, eyes rolled up, tongue out, dripping sweat' },
+  { cn: 'NTR 张力', tag: 'netorare', count: '—', sdxl: 'netorare, looking_at_viewer, oral', nat: 'the tension of being taken — 只写张力与知情关系，不写胁迫' },
+]
+
+const cats: string[] = ['全部', '九槽公式', '模型分流', 'Negative', '成年合规', '人体修复', '镜头光影', '参数', '翻车对照', '复制模板', '联动', '姿势库', 'NSFW 体位', 'NSFW 玩法']
 
 const cards: GuideCard[] = [
   ...formulaRows.map((r, i): GuideCard => ({
@@ -351,6 +418,18 @@ const cards: GuideCard[] = [
     tags: ['姿势库', 'pose', 'tag'], summary: '常用艺术姿势对照 + 7 组 SDXL / Flux 一键复制',
     body: '只收常用艺术姿势。SDXL 用 tag 串，Flux 用整句。躺必写 on_back / on_side / on_stomach 其一；坐必写载体；蹲 / 全身必带脚下阴影；双人必前置 2girls + 站位 + 连接点，先单人版再双人。弹窗含全量对照表 + 7 组一键复制。',
     tplKeys: poseGroups.flatMap((g): string[] => [g.sdxlKey, g.fluxKey]), cover: '姿势',
+  },
+  {
+    id: 'nsfw-pos', cat: 'NSFW 体位', title: 'NSFW 体位表', en: 'nsfw positions',
+    tags: ['NSFW 体位', 'sex', 'tag'], summary: '22 条体位 canonical + 帖数 + tag 轨 / 自然语言轨双写法',
+    body: '词形从 booru wiki 抓取核实（源：skills/video/nsfw-directing/references/kb/positions-extra.md）。两条避坑：lotus 在 booru 是荷花、69 是 3D 渲染——对坐用 upright_straddle，69 位无可用 tag（用 fellatio + cunnilingus 叠）。自慰女向细化用 female_masturbation。写镜纪律：一镜一事件，锁位 + 接触点 + 反应三件套。',
+    tplKeys: [], cover: 'NSFW',
+  },
+  {
+    id: 'nsfw-play', cat: 'NSFW 玩法', title: 'NSFW 玩法 / 道具表', en: 'nsfw play & toys',
+    tags: ['NSFW 玩法', 'bondage', 'cum', 'tag'], summary: '17 条玩法/道具/体液 canonical（源头：kb/play.md · kb/anatomy-fluids.md）',
+    body: '两条红线：① 只写自愿——多人 / NTR 按知情合意写，不写胁迫（gangbang 的 wiki 别称含贬义措辞，本仓禁用）；② 不写疼痛与伤痕——束缚只写可解状态（loose enough to slip），否则模型画成伤检图。体液互斥：cumdrip 是拔出后、cum_overflow 是仍在体内，别混。penetration / grinding 是歧义 tag，tag 轨别用。',
+    tplKeys: [], cover: 'NSFW',
   },
 ]
 

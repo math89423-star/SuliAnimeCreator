@@ -34,12 +34,101 @@
       "note": "",
       "created_at": 1791724272041,
       "updated_at": 1791724272041
+    },
+    "3": {
+      "id": 3,
+      "character_id": "CHAR-233A04",
+      "kind": "head_dressed",
+      "slot": "front",
+      "path": "78ed161fb45a4132af6b6e1e643d673d.jpg",
+      "url": "/api/images/78ed161fb45a4132af6b6e1e643d673d.jpg",
+      "note": "",
+      "created_at": 1792117299956,
+      "updated_at": 1792117299956
+    },
+    "4": {
+      "id": 4,
+      "character_id": "CHAR-233A04",
+      "kind": "head_dressed",
+      "slot": "side",
+      "path": "8272539708514268bba0633cdd89a9ea.jpg",
+      "url": "/api/images/8272539708514268bba0633cdd89a9ea.jpg",
+      "note": "",
+      "created_at": 1792117317407,
+      "updated_at": 1792117317407
+    },
+    "5": {
+      "id": 5,
+      "character_id": "CHAR-233A04",
+      "kind": "head_dressed",
+      "slot": "back",
+      "path": "3348bca37d1b4ed6b391d5445ec6841a.jpg",
+      "url": "/api/images/3348bca37d1b4ed6b391d5445ec6841a.jpg",
+      "note": "",
+      "created_at": 1792117326127,
+      "updated_at": 1792117326127
+    },
+    "6": {
+      "id": 6,
+      "character_id": "CHAR-233A04",
+      "kind": "half_dressed",
+      "slot": "front",
+      "path": "6d8db722dce242298d7590f7d8a60085.jpg",
+      "url": "/api/images/6d8db722dce242298d7590f7d8a60085.jpg",
+      "note": "",
+      "created_at": 1792117335923,
+      "updated_at": 1792117335923
+    },
+    "7": {
+      "id": 7,
+      "character_id": "CHAR-233A04",
+      "kind": "half_undressed",
+      "slot": "front",
+      "path": "a1c65c2052214486b37e04ce725ab6a9.jpg",
+      "url": "/api/images/a1c65c2052214486b37e04ce725ab6a9.jpg",
+      "note": "",
+      "created_at": 1792117340087,
+      "updated_at": 1792117340087
+    },
+    "8": {
+      "id": 8,
+      "character_id": "CHAR-233A04",
+      "kind": "half_dressed",
+      "slot": "front",
+      "path": "74549305b1a64169a964d7012fc6a5a8.jpg",
+      "url": "/api/images/74549305b1a64169a964d7012fc6a5a8.jpg",
+      "note": "",
+      "created_at": 1792117346277,
+      "updated_at": 1792117346277
     }
   },
   "slot_prompts": {
     "CHAR-233A04|head_dressed|front": "high-quality 2D anime character design sheet, head_dressed front view,  , clean line, flat color, front/side/back consistent, masterpiece",
     "CHAR-233A04|look|front": "角色设定图（front）：一位成年女性角色，发型按设定，身穿设定服装；站在纯色背景前，正面、侧面与背面姿态一致、比例协调；中景，镜头平视，浅景深；柔和均匀的顶光与正面补光，阴影干净；动漫插画，干净线稿、平涂上色。",
-    "CHAR-233A04|head|side_cn": "角色设定图（侧面）：一位成年女性角色，发型按设定，身穿设定服装；站在纯色背景前，正面、侧面与背面姿态一致、比例协调；中景，镜头平视，浅景深；柔和均匀的顶光与正面补光，阴影干净；动漫插画，干净线稿、平涂上色。"
+    "CHAR-233A04|head|side_cn": "角色设定图（侧面）：一位成年女性角色，发型按设定，身穿设定服装；站在纯色背景前，正面、侧面与背面姿态一致、比例协调；中景，镜头平视，浅景深；柔和均匀的顶光与正面补光，阴影干净；动漫插画，干净线稿、平涂上色。",
+    "CHAR-8A81DB|head_dressed|side": "side en",
+    "CHAR-3B03AB|head_dressed|side": "side en",
+    "CHAR-56CB9E|head_dressed|front": "E2E EN PROMPT",
+    "CHAR-56CB9E|head_dressed|front_cn": "E2E 中文提示词",
+    "CHAR-17BEE3|head_dressed|front": "E2E EN PROMPT",
+    "CHAR-17BEE3|head_dressed|front_cn": "E2E 中文提示词",
+    "CHAR-B8727A|head_dressed|side": "side en",
+    "CHAR-5ECAE7|head_dressed|side": "side en",
+    "CHAR-B72E20|head_dressed|side": "side en",
+    "CHAR-FD903F|head_dressed|side": "side en",
+    "CHAR-C1FBBE|head_dressed|side": "side en",
+    "CHAR-85AFB5|head_dressed|side": "side en",
+    "CHAR-59CDED|head_dressed|side": "side en",
+    "CHAR-1FB617|head_dressed|side": "side en",
+    "CHAR-40E7D3|head_dressed|side": "side en",
+    "CHAR-1DAFD5|head_dressed|side": "side en",
+    "CHAR-04A6DD|head_dressed|side": "side en",
+    "CHAR-7AF3BC|head_dressed|side": "side en",
+    "CHAR-F01D40|head_dressed|side": "side en",
+    "CHAR-9D1BA0|head_dressed|side": "side en",
+    "CHAR-937059|head_dressed|side": "side en",
+    "CHAR-13BBC6|head_dressed|side": "side en",
+    "CHAR-95E047|head_dressed|side": "side en"
   },
   "slot_svgs": {},
   "outfits": {},
@@ -50,14 +139,190 @@
     },
     "CHAR-95D72E": {
       "doc_html": ""
+    },
+    "CHAR-8A81DB": {
+      "doc_html": ""
+    },
+    "CHAR-B6913B": {
+      "doc_html": ""
+    },
+    "CHAR-28692A": {
+      "doc_html": ""
+    },
+    "CHAR-3B03AB": {
+      "doc_html": ""
+    },
+    "CHAR-3E1CD7": {
+      "doc_html": ""
+    },
+    "CHAR-56CB9E": {
+      "doc_html": ""
+    },
+    "CHAR-17BEE3": {
+      "doc_html": ""
+    },
+    "CHAR-691989": {
+      "doc_html": ""
+    },
+    "CHAR-59EF81": {
+      "doc_html": ""
+    },
+    "CHAR-0048C6": {
+      "doc_html": ""
+    },
+    "CHAR-B8727A": {
+      "doc_html": ""
+    },
+    "CHAR-73A088": {
+      "doc_html": ""
+    },
+    "CHAR-5ECAE7": {
+      "doc_html": ""
+    },
+    "CHAR-B27494": {
+      "doc_html": ""
+    },
+    "CHAR-B72E20": {
+      "doc_html": ""
+    },
+    "CHAR-9B4A4F": {
+      "doc_html": ""
+    },
+    "CHAR-FD903F": {
+      "doc_html": ""
+    },
+    "CHAR-AF3FD4": {
+      "doc_html": ""
+    },
+    "CHAR-C1FBBE": {
+      "doc_html": ""
+    },
+    "CHAR-0636AF": {
+      "doc_html": ""
+    },
+    "CHAR-85AFB5": {
+      "doc_html": ""
+    },
+    "CHAR-50E8E8": {
+      "doc_html": ""
+    },
+    "CHAR-59CDED": {
+      "doc_html": ""
+    },
+    "CHAR-59A858": {
+      "doc_html": ""
+    },
+    "CHAR-1FB617": {
+      "doc_html": ""
+    },
+    "CHAR-F46BD5": {
+      "doc_html": ""
+    },
+    "CHAR-40E7D3": {
+      "doc_html": ""
+    },
+    "CHAR-8E4D27": {
+      "doc_html": ""
+    },
+    "CHAR-1DAFD5": {
+      "doc_html": ""
+    },
+    "CHAR-006AEE": {
+      "doc_html": ""
+    },
+    "CHAR-04A6DD": {
+      "doc_html": ""
+    },
+    "CHAR-819013": {
+      "doc_html": ""
+    },
+    "CHAR-7AF3BC": {
+      "doc_html": ""
+    },
+    "CHAR-33F2B1": {
+      "doc_html": ""
+    },
+    "CHAR-F01D40": {
+      "doc_html": ""
+    },
+    "CHAR-D6D412": {
+      "doc_html": ""
+    },
+    "CHAR-9D1BA0": {
+      "doc_html": ""
+    },
+    "CHAR-9A4F75": {
+      "doc_html": ""
+    },
+    "CHAR-937059": {
+      "doc_html": ""
+    },
+    "CHAR-5CC185": {
+      "doc_html": ""
+    },
+    "CHAR-13BBC6": {
+      "doc_html": ""
+    },
+    "CHAR-A4E75C": {
+      "doc_html": ""
+    },
+    "CHAR-95E047": {
+      "doc_html": ""
+    },
+    "CHAR-4D65D6": {
+      "doc_html": ""
     }
   },
   "versions": {
-    "CHAR-233A04": []
+    "CHAR-233A04": [],
+    "CHAR-8A81DB": [],
+    "CHAR-B6913B": [],
+    "CHAR-28692A": [],
+    "CHAR-3B03AB": [],
+    "CHAR-3E1CD7": [],
+    "CHAR-56CB9E": [],
+    "CHAR-17BEE3": [],
+    "CHAR-691989": [],
+    "CHAR-59EF81": [],
+    "CHAR-0048C6": [],
+    "CHAR-B8727A": [],
+    "CHAR-73A088": [],
+    "CHAR-5ECAE7": [],
+    "CHAR-B27494": [],
+    "CHAR-B72E20": [],
+    "CHAR-9B4A4F": [],
+    "CHAR-FD903F": [],
+    "CHAR-AF3FD4": [],
+    "CHAR-C1FBBE": [],
+    "CHAR-0636AF": [],
+    "CHAR-85AFB5": [],
+    "CHAR-50E8E8": [],
+    "CHAR-59CDED": [],
+    "CHAR-59A858": [],
+    "CHAR-1FB617": [],
+    "CHAR-F46BD5": [],
+    "CHAR-40E7D3": [],
+    "CHAR-8E4D27": [],
+    "CHAR-1DAFD5": [],
+    "CHAR-006AEE": [],
+    "CHAR-04A6DD": [],
+    "CHAR-819013": [],
+    "CHAR-7AF3BC": [],
+    "CHAR-33F2B1": [],
+    "CHAR-F01D40": [],
+    "CHAR-D6D412": [],
+    "CHAR-9D1BA0": [],
+    "CHAR-9A4F75": [],
+    "CHAR-937059": [],
+    "CHAR-5CC185": [],
+    "CHAR-13BBC6": [],
+    "CHAR-A4E75C": [],
+    "CHAR-95E047": [],
+    "CHAR-4D65D6": []
   },
   "seq": {
-    "asset": 3,
-    "outfit": 2,
+    "asset": 129,
+    "outfit": 9,
     "version": 2
   }
 }

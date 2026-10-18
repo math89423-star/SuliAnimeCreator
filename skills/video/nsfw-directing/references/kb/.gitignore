@@ -1,0 +1,6 @@
+# KB 运行缓存 / 原始抓取：可重跑再生，不进版本库（真源=脚本+seeds，结论=各分类 md）
+_cache/
+_raw.json
+_raw.md
+_candidates.json
+_posts_extra.json

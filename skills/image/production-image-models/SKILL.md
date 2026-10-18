@@ -43,6 +43,9 @@ compatibility: Portable — plain local files. Sources: NovelAI official docs, P
 - **Tsubaki.3(PixAI)**：与视频侧同规则——`Normal` 仅 SFW，成人向走 `Enhanced / Professional`（Plus+）。
 - **Seedream(火山方舟)**：托管平台侧有内容审核，投喂前按平台规则确认；本项目的成人向出稿优先走本地/NovelAI/PixAI-Enhanced 通道。
 - 水位、遮挡、器官与体液写法一律回 `video/nsfw-directing`（同一套词表，出图侧照用；该文件的动作预算对静图不适用，静图只需"遮挡结构 + 水位"）。
+- **直白词直接用**（2026-10-17）：NovelAI / Tsubaki.3(PixAI-Enhanced) 都**直接吃露骨描述**——器官/行为/体液照
+  `video/nsfw-directing/references/acts-lexicon.md` §9 直白词表写（`sex, vaginal, penis, cum, cowgirl position, creampie`…），
+  **不要**为"稳"改用含蓄词（含糊＝模型往 SFW 收敛，画不出或画歪）。降级替换表只在目标引擎确带审核时用（如 Seedream 托管侧）。
 - **成年虚构锚定同样适用**：NovelAI 正负双锚（`adult, mature` / negative 见 `references/novelai.md`），Tsubaki.3 与 Seedream 在自然语言里正面写定。
 
 ## 4 交付与归档
