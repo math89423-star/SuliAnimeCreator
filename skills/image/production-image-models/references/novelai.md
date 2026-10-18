@@ -1,6 +1,6 @@
 # NovelAI Diffusion 出稿手册
 
-> 来源：官方文档 `docs.novelai.net/en/image/*`（2026-10-12 抓取）。
+> 来源：官方文档 `docs.novelai.net/en/image/*`。
 > 适用：V5 Full / V5 Curated / V4.5 Full / V4.5 Curated / V4 Full / V4 Curated / Anime V3。
 
 ## 1 模型选择

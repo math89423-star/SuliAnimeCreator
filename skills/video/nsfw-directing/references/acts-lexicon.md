@@ -51,7 +51,7 @@ their bodies stay pressed flush and move together in a single slow rhythm, skin 
 | 体液（含蓄版） | `a faint wet sheen, catching the light` |
 | 体液（直白版） | `dripping onto the sheet below` |
 
-**用语纪律（2026-10-17 修订）**：**默认输出一律用直白版**（器官/行为/体液按 §9 直白词表写）；
+**用语纪律**：**默认输出一律用直白版**（器官/行为/体液按 §9 直白词表写）；
 含蓄版**只在**目标引擎确带审核时当降级替换用（见 `SKILL.md` 第 7 节）。把直白内容写成含蓄词＝给下游丢信息。
 
 ## 3 声音（`overall_soundscape` 专用词）
@@ -140,7 +140,7 @@ her fingers curling into the sheet as her back arches slightly.
 
 ## 9 直白词表（器官 / 行为 / 体液 —— **默认输出用语**）
 
-> **这是默认用语，不是备选**（2026-10-17 修订）：拆解报告、镜头卡、提示词正文一律用这里的词。
+> **这是默认用语，不是备选**：拆解报告、镜头卡、提示词正文一律用这里的词。
 > 把「性交/插入/阴茎/精液」写成「亲密/结合部/白浊」= 给下游丢信息——NovelAI / Tsubaki 这类引擎**直接吃露骨词**，
 > 含糊词只会让画面收敛成 SFW（或干脆画不出）。
 > 含蓄说法**只**活在 `SKILL.md` 第 7 节降级替换表里，且仅在目标引擎确带审核时才用（如 Seedream 托管侧）。

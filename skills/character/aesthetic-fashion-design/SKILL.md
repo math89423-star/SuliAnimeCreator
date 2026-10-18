@@ -5,7 +5,7 @@ description: Use when designing garments, costumes, hosiery, accessories or any 
 
 # Aesthetic Fashion Design（画前方向锁定+通用检查器）
 
-> 归属（2026-10-11 精修）：身份/配色三层/选型归 `character-design`；服装个性层方案归 `costume-design`；代码落盘+门禁归 `garment-flat`。本文件只做**动笔前的通用检查**：品类几何对号、纹样四层、工艺标注、zoning、反模式。配色只定比例 HEX，不重定三色理论。
+> 归属：身份/配色三层/选型归 `character-design`；服装个性层方案归 `costume-design`；代码落盘+门禁归 `garment-flat`。本文件只做**动笔前的通用检查**：品类几何对号、纹样四层、工艺标注、zoning、反模式。配色只定比例 HEX，不重定三色理论。
 
 ## 0. Never draw before locking direction
 Establish first: wearer/scene, silhouette word (e.g. 缠绕/建筑感/流动), base vs motif vs accent colors with hex, material hierarchy (which is matte / glossy / metallic, brightest last), pattern density rule (dense where, fade where, never full-cover without reason), construction (seams, bands, rings, closures).

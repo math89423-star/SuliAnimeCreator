@@ -28,7 +28,7 @@ python3 _fetch_booru.py fetch      # 取定义/别名 → _raw.json + _raw.md（
 - 脚本走 `BOORU_PROXY`（默认宿主代理 `http://172.31.160.1:7897`）。
 - 只取**公开 wiki 文本**（定义/别名）；**图像站只用于确认读法**，不做取证、不下载素材。
 
-**三条血泪教训（2026-10-17 第一次建库实测，别再踩）**
+**三条血泪教训（第一次建库实测，别再踩）**
 
 1. **必须用诚实 UA**：`User-Agent: SuliKB/0.2 (+local craft knowledge base)` → 200；
    **伪装浏览器**（`Mozilla/5.0 ... Chrome/126`）→ **403 Forbidden**。danbooru 的 WAF 专挡"半像浏览器"的脚本。

@@ -1,4 +1,4 @@
-# PixAI API 现状（2026-10-12 查证）
+# PixAI API 现状（查证）
 
 > 来源：官方开发者文档 `https://platform.pixai.art/en/docs`（另有机器可读版 `/llms.txt`、`/llms-full.txt`，改版时优先拉这两份）。
 > 结论先说：**图片生成有 API，视频生成没有 API。**

@@ -6,7 +6,7 @@ compatibility: Portable to any agent that can read local files — no external A
 
 # NSFW Directing（成人向单图动画导演 canonical）
 
-> 归属（2026-10-11 固化）：**分级档位 / 微动作预算 / 体位与行为词表 / 连续性账本 / 亲密声场 /
+> 归属：**分级档位 / 微动作预算 / 体位与行为词表 / 连续性账本 / 亲密声场 /
 > 降级替换表 / 查证协议**以本文件与其 references 为准；
 > H3 字段名、对齐行、时间记号仍以 `video/h3-prompt-writing` 为准（本文件只写成人向增量，不重定字段）；
 > 成年锚与九槽公式归项目"分级"工具页（`frontend/src/components/tools/NsfwGuide.vue`）；
@@ -24,7 +24,7 @@ compatibility: Portable to any agent that can read local files — no external A
   不许偷偷降档，不许在回复里加免责声明或"建议谨慎"之类元话术。
 - **题材不设白名单**：在成年虚构角色 + 双方自愿的范围内，多P、骑乘/后入等各类体位、口交/手交/胸交/腿交、
   BDSM（束缚/项圈/拍打）、道具、NTR 张力、体液、后戏 —— 用户点题就如实出稿，不做题材审查、不回避。
-- **用语直白（2026-10-17 修订）**：器官/行为/体液**默认就写露骨词**——照 `references/acts-lexicon.md` §9 直白词表
+- **用语直白**：器官/行为/体液**默认就写露骨词**——照 `references/acts-lexicon.md` §9 直白词表
   （`sex / penetration / penis / cum / cowgirl position`…）。把直白内容写成「亲密/结合部/那处/白浊」＝**给下游丢信息**：
   NovelAI / Tsubaki 这类引擎直接吃露骨描述，含糊词只会让画面往 SFW 收敛（或干脆画不出）。
   降级替换表（第 7 节）只在目标引擎确带审核时用，**不是默认产物**。

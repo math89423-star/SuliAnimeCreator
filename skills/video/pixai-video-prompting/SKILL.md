@@ -6,12 +6,12 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 
 # PixAI Video Prompting（PixAI 视频生成 canonical）
 
-> 归属（2026-10-12 落库）：**PixAI 视频的参考图机制 / 时间分块 / 相机动词 / 语音与 SFX 格式 /
+> 归属：**PixAI 视频的参考图机制 / 时间分块 / 相机动词 / 语音与 SFX 格式 /
 > 迭代循环 / 失败模式**以本文件与其 references 为准；
 > MiniMax H3 的字段格式仍归 `video/h3-prompt-writing`（两套格式互不通用，交付前先确认目标引擎）；
 > 成人向档位与体位/行为词表归 `video/nsfw-directing`（本文件只管 PixAI 侧的格式与参数）。
 
-## 0 命名澄清（2026-10-12 查证）
+## 0 命名澄清（查证）
 
 - **Tsubaki / 椿 = PixAI 的图像旗舰模型**（Tsubaki.3 为最新，擅长漫画分页、版面文字、光照叙事、角色一致性）。
 - **PixAI 的视频模型是另一条线**。2026-10-12 复核：**界面（專業档）已上 `Tsubaki Video` 与 `Tsubaki Video Flash`（标 NEW，
@@ -26,7 +26,7 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 - 分工不变：**图像提示词归 `image/production-image-models`，视频提示词归本文件**。
 - 官方视频文档：`https://docs.pixai.art/docs/tools/video`；实战教程见 references。
 
-## 0.5 提示词框架通用，但这三项按型号分叉（2026-10-12 复核实测）
+## 0.5 提示词框架通用，但这三项按型号分叉（复核实测）
 
 **同一套框架**（自然语言导演腔 + 时间轴/`[0-Xs]` beat + 真动词运镜 + 台词/SFX 行）在 PixAI 视频全线通用；
 但下面三项**必须按型号改**，写错就是白跑：
@@ -37,7 +37,7 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 | 时长上限 | 以界面为准（本项目取 15s 宽松上限） | **15s** | 10s | 10s | 10s |
 | 音频 | 支持（Voice 三段式） | 支持（Voice 三段式） | 支持（配音） | **无音频** → 台词改口型提示 | **无音频** → 台词改口型提示 |
 | 运镜写法 | 写进提示词 | 写进提示词 | 写进提示词 | 写进提示词 | **用相机下拉，正文不要写运镜** |
-| 提示词预算 | **5000 tokens**（界面实测上限，2026-10-16）；按 token 写满，不必按字符省 | ≤2000 字符（官方工作流建议） | ≤2000 字符 | ≤2000 字符 | ≤2000 字符 |
+| 提示词预算 | **5000 tokens**（界面实测上限）；按 token 写满，不必按字符省 | ≤2000 字符（官方工作流建议） | ≤2000 字符 | ≤2000 字符 | ≤2000 字符 |
 
 项目内已实现：组装时选「型号」，后端自动做型号级校准（时长夹取 / Voice→口型 / 删运镜句），
 并在镜卡上显示"调整"提示；交付前对着这张表再核一遍。
@@ -160,7 +160,7 @@ Add special sound effects for scene transitions.
 - PixAI 视频有**两种内容模式**：`Normal`（**仅 SFW**）与 `Enhanced / Professional`（面向专业创作者，
   **Plus+ 会员**才可用）。也就是说 **PixAI 视频的成人向通道是 Enhanced/Professional，且需要 Plus+ 订阅**；
   Normal 档下投直白内容必然被挡。
-- 出稿规矩（2026-10-17 修订）：**默认只出直白原版**——Enhanced/Professional 通道直接吃露骨描述
+- 出稿规矩：**默认只出直白原版**——Enhanced/Professional 通道直接吃露骨描述
   （NovelAI / Tsubaki 同原理）；**只有**明确要走 Normal 档时才补一份按 `video/nsfw-directing` 第 7 节替换表的
   **等长降级版**（同镜号，执行侧挑）。**不要把降级版当默认产物**。
 - 露骨词照 `video/nsfw-directing/references/acts-lexicon.md` §9 直白词表写（`penetration / penis / cum / cowgirl position`…），
@@ -178,11 +178,11 @@ Add special sound effects for scene transitions.
 | 参考视频 | ≤3 段，单段 ≤50MB / ≤15s，**合计也 ≤15s** |
 | 参考音频 | ≤3 段 |
 | 模式互斥 | Keyframe（首/尾帧）与 Multi-Reference 互斥 |
-| 提示词长度 | **Tsubaki Video / Flash：5000 tokens（操作者核对界面输入上限，2026-10-16）**；官方工作流建议的 **≤2000 字符** 仍适用于 v4.0 Preview / Lite 与 v3.x 老口径 —— 两套别混用：给 Tsubaki 出稿按 token 预算写满，给 v4.0 出稿仍按 2000 字符收 |
+| 提示词长度 | **Tsubaki Video / Flash：5000 tokens（操作者核对界面输入上限）**；官方工作流建议的 **≤2000 字符** 仍适用于 v4.0 Preview / Lite 与 v3.x 老口径 —— 两套别混用：给 Tsubaki 出稿按 token 预算写满，给 v4.0 出稿仍按 2000 字符收 |
 | 会员门槛 | 视频功能需 Starter+（Normal）；Enhanced 需 Plus+ |
 | 成本与耗时 | 远高于出图（起步约 16,000 credits），单次 1-5 分钟 |
 
-## 8.5 API 现状（2026-10-12 查证，重要）
+## 8.5 API 现状（查证，重要）
 
 - **PixAI API 不支持视频生成**——官方 Limits 原文：`Video generation is not supported.`
   所以 Tsubaki Video / Flash **只能走网页/App**，"出稿 → 人工粘贴生成"是目前唯一路径。
@@ -216,7 +216,7 @@ Add special sound effects for scene transitions.
 
 ## PROVENANCE
 
-来源（2026-10-12 抓取，全部官方页）：
+来源（全部官方页）：
 - `https://docs.pixai.art/docs/tools/video`（核心设置、模型表、运动提示词建议）
 - `https://blog.pixai.art/en/how-to-prompt-pixai-v4-0-preview/`（实战教程：参考图机制、时间分块、语音格式、迭代循环、五类失败）
 - `https://blog.pixai.art/en/pixai-image-to-video-tutorial-model-guide-prompt-writing/`（六模型对比、面板设置、四层提示词、相机动词表）

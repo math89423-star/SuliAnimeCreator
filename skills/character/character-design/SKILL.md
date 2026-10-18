@@ -11,7 +11,7 @@ description: Design anime characters from scratch for SOP STEP 1 — motif extra
 - 交棒：服装加饰细化定样（S1-3b）→ `costume-design`；画前方向锁定+品类几何 → `aesthetic-fashion-design`；代码化flat落盘 → `garment-flat`；出图 prompt 组织 → `illustration-prompt`；机位构图 → `composition-camera`。
 - **Identity 可冻结，State 必须放开**：本 skill 只锁身份，不锁动作/表情/镜头（归 STEP 2）。
 - 终点：选型单经用户拍板 → 按本文规格写入 `character.md` → 进 S1-1~S1-7 图像管线。
-- **canonical 声明（2026-10-11 精修）**：三锚/三色/选型单/对标规则以本文件为准；`costume-design` 不重定三锚三色，只做服装层细化；`aesthetic-fashion-design` 不重定配色，只做画前几何纹样工艺检查；`garment-flat` 不谈审美，只做代码落盘+门禁。
+- **canonical 声明**：三锚/三色/选型单/对标规则以本文件为准；`costume-design` 不重定三锚三色，只做服装层细化；`aesthetic-fashion-design` 不重定配色，只做画前几何纹样工艺检查；`garment-flat` 不谈审美，只做代码落盘+门禁。
 
 ## 六步流程
 

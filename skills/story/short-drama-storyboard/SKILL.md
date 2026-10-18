@@ -6,7 +6,7 @@ license: MIT
 
 # 短剧分镜与冻结关键帧（分镜 canonical）
 
-> 归属（2026-10-11 精修）：只做分镜+冻结关键帧；剧本归 `short-drama-write`，资产锁面来源归 `short-drama-assets`（本文件只做注入与边界，不新建资产条目），审查归 `short-drama-review`，H3句式归 `h3-prompt-writing`，机位语法归 `composition-camera`。Scene Bible此处管建立+机位命中，验收归审查。
+> 归属：只做分镜+冻结关键帧；剧本归 `short-drama-write`，资产锁面来源归 `short-drama-assets`（本文件只做注入与边界，不新建资产条目），审查归 `short-drama-review`，H3句式归 `h3-prompt-writing`，机位语法归 `composition-camera`。Scene Bible此处管建立+机位命中，验收归审查。
 
 把剧本和视觉事实转成有镜头职责、空间连续性和可冻结起点的 `剧集/<EP>/分镜.md`。
 每镜使用二级标题 `## SHOT-...`，同镜下用 `### 冻结关键帧提示词` 写起始帧正文；
@@ -46,7 +46,7 @@ license: MIT
 
 ## 工作流
 
-0. **story 后先判 Scene Bible（2026-09-29固化，分镜前必答）**：列场景清单逐个判——高频场景（≥3 镜或跨 seg 复用）必建 Bible（母版空场景 + 3~5 离散机位 + 锚点坐标，落盘 `scene/<代号>/`）；一次性场景（1-2 镜）不建，直接单帧处理。判了才许拆镜；分镜每镜机位必须命中 Bible 覆盖表（Establishing/Medium-A/Medium-B/OTS-A/OTS-B/Close/Detail 八选N），表外机位先补 Bible 参考图，不许临场文字发明。
+0. **story 后先判 Scene Bible（分镜前必答）**：列场景清单逐个判——高频场景（≥3 镜或跨 seg 复用）必建 Bible（母版空场景 + 3~5 离散机位 + 锚点坐标，落盘 `scene/<代号>/`）；一次性场景（1-2 镜）不建，直接单帧处理。判了才许拆镜；分镜每镜机位必须命中 Bible 覆盖表（Establishing/Medium-A/Medium-B/OTS-A/OTS-B/Close/Detail 八选N），表外机位先补 Bible 参考图，不许临场文字发明。
 
 1. 读取已接受的目标模型原生时长区间，再确认每个场景动作、对白、声音、画面文字和转折由哪些镜头承载。
 2. 确定观众何时知道什么、对齐谁、空间如何揭示、转折落在哪个可见动作。

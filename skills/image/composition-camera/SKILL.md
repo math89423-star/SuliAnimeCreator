@@ -5,7 +5,7 @@ description: Plan STEP2 lens and composition for anime illustration: shot size, 
 
 # Composition Camera（STEP2 机位构图 canonical）
 
-> 归属（2026-10-11 精修）：机位词表/构图法/透视底/镜头语法/Scene Bible空间覆盖以本文件为准；prompt组装8-block/ tag转译/风格头/Vague ban归 `illustration-prompt`；SVG图层渲染归 `svg-illustration-craft`；H3句式/对齐行/时间预算归 `h3-prompt-writing`（本文件只定落幅是什么、运镜动因，不写H3句）。
+> 归属：机位词表/构图法/透视底/镜头语法/Scene Bible空间覆盖以本文件为准；prompt组装8-block/ tag转译/风格头/Vague ban归 `illustration-prompt`；SVG图层渲染归 `svg-illustration-craft`；H3句式/对齐行/时间预算归 `h3-prompt-writing`（本文件只定落幅是什么、运镜动因，不写H3句）。
 
 ## 最高指令（压过一切审美词）
 
@@ -21,7 +21,7 @@ description: Plan STEP2 lens and composition for anime illustration: shot size, 
 - `dutch angle ~15°`：失衡/不安。只配俯视用；平视+斜切双叠加脸必歪（C1 实测）。
 - 水平向：`front` / `3/4 view` / `profile 90°` / `rear` / `3/4 back view`（回眸位）/ `over-the-shoulder` / `pov, first-person view`。斜睨类用 front 机位 + 头转向，不转机位。
 
-### 词表出处（2026-10-11 逐词挂 booru，非自造）
+### 词表出处（逐词挂 booru，非自造）
 
 - `cowboy shot` = 大腿上裁框含脸（thighs-up，见 https://danbooru.donmai.us/wiki_pages/cowboy_shot），与本表“大腿中”一致。
 - `dutch angle` = 倾斜构图求动感，90° 另算 `sideways`（见 https://danbooru.donmai.us/wiki_pages/dutch_angle）；故本表限 ~15° 且禁与平视叠加。
@@ -124,7 +124,7 @@ negative 常驻：`empty room without figure, wrong camera angle, color, detaile
 
 自检五问：前/中/后 ≥2 层有内容？亮度分层了吗？引导线 ≤2 且指向主体？留白是单侧的吗？有一个破格点吗？
 
-## 落幅双可读（2026-09-30固化，运镜的落点标准）
+## 落幅双可读（运镜的落点标准）
 
 - 起幅落幅都必须是完整可读的构图：`Start with [close/wide view], then [movement] to reveal [final view]`（Kling Pattern 2）；落幅终帧锐利定住（settle sharp），不许落在运动模糊里。
 - 落幅=新信息三选一：脸/手/物（十字架/信/门/窗/字）；落空=白推，判废。
@@ -133,26 +133,26 @@ negative 常驻：`empty room without figure, wrong camera angle, color, detaile
 
 ## 镜头语法（双人/多图必守）
 
-- **一镜一目的总纲（2026-09-29固化）**：每镜、每切、每束光必须回答五选一——信息/权力/情绪/空间/节奏；答不上的镜头删，答不上的切镜合，答不上的光灭。禁止无意义镜头、无意义切镜、无意义运镜、无意义打光，分镜拆解第一刀先砍这四种。
-- **转场五式（2026-09-29固化，H3 前三式可写）**：声音桥（声过切点不断）/ J-cut（下镜声提前 0.5s 进，`rattle enters under the end of Shot N`）/ 动作匹配（切点落动作中点，上镜抬一半下镜接完）/ 图形匹配（圆→圆瞳孔、竖线→衣褶，关键帧预埋）/ 前景穿越（柱/衣褶划过=天然擦除，`push past the column, emerging on her face`）。硬切默认，叠化后期做不进 prompt。
+- **一镜一目的总纲**：每镜、每切、每束光必须回答五选一——信息/权力/情绪/空间/节奏；答不上的镜头删，答不上的切镜合，答不上的光灭。禁止无意义镜头、无意义切镜、无意义运镜、无意义打光，分镜拆解第一刀先砍这四种。
+- **转场五式（H3 前三式可写）**：声音桥（声过切点不断）/ J-cut（下镜声提前 0.5s 进，`rattle enters under the end of Shot N`）/ 动作匹配（切点落动作中点，上镜抬一半下镜接完）/ 图形匹配（圆→圆瞳孔、竖线→衣褶，关键帧预埋）/ 前景穿越（柱/衣褶划过=天然擦除，`push past the column, emerging on her face`）。硬切默认，叠化后期做不进 prompt。
 - **180 度线**：两人连线为轴，机位全在同一侧；双人 prompt 用「左/右 + 朝向」把轴线写死。
 - **正反打**：视线互为反向、机位同侧。
 - **视线匹配**：A 看画外右 → B 必须从画外左看回。
-- **对话切镜（H3 执行，2026-09-28固化）**：两人对谈≥2轮必须分镜写多 `[Shot N] At 00:0X.000` 切，不许一镜演完；切点落在台词尾音（话音落→切→反应1s→下句起）；正反机位同侧、景别拉开一档（如中景↔近景），视线互为反向；单人独白才许一镜。对白 density 高时优先保切点，宁可镜短不可一镜到底。
-- **人物背景双关系（2026-09-28固化，缺一判废）**：人物→镜头（机位四要素）之外，必须另写人物→背景：视线落点入背景（她看向哪，那件东西就写在哪侧，如面朝右则神像膝压右缘，禁止写"身后"这种机位系方位词）；身体朝向与背景主体的轴线关系（面对/背对/侧对写死）。三点成环：机位→人物→背景回机位，只写两条等于没写。
-- **方位与视线 v2（2026-09-28固化，闭源云模型实战）**：方位词一律机位系（画面左/右/上/下、top-right、dead center），"身前/身后/左侧（人物系）"一律判废；视线=动词+目标物（`gazing at the statue knees on the image-right edge` / `looking down at the book, not at the camera`），不写"侧身/面朝"等姿态词指望模型脑补朝向；相对比例写死（`half frame height` / `child-sized relative to the table`）。英文 prompt 体积压到 150 词内，超了先砍形容词，保机位句和关系句（fal 实测：超限相干性跳水）。
-- **方位介词单义（2026-09-29固化，教堂 K1 跪错行实战）**：`between` 侧向/纵向双关一律禁用——"末排凳之间"会被画成左右夹缝而不是凳外祭坛前。只许单义动词：之外=`past`/`beyond`（越过所有凳子）/ 两侧夹=`flanked by` / 之前=`a few steps before`；位置三重锁：纵向（past all benches）+ 横向（centered on the aisle）+ 距离（steps before platform），缺一即判废。
-- **约束互验（2026-09-29固化，教堂 K1 自相矛盾实战）**：同一 prompt 内位置/比例约束必须先互验——写了"越过所有X"就不许再写"身后的X"（身后已无 X，模型为和解必把人塞回 X 堆里）。标尺只留不打架的两把（神像倍数+框高占比），互斥约束出现即判废，错的永远是导演不是模型。
-- **主约束优先（2026-09-29固化，教堂 K1 一句话教训）**：一镜只设一个主空间关系句——谁在谁面前（如 `directly in front of the statue`），它必须是 prompt 里最短最硬的一句；配角约束（凳/窗/框高）最多一句，且只许为主约束服务。谁是主语谁先说：神像是主语，凳子是配角，不许让配角当主语。约束数与字数成反比：超 150 词先砍配角句，保主约束句；十个字能说清的事不许写五十个字。
-- **身定头动（2026-09-28固化）**：转头/抬头/回眸必须分写两句——躯干朝向锁死（`torso stays facing the statue, shoulders square`）+ 只有头动（`only her head turns up-left`）。只写头不写身，模型必把全身一起转过去。
-- **动作与反应分镜（2026-09-29固化，Shot2 窗颤教训）**：环境异动与人物反应同段出现时，强制拆 action（环境镜：窗颤升级）/ reaction（人物镜：转头慌）两切，不许首尾帧一镜包办。手里有首尾帧不等于必须一镜插值——首尾帧是资产，不是分镜；"保一镜过审"的省事动机一律判废，以叙事信息量为准。
-- **统一时间轴（2026-09-29固化，Shot2 切点断裂教训）**：多切同段必须先画一条时间轴再分镜——切点两侧世界状态必须相等（Cut1 尾窗户剧颤→Cut2 头窗户必须延续剧颤，正文显式写）；人物反应延迟按人类标准 0.3~0.5s（切后 1s 才动=木头人）；每切的环境状态（颤/静/炸）逐切声明，不许只写在 action 镜里默认 reaction 镜继承。
-- **双轴拆解 story_time vs camera_time（2026-09-29固化）**：剧本拆解与分镜拆解必须同时跑两条轴——
+- **对话切镜（H3 执行）**：两人对谈≥2轮必须分镜写多 `[Shot N] At 00:0X.000` 切，不许一镜演完；切点落在台词尾音（话音落→切→反应1s→下句起）；正反机位同侧、景别拉开一档（如中景↔近景），视线互为反向；单人独白才许一镜。对白 density 高时优先保切点，宁可镜短不可一镜到底。
+- **人物背景双关系（缺一判废）**：人物→镜头（机位四要素）之外，必须另写人物→背景：视线落点入背景（她看向哪，那件东西就写在哪侧，如面朝右则神像膝压右缘，禁止写"身后"这种机位系方位词）；身体朝向与背景主体的轴线关系（面对/背对/侧对写死）。三点成环：机位→人物→背景回机位，只写两条等于没写。
+- **方位与视线 v2（闭源云模型实战）**：方位词一律机位系（画面左/右/上/下、top-right、dead center），"身前/身后/左侧（人物系）"一律判废；视线=动词+目标物（`gazing at the statue knees on the image-right edge` / `looking down at the book, not at the camera`），不写"侧身/面朝"等姿态词指望模型脑补朝向；相对比例写死（`half frame height` / `child-sized relative to the table`）。英文 prompt 体积压到 150 词内，超了先砍形容词，保机位句和关系句（fal 实测：超限相干性跳水）。
+- **方位介词单义（教堂 K1 跪错行实战）**：`between` 侧向/纵向双关一律禁用——"末排凳之间"会被画成左右夹缝而不是凳外祭坛前。只许单义动词：之外=`past`/`beyond`（越过所有凳子）/ 两侧夹=`flanked by` / 之前=`a few steps before`；位置三重锁：纵向（past all benches）+ 横向（centered on the aisle）+ 距离（steps before platform），缺一即判废。
+- **约束互验（教堂 K1 自相矛盾实战）**：同一 prompt 内位置/比例约束必须先互验——写了"越过所有X"就不许再写"身后的X"（身后已无 X，模型为和解必把人塞回 X 堆里）。标尺只留不打架的两把（神像倍数+框高占比），互斥约束出现即判废，错的永远是导演不是模型。
+- **主约束优先（教堂 K1 一句话教训）**：一镜只设一个主空间关系句——谁在谁面前（如 `directly in front of the statue`），它必须是 prompt 里最短最硬的一句；配角约束（凳/窗/框高）最多一句，且只许为主约束服务。谁是主语谁先说：神像是主语，凳子是配角，不许让配角当主语。约束数与字数成反比：超 150 词先砍配角句，保主约束句；十个字能说清的事不许写五十个字。
+- **身定头动**：转头/抬头/回眸必须分写两句——躯干朝向锁死（`torso stays facing the statue, shoulders square`）+ 只有头动（`only her head turns up-left`）。只写头不写身，模型必把全身一起转过去。
+- **动作与反应分镜（Shot2 窗颤教训）**：环境异动与人物反应同段出现时，强制拆 action（环境镜：窗颤升级）/ reaction（人物镜：转头慌）两切，不许首尾帧一镜包办。手里有首尾帧不等于必须一镜插值——首尾帧是资产，不是分镜；"保一镜过审"的省事动机一律判废，以叙事信息量为准。
+- **统一时间轴（Shot2 切点断裂教训）**：多切同段必须先画一条时间轴再分镜——切点两侧世界状态必须相等（Cut1 尾窗户剧颤→Cut2 头窗户必须延续剧颤，正文显式写）；人物反应延迟按人类标准 0.3~0.5s（切后 1s 才动=木头人）；每切的环境状态（颤/静/炸）逐切声明，不许只写在 action 镜里默认 reaction 镜继承。
+- **双轴拆解 story_time vs camera_time**：剧本拆解与分镜拆解必须同时跑两条轴——
   - `story_time`（故事世界轴）：世界内真实发生的并行时间线。物理世界规则：没被拍到≠没发生。如本段 5s：1s 起彩窗微颤→3s 转剧颤→3.5s 圣女停祷转头，窗颤与人祷告全程并行。
   - `camera_time`（观众镜头轴）：即分镜脚本，观众看到的顺序。如 0-1s 圣女平静近景→1-3s 切彩窗微颤→3-5s 切回圣女（此时窗已在剧颤，reaction 镜必须声明延续状态）。
   - 铁律：先画 story_time（世界发生什么、何时并行），再排 camera_time（何时给谁镜头）；reaction 镜的世界状态必须从 story_time 取，不得从 camera_time 脑补；两轴时间戳逐一切对齐后才许写 prompt。
-- **续帧背景逐项锁死（2026-09-28固化）**：续写上一 seg 的场景时，"同一教堂/同一牢房"四个字判废；背景每个元素逐项复述点名（石膝两倍大柔虚右缘+彩窗左+中间黑暗幽暗），位置数量缺一即废；只许声明的改动点能变，其余一字"完全一致零改动"。
-- **对话切镜（H3 执行，2026-09-28固化）**：两人对谈≥2轮必须分镜写多 `[Shot N] At 00:0X.000` 切，不许一镜演完；切点落在台词尾音（话音落→切→反应1s→下句起）；正反机位同侧、景别拉开一档（如中景↔近景），视线互为反向；单人独白才许一镜。对白 density 高时优先保切点，宁可镜短不可一镜到底。
+- **续帧背景逐项锁死**：续写上一 seg 的场景时，"同一教堂/同一牢房"四个字判废；背景每个元素逐项复述点名（石膝两倍大柔虚右缘+彩窗左+中间黑暗幽暗），位置数量缺一即废；只许声明的改动点能变，其余一字"完全一致零改动"。
+- **对话切镜（H3 执行）**：两人对谈≥2轮必须分镜写多 `[Shot N] At 00:0X.000` 切，不许一镜演完；切点落在台词尾音（话音落→切→反应1s→下句起）；正反机位同侧、景别拉开一档（如中景↔近景），视线互为反向；单人独白才许一镜。对白 density 高时优先保切点，宁可镜短不可一镜到底。
 
 ## 光位与景深速查（STEP5 交接 / 成品 prompt）
 
@@ -160,7 +160,7 @@ negative 常驻：`empty room without figure, wrong camera angle, color, detaile
 - 光比调子：高调（亮多暗少）/ 低调（暗多亮少，必配轮廓光）/ 硬光（影缘刀切）/ 柔光（影缘羽化，动漫默认保险）。
 - 氛围光：`god rays` 体积光 / `golden hour` 黄金时刻（长影暖光）/ `blue hour` 蓝调 / 窗光 / 斑驳树影 / 条纹光 / 湿润反光（`wet asphalt`）。
 - 写光铁律：一个主光＋可选补光；方向+光比+色温一次写全（`key light from upper left, high contrast, warm 3200K`）。
-- **光影目的（2026-09-29固化）**：主光三问——为谁打（主体/环境/气氛）/藏什么（阴影里藏什么信息）/变化对应什么转折（光变=事变，无转折不许光变）；光比=权力比（谁亮谁掌权， double check 亮的那个是不是该掌权的人）。答不上三问的光灭，等于默许随性打光。
+- **光影目的**：主光三问——为谁打（主体/环境/气氛）/藏什么（阴影里藏什么信息）/变化对应什么转折（光变=事变，无转折不许光变）；光比=权力比（谁亮谁掌权， double check 亮的那个是不是该掌权的人）。答不上三问的光灭，等于默许随性打光。
 - 景深三态：浅景深 `shallow depth of field`（虚化=指向；写 85mm + f/1.8 + 对焦点 + 主体背景距离）/ 深景深 `deep focus`（环境叙事）/ 焦外光斑 `bokeh`。
 
 ## 黑话与词频要点（社区数据）
@@ -190,38 +190,38 @@ negative 常驻：`empty room without figure, wrong camera angle, color, detaile
 - 要素 tag：`caught mid-stride` / `steam still rising` / `reacting to something off-screen` / `palm against the glass` / `gripping the strap` / `smiling with tears` / `worn bag, patched strap` / `crooked bowtie, loose strand` / `looking off-screen` / `falling leaf, fading light` / `footprints, ripples`。
 - 自检五问：正在发生？残响？环境接触？画外指向？情绪词≤1？
 
-## 视频机位四要素（H3 每次必写，2026-09-28固化）
+## 视频机位四要素（H3 每次必写）
 
 - 不写机位=给模型自由发挥。每镜正文必须带机位块：**站位**（机位在哪：中殿尾部中轴/牢房角落/人物身后三步）+ **高度**（眼平/肩高/腰高/膝高/贴地，写词不写感觉）+ **角度**（正直拍零倾斜/俯~20°/仰/荷兰~15°，只配俯视）+ **裁切**（大腿中/腰上/胸口/全身+留白在哪）。
 - 顺序：机位块紧跟 `[Shot N]` 开头风格句之后、动作之前；运镜是机位的变化（push in/pull out/tilt），不是机位的替代——static 也要写 `static locked at eye level`。
 - 远景交代空间三件：前景是什么（虚化椅背）/中景引导线收向哪/远点主体多小。近景交代裁切线（一刀切在大腿中/胸口，不切关节）。
 - 双人必带轴线：左右+朝向写死，180 度线站哪侧。
-- 比例双写（2026-09-28固化）：人物占比（占画面纵向几分之几/裁到哪：大腿中/腰上/胸口，不切关节）+ 人景比例（人 vs 身后门/桌/像：如人物高为门高的二分之一、跪姿仅及像座膝盖）每次必写；有参考图时写 `scale identical to reference`，新镜从零起时写具体比例。远近两人同框先定身高差，再定各自占比。
-- **相对比例优先（2026-09-29固化）**：人景同框时相对句是主锁、绝对占比是辅锁——相对句缺失即判废（`her kneeling height is one-third of the statue's visible height, the statue towers at least three times her size`）；自检：人物站起来也只到背景主体腰部以下。
+- 比例双写：人物占比（占画面纵向几分之几/裁到哪：大腿中/腰上/胸口，不切关节）+ 人景比例（人 vs 身后门/桌/像：如人物高为门高的二分之一、跪姿仅及像座膝盖）每次必写；有参考图时写 `scale identical to reference`，新镜从零起时写具体比例。远近两人同框先定身高差，再定各自占比。
+- **相对比例优先**：人景同框时相对句是主锁、绝对占比是辅锁——相对句缺失即判废（`her kneeling height is one-third of the statue's visible height, the statue towers at least three times her size`）；自检：人物站起来也只到背景主体腰部以下。
 
-## 运镜必动（H3 每次必有主运镜，2026-09-28固化）
+## 运镜必动（H3 每次必有主运镜）
 
 - 禁止整镜 static：`static` 只允许用在首尾定格（各 ≤2s），行进段每镜必有一个主运镜。影视剧几乎没有长时间完全静止的镜头，静止=画面死。
 - 动因三选一，写进动作句：揭示（tilt up/down 开出新信息）/ 逼近（push in 压力累积）/ 释放或巡视（pull out / slow pan 交代空间）。无动因的运镜不写。
-- **运镜五动因+换向落幅（2026-09-29固化）**：三选一扩成揭示/逼近/释放/跟随（truck/pan 跟人）/审视（slow arc 打量）；push 连用不许超 2 镜，第 3 镜必须换向（pull out/tilt/static）；落幅必落新信息（脸/手/窗/门/十字架），落空=白推；ease 写进句（eases in/holds/accelerates once），匀速=CG 味；运镜不抢戏（转头时 static 或反向，同向叠加超 budget）。
-- **四段式运镜句（2026-09-29固化，多家教程收敛）**：`[运镜+速度] + [主体动作] + [揭示什么] + [情绪/节奏]`——"揭示什么"必填（reveal X / ending on Y / emerging on Z），缺落点=漂。速度词是独立指令（slow push-in vs crash zoom 是两种镜），该快写 fast。
-- **高级运镜库（2026-09-29固化，H3 句式，小写+幅度+速度）**：POV 奔跑（`first-person POV sprinting, violent bobbing, arms at frame edges, rushing toward X`，必写身体入画）；FPV 穿行（`aggressive FPV flight, threading through A, banking past B, bursting into C, slight fisheye, motion blur`，航点 through→past→into 三站缺一即乱飞）；俯冲（`high-speed vertical dive from X straight down toward Y, ending in a sudden hover`，起点终点+急停缺一穿模）；环绕（`slow orbital arc 180 degrees`，不写 360°，5s 转不完）；crash zoom（`sudden crash zoom onto X`，一集最多一次）；whip pan（`rapid whip pan from A to B with motion blur`，A→B 同轴两侧，blur 必写）；dolly zoom（`pushes in as the lens zooms out, background stretching, vertigo effect`，反向写全）；crane（`rising from X to high above, revealing Y`，起点越低落差越大）。出处：Atlabs 2026/Seedance 官方/ScreenWeaver/Kling 3.0 Masterclass。
+- **运镜五动因+换向落幅**：三选一扩成揭示/逼近/释放/跟随（truck/pan 跟人）/审视（slow arc 打量）；push 连用不许超 2 镜，第 3 镜必须换向（pull out/tilt/static）；落幅必落新信息（脸/手/窗/门/十字架），落空=白推；ease 写进句（eases in/holds/accelerates once），匀速=CG 味；运镜不抢戏（转头时 static 或反向，同向叠加超 budget）。
+- **四段式运镜句（多家教程收敛）**：`[运镜+速度] + [主体动作] + [揭示什么] + [情绪/节奏]`——"揭示什么"必填（reveal X / ending on Y / emerging on Z），缺落点=漂。速度词是独立指令（slow push-in vs crash zoom 是两种镜），该快写 fast。
+- **高级运镜库（H3 句式，小写+幅度+速度）**：POV 奔跑（`first-person POV sprinting, violent bobbing, arms at frame edges, rushing toward X`，必写身体入画）；FPV 穿行（`aggressive FPV flight, threading through A, banking past B, bursting into C, slight fisheye, motion blur`，航点 through→past→into 三站缺一即乱飞）；俯冲（`high-speed vertical dive from X straight down toward Y, ending in a sudden hover`，起点终点+急停缺一穿模）；环绕（`slow orbital arc 180 degrees`，不写 360°，5s 转不完）；crash zoom（`sudden crash zoom onto X`，一集最多一次）；whip pan（`rapid whip pan from A to B with motion blur`，A→B 同轴两侧，blur 必写）；dolly zoom（`pushes in as the lens zooms out, background stretching, vertigo effect`，反向写全）；crane（`rising from X to high above, revealing Y`，起点越低落差越大）。出处：Atlabs 2026/Seedance 官方/ScreenWeaver/Kling 3.0 Masterclass。
 - 速度幅度挂情绪：累积压迫=slow + small amplitude；惊变=fast + whip/pan；呼吸感=FPV/手持全程叠 `faint handheld tremble`（次级，不占主运镜位）。
 - 一镜一主运镜：行进段只写一个，定格段写 static；两者衔接写清切换点（如 0-2s static 定格，2-5s push in）。
-- **Motion budget（2026-09-29固化，DirectorSKILL 引进）**：一镜预算 = 一主体动作 + 一运镜 + 一环境动，各一。超预算（窗颤升级+转头塞一镜）强制拆镜；static + 世界动供行进不算空定格，但世界动只许一种。
-- **Motion load 量化（2026-09-29固化，云端架构评审引进）**：Camera/Character/Environment/Facial 四轴各计 1（多重叠加逐项+1，如转头+睁眼+张嘴=Facial 3）。Total>3 即超载，判 P1 强制拆镜或降级，不讨论。
-- **空间复杂度预算（2026-09-29固化，云端架构评审引进）**：计数人物数/主要道具/前后遮挡层/换角≥90°/同步动作数；人物≥3 或遮挡≥3 或换角+运镜同镜出现，即超当前模型可靠区间，判 P1 简化（减人/减遮挡/拆镜），不许靠"写更细"硬刚。
-- **Reviewer 双段分工（2026-09-29固化，云端架构评审引进）**：一审分两段先导演后生成——Director 段（叙事/节奏/信息/镜头语言/双轴，P0 为主）→Generation 段（动作负载/手/遮挡/空间/长度/negative，P1 为主）。"导演认为合理≠模型做得到"，两段结论独立写，Generation 段可推翻 Director 段的执行方式（换镜/降级）但不推翻叙事。
+- **Motion budget（DirectorSKILL 引进）**：一镜预算 = 一主体动作 + 一运镜 + 一环境动，各一。超预算（窗颤升级+转头塞一镜）强制拆镜；static + 世界动供行进不算空定格，但世界动只许一种。
+- **Motion load 量化（云端架构评审引进）**：Camera/Character/Environment/Facial 四轴各计 1（多重叠加逐项+1，如转头+睁眼+张嘴=Facial 3）。Total>3 即超载，判 P1 强制拆镜或降级，不讨论。
+- **空间复杂度预算（云端架构评审引进）**：计数人物数/主要道具/前后遮挡层/换角≥90°/同步动作数；人物≥3 或遮挡≥3 或换角+运镜同镜出现，即超当前模型可靠区间，判 P1 简化（减人/减遮挡/拆镜），不许靠"写更细"硬刚。
+- **Reviewer 双段分工（云端架构评审引进）**：一审分两段先导演后生成——Director 段（叙事/节奏/信息/镜头语言/双轴，P0 为主）→Generation 段（动作负载/手/遮挡/空间/长度/negative，P1 为主）。"导演认为合理≠模型做得到"，两段结论独立写，Generation 段可推翻 Director 段的执行方式（换镜/降级）但不推翻叙事。
 
-## 动笔三问（2026-09-28固化，写 prompt 前先答）
+## 动笔三问（写 prompt 前先答）
 
 1. 与上一个 seg 什么关系？续写→必须点名垫哪张（main_ref 继承项逐项复述）；新开→叙述体。答不上来不许写。
-   新生图 vs 编辑二选一（2026-09-28固化）：同机位同框只改神态/局部（抬头、睁眼、玻璃重影）→ 走 main_ref 编辑命令，背景像素级继承，措辞再严也替代不了一张底图；新机位/新场景/新主体 → 走首次生成叙述体。选错模式即废帧，不怪模型。
-   **Bible 门禁（2026-09-29固化）**：新机位先查场景 Bible 覆盖表——表内直接派生（垫对应机位图走编辑）；表外=新增机位参考，先补 Bible 再出镜头，不许临场用文字发明机位。
+   新生图 vs 编辑二选一：同机位同框只改神态/局部（抬头、睁眼、玻璃重影）→ 走 main_ref 编辑命令，背景像素级继承，措辞再严也替代不了一张底图；新机位/新场景/新主体 → 走首次生成叙述体。选错模式即废帧，不怪模型。
+   **Bible 门禁**：新机位先查场景 Bible 覆盖表——表内直接派生（垫对应机位图走编辑）；表外=新增机位参考，先补 Bible 再出镜头，不许临场用文字发明机位。
 2. 机位四要素+比例双写齐了吗？缺一项即废。框量先定距离：近大框（≥1/4）先反推机位离主体几步再写站位（K5 教训：1/4 近背+神像同框只能是圣女身后几步，不许写尾部/祭坛两端），框量与站位矛盾即废。
 3. 人物→背景关系写了吗？视线落点、身定头动，缺一项即废。
 
-## Scene Bible 与离散机位（漫剧空间一致性，2026-09-29固化）
+## Scene Bible 与离散机位（漫剧空间一致性）
 
 - **总纲**：不要让 AI 理解整个房间，让它不需要理解整个房间。摄影机离散化：`Camera ∈ {Establishing, Medium-A, Medium-B, OTS-A, OTS-B, Close, Detail}` 八选N，不许连续 3D 运镜式临场发明。
 - **story 后先判**：列场景清单逐个判——高频（≥3 镜或跨 seg 复用）必建 Bible；一次性场景（1-2 镜）不建，直接单帧处理。

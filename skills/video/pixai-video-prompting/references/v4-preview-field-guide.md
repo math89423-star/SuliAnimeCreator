@@ -1,6 +1,6 @@
 # v4.0 Preview 实战指南（官方现场验证版 · 精编）
 
-> 来源：`blog.pixai.art/en/how-to-prompt-pixai-v4-0-preview/`（2026-05-19，官方 field-tested guide）。
+> 来源：`blog.pixai.art/en/how-to-prompt-pixai-v4-0-preview/`（官方 field-tested guide）。
 > 原话：**参考图怎么叠 > 提示词怎么写 > 失败怎么迭代**。多数人的失败不在文字，在参考图设置。
 
 ## 1 TL;DR（五条）

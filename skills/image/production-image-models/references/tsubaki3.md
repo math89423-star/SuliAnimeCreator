@@ -1,6 +1,6 @@
 # Tsubaki.3（PixAI）出稿手册
 
-> 来源：官方博客 `blog.pixai.art/en/tsubaki-3-prompt-guide/`（2026-09-09）+ 文档 `docs.pixai.art/docs/models/tsubaki3`。
+> 来源：官方博客 `blog.pixai.art/en/tsubaki-3-prompt-guide/`+ 文档 `docs.pixai.art/docs/models/tsubaki3`。
 > 一句话：**描述它，不要给它堆 tag**（官方原文 "Describe It, Don't Tag It"）。
 
 ## 1 核心：像给插画师下 brief 一样写

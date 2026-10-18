@@ -6,7 +6,7 @@ license: MIT
 
 # 短剧资产拆解（资产 canonical，不抢写剧本镜头）
 
-> 归属（2026-10-11 精修）：只拆身份/变体/锁面写 `视觉设定.md`；剧本归 `short-drama-write`，分镜归 `short-drama-storyboard`（镜头瞬态/站位/机位归分镜），审查归 `short-drama-review`。连续性锁只建锁面，注入与验收归分镜/审查。
+> 归属：只拆身份/变体/锁面写 `视觉设定.md`；剧本归 `short-drama-write`，分镜归 `short-drama-storyboard`（镜头瞬态/站位/机位归分镜），审查归 `short-drama-review`。连续性锁只建锁面，注入与验收归分镜/审查。
 
 把剧本文字变成可复用、可持续的视觉事实，统一写入 `剧集/<EP>/视觉设定.md`。不要把每次出场都
 变成新资产，也不要抢写剧本语义、镜头走位或生成提示词。

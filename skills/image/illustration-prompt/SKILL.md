@@ -5,7 +5,7 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 
 # Illustration Prompt（prompt组装 canonical）
 
-> 归属（2026-10-11 精修）：8-block/双轨输出/风格头/Vague ban/tag转译/MCP prompt检索以本文件为准；机位构图透视底/镜头语法/Scene Bible空间覆盖见 `composition-camera`（此处不重定机位词表，直接引用）；SVG图层渲染见 `svg-illustration-craft`；Scene Bible此处只管prompt措辞（母版/派生/入场句式），空间覆盖表归 composition。
+> 归属：8-block/双轨输出/风格头/Vague ban/tag转译/MCP prompt检索以本文件为准；机位构图透视底/镜头语法/Scene Bible空间覆盖见 `composition-camera`（此处不重定机位词表，直接引用）；SVG图层渲染见 `svg-illustration-craft`；Scene Bible此处只管prompt措辞（母版/派生/入场句式），空间覆盖表归 composition。
 
 ## What I do
 
@@ -88,8 +88,8 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 - **光影三要素**一次写全：方向 + 光比 + 色温（`key light from upper left, high contrast, warm 3200K`）。
 - **冷暖结合**：主色暖时，在反射/阴影里塞一抹反色，画面才活。
 - **修饰词纪律**：质感词 ≤3 个（`film grain / chromatic aberration / dust motes`），多了互相打架。
-- **Vague ban 表（2026-09-29固化，ai-shortfilm-prompts 引进）**：`cinematic / epic / masterpiece / stunning / spectacular / perfect / premium / 4K / 8K / HD / high quality / texture-rich` 一律禁入正文——模型对它们形不成具体图像。必须换具体物理量：`史诗感`→`IMAX + 35mm f/4 + 低饱和灰蓝`；`精致`→`film grain + 金属拉丝 + 布面纹`。自检：随机抽 3 个形容词，形不成画面的删。豁免：Pony/Illustrious tag 串里的 `score_9, masterpiece, best quality` 是模型方言功能词，不在 ban 列；ban 只管自然语言形容词。
-- **风格头质量分级（2026-09-30固化，教堂Master糊片教训）**：`2D tv anime screencap`声明低码流电视截帧，模型往压缩画质走， heavenly大教堂必糊。漫剧统一改用设定级头——`high-quality 2D anime illustration, anime key visual, official anime art, cel-shaded anime`+原赛璐璐特征（平涂/两级阴影/干净线稿）保留，质量尾只用具体词（`sharp lineart, highly detailed background, film grain`），与Vague ban同查。
+- **Vague ban 表（ai-shortfilm-prompts 引进）**：`cinematic / epic / masterpiece / stunning / spectacular / perfect / premium / 4K / 8K / HD / high quality / texture-rich` 一律禁入正文——模型对它们形不成具体图像。必须换具体物理量：`史诗感`→`IMAX + 35mm f/4 + 低饱和灰蓝`；`精致`→`film grain + 金属拉丝 + 布面纹`。自检：随机抽 3 个形容词，形不成画面的删。豁免：Pony/Illustrious tag 串里的 `score_9, masterpiece, best quality` 是模型方言功能词，不在 ban 列；ban 只管自然语言形容词。
+- **风格头质量分级（教堂Master糊片教训）**：`2D tv anime screencap`声明低码流电视截帧，模型往压缩画质走， heavenly大教堂必糊。漫剧统一改用设定级头——`high-quality 2D anime illustration, anime key visual, official anime art, cel-shaded anime`+原赛璐璐特征（平涂/两级阴影/干净线稿）保留，质量尾只用具体词（`sharp lineart, highly detailed background, film grain`），与Vague ban同查。
 - **顺序即权重**：风格锚最前、主体次之、机位与光在中后段；重要词别埋尾巴。
 - **留白必须带位置**：`negative space on the upper third for text`。
 - **器材作弊码**：`shot on Sony A7R V, 35mm f/1.4, Fujifilm Classic Negative film simulation`——具体器材字符串比抽象形容稳。
@@ -97,8 +97,8 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 ## 避雷速查（出稿前 30 秒）
 
 - 机位词打架（`from above` + `eye-level` 同写）/ 景别冲突（`close-up` + `full body`）/ 同义三连堆叠（high angle + from above + bird's eye）。
-- **Targeted negative（2026-09-29固化，DirectorSKILL 引进；短原则有 Mage 背书）**：negative 每镜现配，只点名本镜真实风险的实例（`no plastic, no rubber soles, no wristwatch, no printed logos`），禁通用长单——长单稀释且可能召唤所禁之物（Mage 原话：field 不是句子、要短、长了反噬，见 https://docs.mage.space/features/negative-prompts）。正文已写明的风险不重复进 negative（正负同词正文赢）。
-- **negative 分模型（2026-10-11 联网纠正，笼统写法作废）**：moe（Illustrious/Pony/Anima/SDXL 系）有栏照常用短 negative；Mango/Flux/GPT Image 2/Grok/MiniMax-H3/Nano Banana 2 **无 negative 栏**，不许写“有框就填”（见 https://docs.mage.space/features/negative-prompts 表）。
+- **Targeted negative（DirectorSKILL 引进；短原则有 Mage 背书）**：negative 每镜现配，只点名本镜真实风险的实例（`no plastic, no rubber soles, no wristwatch, no printed logos`），禁通用长单——长单稀释且可能召唤所禁之物（Mage 原话：field 不是句子、要短、长了反噬，见 https://docs.mage.space/features/negative-prompts）。正文已写明的风险不重复进 negative（正负同词正文赢）。
+- **negative 分模型（联网纠正，笼统写法作废）**：moe（Illustrious/Pony/Anima/SDXL 系）有栏照常用短 negative；Mango/Flux/GPT Image 2/Grok/MiniMax-H3/Nano Banana 2 **无 negative 栏**，不许写“有框就填”（见 https://docs.mage.space/features/negative-prompts 表）。
 - 构图词不带留白内容 / negative 与正向打架（负词里混进要的概念）/ 垫图句不锁机位（缺 `same camera angle and composition as the reference`）。
 - 双人不写左右与朝向（越轴）/ 远景却要求眼部细节（描述预算按景别分配）/ `tilt` 误当 `dutch`。
 
@@ -110,18 +110,18 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 - **活感三招**（成品段落必查）：动词换名词（`mid-stride` 而非 `standing`）＋ 加残响层（`still swaying, steam rising`）＋ 情绪写行为不写标签（`tearing up but smiling` > `sad`）。
 - 成品段落范例与逐段拆解：查 `composition-camera.html`（组合实战 / 高级镜头 / 拆解实战 / 活感工作台）。
 
-## 场景 Bible 提示词写法（漫剧多机位，2026-09-29固化）
+## 场景 Bible 提示词写法（漫剧多机位）
 
 - **母版 prompt（空场景，无人物）**：风格锚 + 空间结构句（房间类型/开间/门窗位置机位系双述）+ 固定家具清单（件数≤5，逐件方位）+ 光源时间（主光方向+色温+时间点）+ 透视（灭点/眼位线可读）+ 质量尾。禁人物词（出现 `1girl/boy/man` 一律判废）、禁氛围形容词堆砌。
 - **机位派生 prompt（只改一变量）**：首句母版继承——`same chapel interior as the scene master, identical door window benches positions, keep layout fully consistent` + 本机位增量（机位四要素一句）+ 本镜可见物一句；其余一字不复述母版。改两处以上=新机位，拆成两步走。
 - **人物入场写法**：人物站位用锚点相对关系（`kneeling left of the altar, facing the statue on the image-right`），不写绝对坐标；比例双写（人物占比+人景比例）必带。`between` 双关禁用，用 `past`/`beyond`/`flanked by` 单义动词，位置纵向+横向+距离三重锁。
-- **相对比例优先于绝对比例（2026-09-29固化，教堂 K1 实战）**：人景同框时，绝对数值（几分之几框高）模型随手 inflation，**相对比例句才是唯一标尺**——必须写人物相对背景主体的倍数关系（如 `her kneeling height is one-third of the statue's visible height, the statue towers at least three times her size`）。绝对比例只作辅助，相对句缺失即判废；自检：人物站起来也只到背景主体腰部以下才算过。
-- **家具作尺子（2026-09-29固化，教堂 K1 巨人症实战）**：相对比例第一标尺永远是**同深度已知高度的家具**（凳/桌/门），不是神像雕像这类未知高度物——神像可高可矮，凳高 0.9 米是死的。写法：`her kneeling height equals about 1.2 times the back height of the nearest bench at the same depth`；自检换算：跪姿≈0.9~1 米≈一凳背高，站姿≈1.6 米≈两凳背，超了就是巨人，直接 FAIL。神像倍数句只保"高耸叙事"，家具句保"真实身高"，两句都要写。
-- **母版验收必过尺子（2026-09-29固化，教堂 Master 九米神像教训）**：母版冻结前除验透视收敛，必须拿同深度家具逐项量一遍非常物（神像/立柱/吊灯）：神像可见高 ÷ 同深度凳背高 = 倍数，×0.9 米即神像真实高度。倍数与故事不符（亲近祈福要 3~4 米，史诗仰望才许 8 米+）→ 重出母版，不许将错就错进派生。漏量即评审 FAIL。
+- **相对比例优先于绝对比例（教堂 K1 实战）**：人景同框时，绝对数值（几分之几框高）模型随手 inflation，**相对比例句才是唯一标尺**——必须写人物相对背景主体的倍数关系（如 `her kneeling height is one-third of the statue's visible height, the statue towers at least three times her size`）。绝对比例只作辅助，相对句缺失即判废；自检：人物站起来也只到背景主体腰部以下才算过。
+- **家具作尺子（教堂 K1 巨人症实战）**：相对比例第一标尺永远是**同深度已知高度的家具**（凳/桌/门），不是神像雕像这类未知高度物——神像可高可矮，凳高 0.9 米是死的。写法：`her kneeling height equals about 1.2 times the back height of the nearest bench at the same depth`；自检换算：跪姿≈0.9~1 米≈一凳背高，站姿≈1.6 米≈两凳背，超了就是巨人，直接 FAIL。神像倍数句只保"高耸叙事"，家具句保"真实身高"，两句都要写。
+- **母版验收必过尺子（教堂 Master 九米神像教训）**：母版冻结前除验透视收敛，必须拿同深度家具逐项量一遍非常物（神像/立柱/吊灯）：神像可见高 ÷ 同深度凳背高 = 倍数，×0.9 米即神像真实高度。倍数与故事不符（亲近祈福要 3~4 米，史诗仰望才许 8 米+）→ 重出母版，不许将错就错进派生。漏量即评审 FAIL。
 - **机位间一致性锚定**：每张机位图带 `same space as <cam-X>, shared layout, only framing differs`，与角色一致性锚定句同级，不得省略。
 - **避雷**：临场发明机位词（绕背/正后方/新空间）→ 先补 Bible 机位图；一次派生只动 Frame（框量/裁切），Blocking（站位/轴线/锚点）一字不许动。
 
-## 云端大场面 background-master（Grok/Seedream/GPT-Image 通用，2026-10-01固化）
+## 云端大场面 background-master（Grok/Seedream/GPT-Image 通用）
 
 - **何时用**：云端出大场面环境建筑母版（教堂/街景/大殿）。本地不管，STEP1/2词表版不管，只管云端自然语言版。
 - **三家收敛顺序**：`Goal/Canvas → Scene → Subject → Light/Camera → Finish → Constraints`。30-100词，前半放最重要的，虚词禁入（见Vague ban）。
@@ -129,7 +129,7 @@ description: Turn vague Chinese art ideas into generator-ready English prompts f
 - **融合保真句**：换背景/入人物必带 `match perspective, shadow direction, color temperature` + `change only X, keep everything else identical`，每轮重复preserve清单。多图编号：`Image 1: shape, Image 2: light only, do not copy objects from Image 2`。Mage Grok最多3张，无seed，靠文字锁构图。
 - **验收**：拿同深度家具量非常物（高÷凳背高×0.9米），倍数不符重出母版，不进派生。
 
-## V5 & Tsubaki 质量尾 (2026-10-16 argon 精华同步，升级版 skill 同源)
+## V5 & Tsubaki 质量尾 （argon 精华同步，升级版 skill 同源）
 
 - **NovelAI V5**：标准尾 `very aesthetic, masterpiece, high complexity, no text`；复杂度默认 `high complexity`；`depthness/location` 保留；Add Quality Tags 已追加的不重复；权重 `1.3::tag::`，无位置衰减。
 - **PixAI Tsubaki.3**：自然语言尾放末尾 `Clean anime illustration, high detail on costume and fabric folds, crisp lineart, cinematic color grading, high detail, masterpiece.`；开头不堆 tag 垃圾场；关闭 Prompt Helper 防转译。

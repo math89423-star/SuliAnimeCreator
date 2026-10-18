@@ -5,7 +5,7 @@ description: Use when drawing any SVG illustration, technical fashion flat, zone
 
 # SVG Illustration Craft（通用SVG插画 canonical）
 
-> 归属（2026-10-11 精修）：通用SVG图层/渲染回看/文字纪律/seg导出以本文件为准；服饰flat代码落盘归 `garment-flat`（params→generate.py），时尚画前检查归 `aesthetic-fashion-design`。画服饰flat时先过那两家，本文件只做通用SVG执行。
+> 归属：通用SVG图层/渲染回看/文字纪律/seg导出以本文件为准；服饰flat代码落盘归 `garment-flat`（params→generate.py），时尚画前检查归 `aesthetic-fashion-design`。画服饰flat时先过那两家，本文件只做通用SVG执行。
 
 ## 1. File discipline
 - Groups: `art > base / motif / accents / shading / annotations`. Art and annotations are separate top-level groups; seg export hides annotations.

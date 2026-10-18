@@ -6,7 +6,7 @@ license: MIT
 
 # 短剧审查（审查 canonical，只判不改）
 
-> 归属（2026-10-11 精修）：只定位问题+修订要求，不替 owner 改来源；写作归 `short-drama-write`，资产归 `short-drama-assets`，分镜归 `short-drama-storyboard`，Scene Bible只做验收（建立归分镜）。结论分派按 owner 回到各文件。
+> 归属：只定位问题+修订要求，不替 owner 改来源；写作归 `short-drama-write`，资产归 `short-drama-assets`，分镜归 `short-drama-storyboard`，Scene Bible只做验收（建立归分镜）。结论分派按 owner 回到各文件。
 
 优先由未参与当前版本创作的 reviewer 执行；条件不允许时可以自检并如实说明。审查与修改是两个工作
 单元：本技能只定位问题、影响和必须达到的修订结果，不在同一轮替 owner 改来源。

@@ -6,7 +6,7 @@ compatibility: Portable — plain local files. Sources: NovelAI official docs, P
 
 # Production Image Models（本项目出图引擎 canonical）
 
-> 归属（2026-10-12 落库）：**NovelAI / Tsubaki.3 / Seedream 三家生产引擎的提示词写法**以本文件与其 references 为准；
+> 归属：**NovelAI / Tsubaki.3 / Seedream 三家生产引擎的提示词写法**以本文件与其 references 为准；
 > 本地 Pony/Illustrious/SDXL/Flux 的 8-block、风格头、Vague ban 仍归 `image/illustration-prompt`（本文件不重定）；
 > 机位/景别/透视归 `image/composition-camera`；成人向档位与体位/行为词表归 `video/nsfw-directing`（出图同样适用其水位与遮挡规则）。
 
@@ -43,7 +43,7 @@ compatibility: Portable — plain local files. Sources: NovelAI official docs, P
 - **Tsubaki.3(PixAI)**：与视频侧同规则——`Normal` 仅 SFW，成人向走 `Enhanced / Professional`（Plus+）。
 - **Seedream(火山方舟)**：托管平台侧有内容审核，投喂前按平台规则确认；本项目的成人向出稿优先走本地/NovelAI/PixAI-Enhanced 通道。
 - 水位、遮挡、器官与体液写法一律回 `video/nsfw-directing`（同一套词表，出图侧照用；该文件的动作预算对静图不适用，静图只需"遮挡结构 + 水位"）。
-- **直白词直接用**（2026-10-17）：NovelAI / Tsubaki.3(PixAI-Enhanced) 都**直接吃露骨描述**——器官/行为/体液照
+- **直白词直接用**：NovelAI / Tsubaki.3(PixAI-Enhanced) 都**直接吃露骨描述**——器官/行为/体液照
   `video/nsfw-directing/references/acts-lexicon.md` §9 直白词表写（`sex, vaginal, penis, cum, cowgirl position, creampie`…），
   **不要**为"稳"改用含蓄词（含糊＝模型往 SFW 收敛，画不出或画歪）。降级替换表只在目标引擎确带审核时用（如 Seedream 托管侧）。
 - **成年虚构锚定同样适用**：NovelAI 正负双锚（`adult, mature` / negative 见 `references/novelai.md`），Tsubaki.3 与 Seedream 在自然语言里正面写定。
@@ -56,6 +56,6 @@ compatibility: Portable — plain local files. Sources: NovelAI official docs, P
 
 ## PROVENANCE
 
-- NovelAI：`https://docs.novelai.net/en/image/{basics,models,qualitytags,strengthening-weakening,stepsguidance,multiplecharacters,precisereference,promptchunks}`（2026-10-12 抓取）
-- PixAI Tsubaki.3：`https://blog.pixai.art/en/tsubaki-3-prompt-guide/`、`https://docs.pixai.art/docs/models/tsubaki3`（2026-10-12 抓取）
+- NovelAI：`https://docs.novelai.net/en/image/{basics,models,qualitytags,strengthening-weakening,stepsguidance,multiplecharacters,precisereference,promptchunks}`
+- PixAI Tsubaki.3：`https://blog.pixai.art/en/tsubaki-3-prompt-guide/`、`https://docs.pixai.art/docs/models/tsubaki3`
 - Seedream：`https://www.volcengine.com/docs/82379/1829186`（Seedream 4.0-5.0 提示词指南，官方）、`https://www.volcengine.com/docs/82379/1824718`（模型能力/限流）

@@ -114,7 +114,7 @@
 - 草案几镜：`GET /api/v1/scriptboard/shots?episode_id=<集号>`，行数即镜数；`draft:true` 是草案（待定稿），无该标记是定稿。
 - 第①步产物 = 大纲：回复用户时按"方向一句话 + 镜数 + 合计时长"报数（出大纲流程第 4 步已有），不要在库里另存标记。
 
-## 目标视频引擎（2026-10-12：主力模型 = PixAI 视频）
+## 目标视频引擎（主力模型 = PixAI 视频）
 
 **本项目后续主力视频引擎是 PixAI 视频，主力型号 `Tsubaki Video`**（界面 專業档，NEW；多图参考 + 支援音讯），不是 MiniMax H3。
 出稿口径按目标引擎分两套，**格式互不通用**，写之前先读对应 skill：
@@ -127,12 +127,12 @@
   - 提示词 ≤2000 字符；成人向必须走 Enhanced/Professional（Plus+），Normal 档只吃 SFW
 - **MiniMax H3** → 读 `../skills/video/h3-prompt-writing/SKILL.md`（对齐行 + 三字段）
 
-命名澄清（2026-10-12 修订）：**图像线** Tsubaki.1/.2/.3 是出图旗舰；**视频线**里已有 **`Tsubaki Video` / `Tsubaki Video Flash`**
+命名澄清：**图像线** Tsubaki.1/.2/.3 是出图旗舰；**视频线**里已有 **`Tsubaki Video` / `Tsubaki Video Flash`**
 （界面 NEW，多图参考 + 支援音讯；官方 Oct 6 周报提及，docs 尚未出专页）——用户说的"tsubaki video"就是它们。
 其余视频型号：V4.0 Preview/Lite、V3.2、V3.0 Lite、V2.7。**Tsubaki Video 按 v4.0 家族口径出稿，时长档位以界面为准。**
 出图提示词归 `image/production-image-models`，视频提示词归 `video/pixai-video-prompting`。
 导演页组装时可切引擎（默认 PixAI），切了哪个引擎就按哪个 skill 的格式核稿；不要在一条提示词里混两种格式。
-**API 事实（2026-10-12 查证）**：PixAI API **不支持视频生成**（官方原文 `Video generation is not supported.`）——
+**API 事实（查证）**：PixAI API **不支持视频生成**（官方原文 `Video generation is not supported.`）——
 Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片 API 可用（`api.pixai.art`，`POST /v2/image/create` + 轮询 `/v1/task/{id}`），
 但**按 POSITIONING §4 红线，本项目不直连生成**，接口留给执行侧。详见 `../skills/video/pixai-video-prompting/references/api-status.md`。
 

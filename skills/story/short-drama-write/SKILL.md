@@ -6,7 +6,7 @@ license: MIT
 
 # 短剧写作（剧本 canonical，不碰下游）
 
-> 归属（2026-10-11 精修）：只写 `剧本.md`；资产拆解归 `short-drama-assets`，分镜归 `short-drama-storyboard`，审查归 `short-drama-review`，发散归 `creative-divergence`。本文件不写资产/分镜/提示词/审查结论。
+> 归属：只写 `剧本.md`；资产拆解归 `short-drama-assets`，分镜归 `short-drama-storyboard`，审查归 `short-drama-review`，发散归 `creative-divergence`。本文件不写资产/分镜/提示词/审查结论。
 
 把单集意图写成可表演、可拍摄、会改变故事状态的 `剧集/<EP>/剧本.md`。
 

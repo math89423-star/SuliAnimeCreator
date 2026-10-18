@@ -25,18 +25,18 @@
 | `story/short-drama-review` | `ComfyUIAgent short-drama-review` | 审查 |
 | `story/drama-director` | `MirrorStage backend/app/skills/drama-director`（含LICENSE/PROVENANCE） | 九宫格+Seedance导演判断，只借文本不走生成 |
 | `video/h3-prompt-writing` | `ComfyUIAgent .agents/h3-prompt-writing` | H3视频字段校准 |
-| `video/nsfw-directing` | 本项目原创（2026-10-11，单图成人向导演） | 四档分级+微动作预算+降级替换表，H3格式仍归 h3-prompt-writing |
-| `video/pixai-video-prompting` | PixAI 官方文档与博客实战教程（2026-10-12 抓取） | PixAI 视频格式：@image 参考/时间分块/语音SFX/迭代循环；主力引擎口径 |
-| `image/production-image-models` | NovelAI 官方文档 + PixAI Tsubaki.3 官方 guide + 火山方舟 Seedream 提示词指南（2026-10-12 抓取） | 三家主力出图引擎的提示词写法与硬规则 |
+| `video/nsfw-directing` | 本项目原创（单图成人向导演） | 四档分级+微动作预算+降级替换表，H3格式仍归 h3-prompt-writing |
+| `video/pixai-video-prompting` | PixAI 官方文档与博客实战教程 | PixAI 视频格式：@image 参考/时间分块/语音SFX/迭代循环；主力引擎口径 |
+| `image/production-image-models` | NovelAI 官方文档 + PixAI Tsubaki.3 官方 guide + 火山方舟 Seedream 提示词指南 | 三家主力出图引擎的提示词写法与硬规则 |
 
-## character 域精修边界（2026-10-11，有交叉已去重）
+## character 域精修边界（有交叉已去重）
 - `character-design`：身份层 canonical（三锚/三色/选型单/身份对标/评审清单），唯一写 `character.md`。
 - `costume-design`：只做个性层服装细化（部位矩阵/流派包/双层/分层L1-L5/大胆基线/素体三母版），三锚三色选型只引用不重定，服装层对标不碰脸发。
 - `aesthetic-fashion-design`：只做画前通用检查（品类几何/纹样四层/工艺mm/zoning/反模式），配色只登记比例不讲理论。
 - `garment-flat`：只做代码落盘（params→generate.py→flat.svg+门禁+事故库），不发明审美。
 - 交叉点已收敛：三锚三色→character-design；服装对标→costume-design；几何纹样工艺→aesthetic；落盘门禁→garment-flat；palette.html 各家只查不定义。
 
-## image/story/video 域精修边界（2026-10-11，同类一起修）
+## image/story/video 域精修边界（同类一起修）
 - image：机位构图透视底/镜头语法/空间覆盖→`composition-camera`；8-block/tag转译/风格头/Vague ban→`illustration-prompt`（机位词表不重定）；通用SVG图层渲染→`svg-illustration-craft`（服饰flat归 garment-flat）；
   三家主力出图引擎（NovelAI / Tsubaki.3 / Seedream）的提示词形态、质量标签、参考图通道、文字与组图写法→`production-image-models`（本地 SD 系仍归 illustration-prompt，机位词表不重定）。
 - Scene Bible：空间覆盖表→composition，prompt措辞（母版/派生/入场）→illustration，验收→review，建立→storyboard。
@@ -46,7 +46,7 @@
   PixAI 视频（主力引擎）的参考图机制/时间分块/语音SFX/迭代循环→`pixai-video-prompting`（与 H3 格式互不通用，交付前先定引擎）。
 - MCP：prompt tag检索→illustration，机位例文→composition，锁死不串库。
 
-## 工程 skill（2026-10-11 联网补，非自编；web_search 401 改 web_fetch 直取）
+## 工程 skill（联网补，非自编；web_search 401 改 web_fetch 直取）
 
 | 路径 | 联网依据 |
 |---|---|

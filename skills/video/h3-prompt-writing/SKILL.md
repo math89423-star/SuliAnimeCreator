@@ -6,7 +6,7 @@ compatibility: Portable to any agent that can read local files — no external A
 
 # H3 Prompt Writing（H3句式 canonical）
 
-> 归属（2026-10-11 精修）：H3对齐行/多模态字段/时间预算/锚点carry以本文件为准；机位/落幅是什么/运镜动因归 `composition-camera`（本文件只做H3执行句，不重定机位词表）；本文件不拆镜，只接分镜输出的起终帧。
+> 归属：H3对齐行/多模态字段/时间预算/锚点carry以本文件为准；机位/落幅是什么/运镜动因归 `composition-camera`（本文件只做H3执行句，不重定机位词表）；本文件不拆镜，只接分镜输出的起终帧。
 
 ## Workflow
 
@@ -36,19 +36,19 @@ Read `references/ref-en.txt` for label rules, retention analysis, and complete e
 - Describe each shot by composition, subjects, environment, actions, camera, sound, and the exact point where referenced content appears.
 - Avoid plot summaries, unresolved reference labels, and timing that does not match the requested duration.
 
-## 落幅四步与对齐行（2026-09-30固化，FL2VA必走）
+## 落幅四步与对齐行（FL2VA必走）
 
 - 对齐行是死格式，首行+空一行再接字段：`How the reference pictures align with the target video — Picture 1 (from Shot 1) aligns with the 0.00-second mark of the target video; Picture 2 (from Shot N) aligns with the S.SS-second mark of the target video.` N=实际终镜号，S.SS=两位小数（如8.00）；I2VA/L2VA各用自己的对齐句，不许混用（I2VA句+第二张图=尾帧被静默忽略）。
 - 正文只写中间路径，四步缺一即糊：首帧态 → 可见中间变化（至少2-3个可观察状态）→ 差异收窄 → 尾帧态（`settles into the exact pose ... established by Picture 2`）。复述两帧长相不写路径=交叉淡化。
 - 单shot优先：FL2VA默认一镜插值；多shot只在显式要求时用，加切则对齐行N跟着走。
 - 时长先定：6-10s覆盖单次变换；改时长=对齐行+落幅句两处同改。
 
-## 锚点carry（2026-09-30固化）
+## 锚点carry
 
 - 身份漂移的主因：衣服/颜色/关键道具只在开头写了一遍。锚点词必须写进运动句里全程携带（如伞：`raises the umbrella ... Water rolls from the expanding fabric while she steps beneath it, rotates the handle`），不能开头交代完就撒手。
 - 切镜两侧世界状态相等：Cut1尾什么状态（窗剧颤），Cut2头必须延续声明，不许默认继承。
 
-## 时间预算与失败模式对照表（2026-09-30固化）
+## 时间预算与失败模式对照表
 
 - 预算：8s内容里动作/运镜/反应/对白/切镜抢同一时长；觉得赶=删事件，不加词。时间戳只许给切镜用，不许拿来定动作时序。
 - 小变用运镜，大变才用切：切必须带新信息（主体/空间/状态/视角/时间），否则换push/pull/pan。

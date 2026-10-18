@@ -33,7 +33,7 @@ sources:
 - 路由懒加载：`defineAsyncComponent(() => import('./Foo.vue'))`，路由组件强烈建议懒加载。([来源](https://vuejs.org/guide/best-practices/performance))→ 本仓下一步：views 改动态 import 压 1.1M 包。
 - 更新：props 保持稳定（`active` 下沉而非 `activeId` 全刷）、`v-once/v-memo`、computed 返回旧引用、长列表虚拟化（`vue-virtual-scroller` 等）、大不可变结构用 `shallowRef`、少造无意义中间组件。([来源](https://vuejs.org/guide/best-practices/performance))
 
-## 4. Nielsen Norman 十启发式在本仓的映射（2026-10-11 补）
+## 4. Nielsen Norman 十启发式在本仓的映射
 
 > 原文：[10 Usability Heuristics](https://www.nngroup.com/articles/ten-usability-heuristics/)；H3 深文：[User Control and Freedom](https://www.nngroup.com/articles/user-control-and-freedom/)（Back/Cancel/Close/Undo，还必须可发现）。
 

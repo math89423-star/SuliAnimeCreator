@@ -5,7 +5,7 @@ description: Design bold anime-style costume details and accessories for charact
 
 # Costume Design（S1-3b 服装细化唯一入口）
 
-> 归属（2026-10-11 精修）：身份层归 `character-design`（三锚/三色/选型单 canonical，不在此重定）；画前几何纹样检查归 `aesthetic-fashion-design`；代码落盘归 `garment-flat`。本文件只做**个性层服装细化**：通用层复用 + 个性层出 push 版 + 分层定级 + 换装素体。
+> 归属：身份层归 `character-design`（三锚/三色/选型单 canonical，不在此重定）；画前几何纹样检查归 `aesthetic-fashion-design`；代码落盘归 `garment-flat`。本文件只做**个性层服装细化**：通用层复用 + 个性层出 push 版 + 分层定级 + 换装素体。
 
 ## 契合第一（最高指令，压过一切）
 

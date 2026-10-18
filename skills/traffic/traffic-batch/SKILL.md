@@ -6,7 +6,7 @@ license: MIT
 
 # 投流批量（方案包 canonical，不碰成片）
 
-> 归属（2026-10-14 新建）：投流批量归本文件；剧本写作归 `short-drama-write`，资产归 `short-drama-assets`，分镜归 `short-drama-storyboard`，审查归 `short-drama-review`，通用发散归 `creative-divergence`。本文件只做 `任务 → 方案包`，不写剧本正文、不拆资产、不审艺术、不生成媒体。
+> 归属：投流批量归本文件；剧本写作归 `short-drama-write`，资产归 `short-drama-assets`，分镜归 `short-drama-storyboard`，审查归 `short-drama-review`，通用发散归 `creative-divergence`。本文件只做 `任务 → 方案包`，不写剧本正文、不拆资产、不审艺术、不生成媒体。
 
 把一句投流任务变成 N 条可测试、可执行、可复盘的方案包，交给 L-Port 实施。
 
@@ -53,7 +53,7 @@ license: MIT
 3. **可执行性**：L-Port 打开包能直接剪：高光引用可定位、文案段与拼接 order 一一对应、时长加总 15–30s。
 4. **可复盘**：文件名即测试方向，包内 `task/假设/命名规则` 齐，回传 CTR/3s完播/转化后能反查是哪层赢的。
 
-## 万条规模·只走索引（L-Port 素材库，2026-10-15 落库）
+## 万条规模·只走索引（L-Port 素材库）
 
 素材库在 L-Port（`app/backend/data/libraries/投流素材库/videos/`），本项目只读索引（`GET /api/v1/traffic/assets`），**不逐条打开原视频**：
 

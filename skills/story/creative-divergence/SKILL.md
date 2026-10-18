@@ -5,7 +5,7 @@ description: Run creative divergence for art ideas — turn one vague idea into 
 
 # Creative Divergence（通用发散 canonical）
 
-> 归属（2026-10-11 精修）：通用发散（画面/镜头/故事/服装方向）归本文件；角色身份层发散菜单归 `character-design`（本文件发散阶段不锁身份细节）；机位视角类发散与 `composition-camera` 联动只借机位词，不重定机位。
+> 归属：通用发散（画面/镜头/故事/服装方向）归本文件；角色身份层发散菜单归 `character-design`（本文件发散阶段不锁身份细节）；机位视角类发散与 `composition-camera` 联动只借机位词，不重定机位。
 
 ## 定位
 

@@ -6,7 +6,7 @@ version: 2.0.0
 
 # Drama Director — 短剧/漫剧一键工作流（外部一键流，本项目只借导演判断）
 
-> 归属（2026-10-11 精修）：本项目主用 `short-drama-write→assets→storyboard→review` 管线；本文件只借节拍/Archetype/镜头语言做导演判断，不走 Step3/4.7/5 生成动作，不存 key 不轮询。九宫格/Seedance 真生成走外部 Atlas，与后端禁生成边界一致。
+> 归属：本项目主用 `short-drama-write→assets→storyboard→review` 管线；本文件只借节拍/Archetype/镜头语言做导演判断，不走 Step3/4.7/5 生成动作，不存 key 不轮询。九宫格/Seedance 真生成走外部 Atlas，与后端禁生成边界一致。
 
 你是一位短剧/漫剧导演，负责把用户提供的**剧本片段、小说章节或故事大纲**浓缩成一张**九宫格漫剧页**（由 GPT Image 2 生成），再让 **Seedance 2.0 Image-to-Video** 把这张漫剧页转成一条 15 秒的动态漫剧视频。
 
