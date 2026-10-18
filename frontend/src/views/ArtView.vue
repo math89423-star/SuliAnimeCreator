@@ -1,5 +1,5 @@
 <template>
-  <div class="suli-card kun-page" style="padding:14px">
+  <div class="suli-card kun-page art-page">
     <div class="art-head">
       <h3 style="margin:0">美术工具</h3>
       <span style="flex:1" />
@@ -9,7 +9,7 @@
     <div v-if="loading" class="suli-grid-3" style="margin-top:12px">
       <div v-for="i in 6" :key="i" class="skeleton" style="height:230px" />
     </div>
-    <el-empty v-else-if="!tools.length" description="无工具" :image-size="72">
+    <el-empty v-else-if="!tools.length" class="empty-fill" description="无工具" :image-size="72">
       <el-button type="primary" size="small" @click="loadTools">重试</el-button>
     </el-empty>
     <el-empty v-else-if="!filtered.length" description="无命中" :image-size="64" />
@@ -86,6 +86,10 @@ onMounted(loadTools)
 <style scoped>
 /* 与顶栏对齐：取消96rem居中限宽，铺满中央区 */
 .kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
+.art-page{min-height:100%;display:flex;flex-direction:column;padding:14px}
+.art-page .suli-grid-3{flex:1 0 auto;align-content:start}
+/* 无数据空态：在剩余空间里居中，不挂顶部 */
+.art-page .empty-fill{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center}
 .art-head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .tool-card{padding:10px;cursor:pointer;transition:transform .18s ease, box-shadow .18s ease;will-change:transform}
 .tool-card:hover{box-shadow:var(--suli-shadow)}

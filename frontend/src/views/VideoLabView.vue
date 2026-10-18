@@ -70,9 +70,9 @@
           </el-button>
         </div>
 
-        <div class="suli-card sect">
+        <div class="suli-card sect grow-card">
           <div class="sect-title">③ 拉片报告</div>
-          <el-input v-model="ask" type="textarea" :rows="3" placeholder="分析侧重" />
+          <el-input v-model="ask" class="ask-grow" type="textarea" :rows="3" placeholder="分析侧重" />
           <div class="row" style="margin-top:8px">
             <el-checkbox v-model="deep" size="small">深度拆解</el-checkbox>
             <el-select v-if="deep" v-model="deepModel" size="small" style="width:175px">
@@ -144,7 +144,7 @@
           <el-empty v-else description="暂无预览" :image-size="72" />
         </div>
 
-        <div class="suli-card sect">
+        <div class="suli-card sect grow-card">
           <div class="sect-title">
             关键帧
             <span v-if="frames.length" class="suli-muted" style="font-size:12px;font-weight:400">
@@ -171,7 +171,7 @@
           </div>
         </div>
 
-        <div v-if="report || analyzing" class="suli-card sect">
+        <div v-if="report || analyzing" class="suli-card sect grow-card">
           <div class="sect-title">
             {{ deep ? '详细设计报告' : '拉片报告' }}
             <span style="flex:1" />
@@ -183,7 +183,7 @@
       </div>
     </div>
 
-    <div v-show="tab === 'lib'" class="suli-card sect">
+    <div v-show="tab === 'lib'" class="suli-card sect grow-card">
       <div class="sect-title">
         素材源
         <span class="suli-muted" style="font-size:12px;font-weight:400">已拉好的素材都在这里（uploads 库）；支持全选批量删除与手动上传；载入即本地文件模式（抽帧零拷贝）</span>
@@ -221,7 +221,7 @@
       </div>
     </div>
 
-    <div v-show="tab === 'reports'" class="suli-card sect">
+    <div v-show="tab === 'reports'" class="suli-card sect grow-card">
       <div class="sect-title">
         报告历史
         <span class="suli-muted" style="font-size:12px;font-weight:400">拉片 / 深度拆解报告自动入库——跑完即存，刷新、关页都不丢</span>
@@ -806,12 +806,17 @@ onMounted(restore)
 </script>
 
 <style scoped>
-.lab { display: flex; flex-direction: column; gap: 12px; }
+.lab { display: flex; flex-direction: column; gap: 12px; min-height: 100%; }
+/* 主体区吃满剩余高度：两栏各自的最后一张卡撑到底 */
+.grow-card { flex: 1 0 auto; display: flex; flex-direction: column; }
+/* 报告输入框吃掉卡内剩余高度 */
+.ask-grow { flex: 1 1 0; min-height: 80px; }
+.ask-grow :deep(textarea) { height: 100%; resize: none; }
 .head { padding: 12px 14px; }
 .head-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.cols { display: flex; gap: 12px; align-items: flex-start; }
+.cols { display: flex; gap: 12px; align-items: stretch; flex: 1 0 auto; min-height: 0; }
 .col-left { width: 360px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px; }
-.col-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.col-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
 .sect { padding: 12px 14px; }
 .sect-title { font-weight: 700; font-size: 13px; display: flex; gap: 8px; align-items: baseline; margin-bottom: 8px; flex-wrap: wrap; }
 .drop { border: 1.5px dashed var(--suli-border-hover); border-radius: 12px; padding: 22px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--suli-text-2); cursor: pointer; transition: border-color .15s, background .15s; }

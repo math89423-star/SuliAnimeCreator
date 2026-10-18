@@ -1,5 +1,5 @@
 <template>
-  <div class="suli-card kun-page" style="padding:14px">
+  <div class="suli-card kun-page board-page">
     <h3 class="script-title">{{ store.episodeId }} 故事剧本</h3>
     <el-input v-model="script" type="textarea" :rows="8" />
     <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -21,7 +21,7 @@
     <div v-if="loading && !rows.length" class="shot-flow">
       <div v-for="i in 3" :key="i" class="suli-card" style="padding:14px"><div class="skeleton" style="height:20px;width:40%" /><div class="skeleton" style="height:14px;margin-top:8px" /><div class="skeleton" style="height:60px;margin-top:8px" /></div>
     </div>
-    <el-empty v-else-if="!rows.length" description="暂无分镜" :image-size="64" />
+    <el-empty v-else-if="!rows.length" class="empty-fill" description="暂无分镜" :image-size="64" />
     <div v-else class="seg-table">
       <div class="seg-row seg-head">
         <div class="c-check"><el-checkbox v-model="allChecked" /></div>
@@ -347,6 +347,9 @@ onMounted(async () => {
 </script>
 <style scoped>
 .kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
+.board-page{min-height:100%;display:flex;flex-direction:column;padding:14px}
+/* 无数据空态：在剩余空间里居中，不挂顶部 */
+.board-page .empty-fill{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center}
 .shot-flow { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .shot-card { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
 .shot-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
@@ -362,7 +365,7 @@ onMounted(async () => {
 .shot-refwrap { display: inline-flex; gap: 4px; align-items: center; }
 .script-title { font-size: 20px; font-weight: 800; margin: 0 0 4px; }
 .save-state { display: inline-block; min-width: 96px; font-size: 12px; color: var(--suli-text-3); }
-.seg-table { border: 1px solid var(--suli-border); border-radius: 10px; overflow-x: auto; background: #fff; margin-top: 10px; }
+.seg-table { border: 1px solid var(--suli-border); border-radius: 10px; overflow: auto; background: #fff; margin-top: 10px; flex: 1 0 auto; min-height: 200px; }
 .seg-row { display: grid; grid-template-columns: 52px 180px 1.4fr 170px 1fr 1fr; min-width: 1000px; }
 .seg-head { background: var(--suli-bg-2); font-size: 13px; color: var(--suli-text-2); }
 .seg-head > div { padding: 10px 12px; }

@@ -1,5 +1,5 @@
 <template>
-  <div class="suli-card kun-page" style="padding:14px">
+  <div class="suli-card kun-page char-page">
     <h3>原创角色设计</h3>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <el-select v-model="curId" placeholder="角色" style="width:220px" @change="loadChar" :disabled="charLoading">
@@ -322,6 +322,10 @@ onMounted(async () => {
 </script>
 <style scoped>
 .kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
+/* 整页排版：卡片撑满工作区，页签内容区吃满剩余高度并内部滚动 */
+.char-page{min-height:100%;display:flex;flex-direction:column;padding:14px}
+.char-page :deep(.el-tabs){flex:1;min-height:0;display:flex;flex-direction:column}
+.char-page :deep(.el-tabs__content){flex:1;min-height:0;overflow:auto}
 .worksec-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .worksec { max-width: 1140px; margin: 0 auto 4px; }
 .slot-worklist { display: flex; flex-direction: column; gap: 12px; }

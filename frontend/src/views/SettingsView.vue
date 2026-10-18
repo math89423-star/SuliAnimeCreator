@@ -1,5 +1,5 @@
 <template>
-  <div class="kun-page" style="padding:14px">
+  <div class="kun-page settings-page" style="padding:14px">
     <h2 class="page-title">设置</h2>
 
     <!-- 模型 -->
@@ -385,6 +385,9 @@ onMounted(async () => {
 <style scoped>
 /* 与顶栏对齐：取消96rem居中限宽，铺满中央区 */
 .kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
+/* 整页排版：页面向下撑满，卡片栅格吃掉剩余高度（矮窗不收缩，交给整页滚动） */
+.settings-page{min-height:100%;display:flex;flex-direction:column}
+.settings-page .suli-grid-3{flex:1 0 auto;min-height:0}
 .dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;border:1px solid rgba(0,0,0,.15)}
 @media (max-width: 900px) {
   .suli-grid-3{grid-template-columns:1fr !important}

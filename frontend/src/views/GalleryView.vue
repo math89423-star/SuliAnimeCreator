@@ -1,5 +1,5 @@
 <template>
-  <div class="gallery suli-card kun-page" style="padding:14px" @pointermove="onGridGlow">
+  <div class="gallery suli-card kun-page" @pointermove="onGridGlow">
     <div class="cursor-glow" :style="glowStyle" />
     <h3>展览</h3>
     <!-- 精选大卡（学 Animiz hero：最新更新的角色做特写） -->
@@ -39,10 +39,10 @@
     <div v-if="loading" class="suli-grid-3" style="margin-top:12px">
       <div v-for="i in 6" :key="i" class="skeleton" style="height:220px" />
     </div>
-    <el-empty v-else-if="!cards.length && loadError" description="加载失败" :image-size="72">
+    <el-empty v-else-if="!cards.length && loadError" class="empty-fill" description="加载失败" :image-size="72">
       <el-button type="primary" size="small" @click="load">重试</el-button>
     </el-empty>
-    <el-empty v-else-if="!cards.length" description="无角色" :image-size="72">
+    <el-empty v-else-if="!cards.length" class="empty-fill" description="无角色" :image-size="72">
       <el-button type="primary" size="small" @click="goNew">去新建</el-button>
     </el-empty>
     <div v-else class="suli-grid-3 grid-glow" :style="gridGlow" style="margin-top:12px">
@@ -145,7 +145,10 @@ function goNew() { store.selectedCharId = ''; router.push('/character') }
 onMounted(load)
 </script>
 <style scoped>
-.gallery{position:relative}
+.gallery{position:relative;padding:14px;min-height:100%;display:flex;flex-direction:column}
+.gallery .suli-grid-3{flex:1 0 auto;align-content:start}
+/* 无数据空态：在剩余空间里居中，不挂顶部 */
+.gallery .empty-fill{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center}
 /* 与顶栏对齐：取消96rem居中限宽，铺满中央区（同其他工作页一致） */
 .gallery.kun-page{max-width:none;margin:0;width:100%;box-sizing:border-box}
 .section-head{display:flex;gap:10px;align-items:center;margin-top:18px;flex-wrap:wrap}

@@ -412,13 +412,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.studio-page { max-width: none; margin: 0; width: 100%; }
+.studio-page { max-width: none; margin: 0; width: 100%; min-height: 100%; display: flex; flex-direction: column; }
 .crumbs { display: flex; gap: 8px; align-items: center; font-size: 13px; margin: 2px 2px 10px; }
 .crumb-main { color: var(--suli-text-2); }
 .crumb-sep { color: var(--suli-text-3); }
 .crumb-sub { font-weight: 700; }
-.studio-grid { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 14px; align-items: stretch; min-height: calc(100vh - 150px); }
-.studio-form { padding: 18px 18px 14px; align-self: start; max-height: calc(100vh - 150px); overflow: auto; position: sticky; top: 0; }
+.studio-grid { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 14px; align-items: stretch; flex: 1; min-height: 0; }
+.studio-form { padding: 18px 18px 14px; align-self: start; max-height: 100%; overflow: auto; position: sticky; top: 0; }
 .form-title { font-size: 20px; font-weight: 800; margin: 0; }
 .form-sub { color: var(--suli-text-2); font-size: 13px; margin: 6px 0 4px; }
 .sec { margin-top: 6px; }
@@ -461,7 +461,7 @@ onMounted(async () => {
 .form-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
 .act-clear { background: var(--suli-bg-2); border: none; }
 .act-go { background: linear-gradient(180deg, #FFC46B, #FF9F43); border: none; font-weight: 800; }
-.studio-preview { min-height: calc(100vh - 150px); display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.studio-preview { min-height: 0; display: flex; flex-direction: column; padding: 0; overflow: hidden; }
 .prev-head { display: flex; gap: 10px; align-items: flex-start; padding: 16px 18px; border-bottom: 1px solid var(--suli-border); }
 .prev-sub { font-size: 12px; margin-top: 4px; }
 .empty-wrap { flex: 1; display: flex; flex-direction: column; overflow: auto; }

@@ -1,5 +1,5 @@
 <template>
-  <div class="suli-card kun-page director" style="padding:14px">
+  <div class="suli-card kun-page director">
     <div class="dir-head">
       <h3 style="margin:0">导演 · 动画</h3>
       <el-tag size="small" class="tnum">{{ store.episodeId }}</el-tag>
@@ -735,9 +735,10 @@ onMounted(async () => {
 .tl-total { align-self: center; font-size: 12px; margin-left: 4px; }
 .draft-guide { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
 .guide-btns { display: flex; gap: 8px; }
-.director { padding: 12px !important; }
+.director { padding: 12px !important; min-height: 100%; display: flex; flex-direction: column; }
 .dir-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.dir-tabs { margin-top: 8px; }
+.dir-tabs { margin-top: 8px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.dir-tabs :deep(.el-tabs__content) { flex: 1; min-height: 0; overflow: auto; }
 .dir-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; padding: 8px 10px; border: 1.5px solid var(--suli-border); border-radius: var(--suli-radius-sm); background: var(--suli-surface); }
 .dir-bar .bar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .bar-spacer { flex: 1 1 auto; min-width: 4px; }

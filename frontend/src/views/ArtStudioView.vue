@@ -1,5 +1,5 @@
 <template>
-  <div class="suli-card kun-page" style="padding:14px">
+  <div class="suli-card kun-page art-studio">
     <!-- 顶栏：方案选择 / 保存 / 状态 -->
     <div class="studio-head">
       <h3 style="margin:0">单图创作</h3>
@@ -22,7 +22,9 @@
         <el-input v-model="form.title" size="small" placeholder="标题" />
 
         <div class="block-title">方案意图</div>
-        <el-input v-model="form.intent_text" type="textarea" :rows="8" />
+        <div class="grow">
+          <el-input v-model="form.intent_text" type="textarea" :rows="8" />
+        </div>
         <div class="row">
           <el-button size="small" :loading="agentLoading" @click="discussWithAgent">与 agent 讨论方案</el-button>
           <el-button v-if="agentLoading" size="small" text @click="stopAgent">停止</el-button>
@@ -69,27 +71,29 @@
           <span class="suli-muted tnum">{{ promptKeys.length }}</span>
           <el-button v-if="promptKeys.length" size="small" text style="margin-left:auto" @click="copyAll">复制全部</el-button>
         </div>
-        <el-empty v-if="!promptKeys.length" description="暂无回传" :image-size="64" />
-        <div v-for="k in promptKeys" :key="k" class="prompt-card">
-          <div class="prompt-head">
-            <b>{{ engineLabel(k) }}</b>
-            <span class="suli-muted">{{ prompts[k]?.source || '' }}</span>
-            <span style="flex:1" />
-            <el-button size="small" text @click="copyPrompt(k)">复制</el-button>
+        <el-empty v-if="!promptKeys.length" class="empty-fill" description="暂无回传" :image-size="64" />
+        <div v-else class="prompt-scroll">
+          <div v-for="k in promptKeys" :key="k" class="prompt-card">
+            <div class="prompt-head">
+              <b>{{ engineLabel(k) }}</b>
+              <span class="suli-muted">{{ prompts[k]?.source || '' }}</span>
+              <span style="flex:1" />
+              <el-button size="small" text @click="copyPrompt(k)">复制</el-button>
+            </div>
+            <div class="prompt-row">
+              <span class="lbl">正向</span>
+              <pre>{{ prompts[k]?.positive || '—' }}</pre>
+            </div>
+            <div class="prompt-row" v-if="prompts[k]?.negative">
+              <span class="lbl">负向</span>
+              <pre>{{ prompts[k]?.negative }}</pre>
+            </div>
+            <div class="prompt-row" v-if="prompts[k]?.note">
+              <span class="lbl">备注</span>
+              <pre>{{ prompts[k]?.note }}</pre>
+            </div>
+            <div class="suli-muted" v-if="prompts[k]?.at" style="font-size:12px">回传于 {{ prompts[k]?.at }}</div>
           </div>
-          <div class="prompt-row">
-            <span class="lbl">正向</span>
-            <pre>{{ prompts[k]?.positive || '—' }}</pre>
-          </div>
-          <div class="prompt-row" v-if="prompts[k]?.negative">
-            <span class="lbl">负向</span>
-            <pre>{{ prompts[k]?.negative }}</pre>
-          </div>
-          <div class="prompt-row" v-if="prompts[k]?.note">
-            <span class="lbl">备注</span>
-            <pre>{{ prompts[k]?.note }}</pre>
-          </div>
-          <div class="suli-muted" v-if="prompts[k]?.at" style="font-size:12px">回传于 {{ prompts[k]?.at }}</div>
         </div>
       </div>
     </div>
@@ -376,12 +380,20 @@ onMounted(async () => {
 /* 工作台页统一放开 7xl 居中骨架（theme.css 的 .kun-page 是 96rem + margin:auto），
    否则宽屏下本页卡片被居中封在 1536px，与全宽顶栏（.topbar）左右都对不齐。 */
 .kun-page { max-width:none; margin:0; width:100%; box-sizing:border-box }
+/* 整页排版：卡片撑满中央工作区高度；内容更高时整页滚动，不裁切 */
+.art-studio { min-height:100%; display:flex; flex-direction:column; padding:14px }
 .studio-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .w-plan { width: 240px; }
 .block-title { display:flex; align-items:center; gap:6px; margin:14px 0 6px; font-weight:600; font-size:13px; }
-.studio-grid { display:grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); gap:18px; margin-top:12px; }
-@media (max-width: 1000px) { .studio-grid { grid-template-columns: 1fr; } }
-.studio-col { min-width:0; }
+.studio-grid { display:grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); gap:18px; margin-top:12px; flex:1 0 auto; min-height:0 }
+@media (max-width: 1000px) { .studio-grid { grid-template-columns: 1fr; flex:0 0 auto } }
+.studio-col { min-width:0; display:flex; flex-direction:column; min-height:0 }
+/* 意图框吃掉左栏剩余高度；右栏提示词列表内部滚动 */
+.grow { flex:1 1 0; min-height:130px; display:flex }
+.grow :deep(.el-textarea) { flex:1; display:flex }
+.grow :deep(.el-textarea__inner) { height:100%; resize:none }
+.prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }
+.empty-fill { flex:1; display:flex; flex-direction:column; justify-content:center }
 .row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
 .engines { display:flex; flex-wrap:wrap; gap:4px 12px; }
 .refs { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
@@ -394,5 +406,5 @@ onMounted(async () => {
 .prompt-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .prompt-row { display:flex; gap:8px; margin-top:6px; }
 .prompt-row .lbl { flex:0 0 32px; font-size:12px; color:var(--el-text-color-secondary); }
-.prompt-row pre { flex:1; margin:0; white-space:pre-wrap; word-break:break-word; font-size:12px; max-height:220px; overflow:auto; background:var(--el-fill-color-light); border-radius:6px; padding:6px 8px; }
+.prompt-row pre { flex:1; margin:0; white-space:pre-wrap; word-break:break-word; font-size:12px; background:var(--el-fill-color-light); border-radius:6px; padding:6px 8px; }
 </style>
