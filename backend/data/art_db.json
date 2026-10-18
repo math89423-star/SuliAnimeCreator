@@ -5,22 +5,22 @@
       "created_at": "2026-10-18T09:57:05",
       "prompts": {
         "anima": {
-          "positive": "masterpiece, best quality, score_7, safe, 1girl, solo, long hair, loose hair, sailor uniform, navy blue sailor uniform, white collar stripes, dark neckerchief, sitting by the window, looking back, half body, quiet expression, slightly open mouth, evening classroom, warm orange sunlight, low angle light, soft shadow transition, blue purple shadow, edge highlight on hair strands, cel shading, anime style, upper body, window frame, blurred background, empty background, warm and cool color contrast, 一位披散长发的少女侧身坐在傍晚的教室窗边，上半身微微后转呈回眸姿态，嘴角微启似在轻声开口说话，目光安静落向身后，神情平静内敛。暖橘色天光从窗外低角度斜射入室内，窗框将光线切割为明确的几何区域，面部靠窗一侧映着暖光，另一侧缓缓没入蓝紫色的室内阴影，明暗过渡平缓无明显暗部边界，发丝末梢被夕阳镀上一层薄橘色的边缘高光。半身取景框住她肩颈以上与窗框边缘，深绀色水手服的白色襟线在暖光下隐约可辨，深色领巾服帖垂于胸前，背景大面积渐暗留白、柔焦虚化不放置多余物件，日系赛璐璐动画上色风格下暖橘光源与蓝紫暗部形成微妙的冷暖对比，将视觉重心锁定于面部受光与安静神情之间。",
+          "positive": "masterpiece, best quality, score_7, safe, 1girl, solo, sailor uniform, dark navy sailor uniform, white sailor collar, neckerchief with metal buckle, looking back over shoulder, profile view, slightly parted lips, window, indoor, evening, warm orange side light, rim light on jawline, rim light on ear, rim light on shoulder, light fading along cheek, soft shadow transition, face in focal light, mostly shadowed background, cool blue-grey shadow, subject separated by side light",
           "negative": "",
           "params": {},
           "note": "",
           "source": "lport:intent_chain",
           "package_id": "PKG-ART-20261018095705-8936",
-          "at": "2026-10-18T10:01:09"
+          "at": "2026-10-18T15:28:30"
         },
         "novelai": {
-          "positive": "masterpiece, best quality, very aesthetic, absurdres, 1girl, solo, long hair, dark navy serafuku, sailor collar, white collar stripes, dark neckerchief, sitting by window, turned back, looking back over shoulder, slightly open mouth, calm expression, classroom, dusk, warm orange lighting, window light, low-angle light, geometric light, rim lighting, half-lit face, blue-purple shadow, cel shading, anime style, bust-up, gradient background, simple background, blurred background, warm-cool color contrast",
+          "positive": "masterpiece, best quality, very aesthetic, absurdres, 1girl, solo, looking back over shoulder, side profile, slightly parted lips, upper body, from side, eye-level, sailor uniform, dark blue sailor uniform, white sailor collar, neckerchief, metal clip, window, indoor, evening, rim light on jawline, warm orange side light, light fading into shadow along cheek, soft shadow edge on cheek, ear in rim light, white collar catching light, mostly shadowed background, blue grey shadow, warm orange cool blue contrast, face in focal light, subject separated from background by side light, subtle warm reflection on metal clip",
           "negative": "",
           "params": {},
           "note": "",
           "source": "lport:intent_chain",
           "package_id": "PKG-ART-20261018095705-8936",
-          "at": "2026-10-18T10:01:09"
+          "at": "2026-10-18T15:28:30"
         }
       },
       "title": "星环第七格 · 窗边回眸立绘",
@@ -29,7 +29,7 @@
         "anima",
         "novelai"
       ],
-      "updated_at": "2026-10-18T10:01:09",
+      "updated_at": "2026-10-18T15:28:30",
       "status": "returned",
       "push": {
         "package_id": "PKG-ART-20261018095705-8936",
@@ -47,23 +47,23 @@
             "en": ""
           },
           "body": {
-            "cn": "披散的长发，发丝自然散落",
+            "cn": "侧脸轮廓与耳际在暖橘侧光下形成明亮高光边缘，肩头线条同样承接高光，脸颊曲线沿光线渐弱处没入暗部形成柔和明暗交界",
             "en": ""
           },
           "character": {
-            "cn": "一位少女，独自坐在教室窗边",
+            "cn": "一位少女",
             "en": ""
           },
           "clothing": {
-            "cn": "深绀色水手服，领口有白色襟线在暖光下隐约可辨，深色领巾服帖垂于胸前",
+            "cn": "深色水手服在阴影中呈藏青近黑色调，水手服白领在暖橘侧光下形成明亮高光边缘，领巾配金属扣在低光处反出微弱暖光",
             "en": ""
           },
           "composition": {
-            "cn": "半身取景框住少女肩颈以上及窗框边缘，背景大面积渐暗留白不放置多余物件，背景柔焦虚化，将视觉重心锁定于面部受光与安静神情之间",
+            "cn": "半身近景取景，取景框切至胸口以上，头顶与肩部留少量呼吸空间，平视机位。暖橘与冷蓝暗部对比，主体与背景依靠侧光分离。",
             "en": ""
           },
           "director_notes": {
-            "cn": "通过暖橘色低角度天光切入室内与面部半明半暗的柔和过渡，配合大面积渐暗留白背景与半身取景的克制构图，将视觉重心锁定于少女面部受光与安静神情之间，营造出一个安静内敛的回眸瞬间。冷暖色调的微妙对比——暖橘光源与蓝紫暗部——强化了傍晚时间感与情绪氛围。",
+            "cn": "少女回眸瞬间的私密叙事感——暖橘侧光沿侧脸轮廓勾出明亮高光边缘，与大面积冷蓝暗部形成强烈色温对比；光线沿脸颊曲线渐弱没入暗部，将视觉焦点压缩至面部；嘴唇微启与回眸姿态形成'欲言又止'的叙事张力。",
             "en": ""
           },
           "entity_count": {
@@ -71,7 +71,7 @@
             "en": ""
           },
           "expression": {
-            "cn": "嘴角微启似在轻声开口说话，目光安静落向身后，神情平静内敛",
+            "cn": "嘴唇微启，似乎正轻声说着什么",
             "en": ""
           },
           "franchise": {
@@ -79,11 +79,11 @@
             "en": ""
           },
           "lighting": {
-            "cn": "暖橘色天光从窗外低角度斜射入室内，窗框将光线切割为明确的几何区域；面部靠窗一侧映着暖光，另一侧缓缓没入室内阴影，明暗过渡平缓无明显暗部边界；发丝末梢被窗外暖光镀上一层薄橘色的边缘高光",
+            "cn": "傍晚暖橘侧光从窗口斜射入，在侧脸轮廓、耳际与肩头白领勾出明亮高光边缘，沿脸颊渐弱没入暗部形成柔和明暗交界。水手服阴影中呈藏青近黑，背景沉入蓝灰冷调暗部，暖橘与冷蓝对比，主体依靠侧光与背景分离。",
             "en": ""
           },
           "object": {
-            "cn": "",
+            "cn": "领巾的金属扣在低光处反出一点微弱暖光。",
             "en": ""
           },
           "other": {
@@ -91,19 +91,23 @@
             "en": ""
           },
           "pose": {
-            "cn": "侧身坐在窗边，上半身微微后转回头，呈回眸姿态",
+            "cn": "站在窗边缓缓回过头，侧脸朝向画外，动作轻柔缓慢",
             "en": ""
           },
           "quality": {
             "cn": "",
             "en": ""
           },
+          "relationship": {
+            "cn": "暖橘侧光沿侧脸轮廓勾出明亮高光边缘、沿脸颊曲线渐弱没入暗部，主体被光线勾勒分离；深色水手服与背景同沉入暗部，仅靠窗口暖光界定空间深度，主体与背景通过光分离；大面积暗部将视线压回面部高光处，明暗对比压缩视觉焦点。",
+            "en": ""
+          },
           "scene": {
-            "cn": "傍晚时分的教室窗边场景",
+            "cn": "傍晚时分的窗边场景，空间深度仅靠窗口一束暖光界定。",
             "en": ""
           },
           "style": {
-            "cn": "日系赛璐璐动画上色风格，暗部采用偏蓝紫的冷色填充，与暖橘光源形成微妙的冷暖对比",
+            "cn": "写实摄影质感，色调以暖橘与冷蓝暗部对比为主",
             "en": ""
           }
         },
@@ -118,7 +122,7 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "一位少女",
+            "text_cn": "少女",
             "text_en": ""
           },
           {
@@ -126,43 +130,69 @@
             "concept_layer": "hard_visual",
             "dimension": "body",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "披散的长发，发丝自然散落",
+            "text_cn": "侧脸轮廓",
             "text_en": ""
           },
           {
             "concept_id": "kc_003",
             "concept_layer": "hard_visual",
-            "dimension": "clothing",
+            "dimension": "body",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
-            "notes": "",
+            "notes": "[imp:decorative→important]",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "深绀色水手服",
+            "text_cn": "耳际",
             "text_en": ""
           },
           {
             "concept_id": "kc_004",
             "concept_layer": "hard_visual",
-            "dimension": "clothing",
+            "dimension": "body",
             "evidence": "",
             "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "水手服领口白色襟线在暖光下隐约可辨",
+            "text_cn": "脸颊曲线",
             "text_en": ""
           },
           {
             "concept_id": "kc_005",
             "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "肩头",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_006",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深色水手服",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_007",
+            "concept_layer": "hard_visual",
             "dimension": "clothing",
             "evidence": "",
             "importance": "important",
@@ -170,168 +200,129 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "深色领巾服帖垂于胸前",
-            "text_en": ""
-          },
-          {
-            "concept_id": "kc_006",
-            "concept_layer": "hard_visual",
-            "dimension": "pose",
-            "evidence": "",
-            "importance": "core",
-            "must_cover": true,
-            "notes": "",
-            "prompt_role": "",
-            "source": "user_stated",
-            "text_cn": "侧身坐于窗边",
-            "text_en": ""
-          },
-          {
-            "concept_id": "kc_007",
-            "concept_layer": "hard_visual",
-            "dimension": "pose",
-            "evidence": "",
-            "importance": "core",
-            "must_cover": true,
-            "notes": "",
-            "prompt_role": "",
-            "source": "user_stated",
-            "text_cn": "上半身微微后转回头，呈回眸姿态",
+            "text_cn": "水手服白领",
             "text_en": ""
           },
           {
             "concept_id": "kc_008",
             "concept_layer": "hard_visual",
-            "dimension": "expression",
+            "dimension": "clothing",
             "evidence": "",
             "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "嘴角微启似在轻声开口说话",
+            "text_cn": "藏青近黑色调",
             "text_en": ""
           },
           {
             "concept_id": "kc_009",
             "concept_layer": "hard_visual",
-            "dimension": "expression",
+            "dimension": "clothing",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "目光安静落向身后",
+            "text_cn": "领巾",
             "text_en": ""
           },
           {
             "concept_id": "kc_010",
-            "concept_layer": "soft_director",
-            "dimension": "expression",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
-            "notes": "",
+            "notes": "[imp:decorative→important]",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "神情平静内敛",
+            "text_cn": "金属扣",
             "text_en": ""
           },
           {
             "concept_id": "kc_011",
             "concept_layer": "hard_visual",
-            "dimension": "scene",
+            "dimension": "pose",
             "evidence": "",
             "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "傍晚时分的教室窗边场景",
+            "text_cn": "站在窗边",
             "text_en": ""
           },
           {
             "concept_id": "kc_012",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
+            "dimension": "pose",
             "evidence": "",
             "importance": "core",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "暖橘色天光从窗外低角度斜射入室内",
+            "text_cn": "缓缓回过头",
             "text_en": ""
           },
           {
             "concept_id": "kc_013",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
+            "dimension": "pose",
             "evidence": "",
-            "importance": "important",
+            "importance": "core",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "发丝末梢被窗外暖光镀上一层薄橘色的边缘高光",
+            "text_cn": "侧脸朝向画外",
             "text_en": ""
           },
           {
             "concept_id": "kc_014",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
+            "dimension": "expression",
             "evidence": "",
             "importance": "core",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "面部靠窗一侧映着暖光",
+            "text_cn": "嘴唇微启",
             "text_en": ""
           },
           {
             "concept_id": "kc_015",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
+            "dimension": "expression",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "面部另一侧缓缓没入室内阴影",
+            "text_cn": "轻声说着什么",
             "text_en": ""
           },
           {
             "concept_id": "kc_016",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
+            "dimension": "composition",
             "evidence": "",
             "importance": "core",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "明暗过渡平缓无明显暗部边界",
+            "text_cn": "半身近景取景",
             "text_en": ""
           },
           {
             "concept_id": "kc_017",
             "concept_layer": "hard_visual",
-            "dimension": "lighting",
-            "evidence": "",
-            "importance": "important",
-            "must_cover": true,
-            "notes": "",
-            "prompt_role": "",
-            "source": "user_stated",
-            "text_cn": "窗框将光线切割为明确的几何区域",
-            "text_en": ""
-          },
-          {
-            "concept_id": "kc_018",
-            "concept_layer": "assembly_guidance",
             "dimension": "composition",
             "evidence": "",
             "importance": "core",
@@ -339,12 +330,12 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "背景大面积渐暗留白",
+            "text_cn": "取景框切至胸口以上",
             "text_en": ""
           },
           {
-            "concept_id": "kc_019",
-            "concept_layer": "assembly_guidance",
+            "concept_id": "kc_018",
+            "concept_layer": "hard_visual",
             "dimension": "composition",
             "evidence": "",
             "importance": "important",
@@ -352,7 +343,20 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "背景不放置多余物件",
+            "text_cn": "平视机位",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_019",
+            "concept_layer": "hard_visual",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "头顶与肩部留少量呼吸空间",
             "text_en": ""
           },
           {
@@ -365,7 +369,7 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "半身取景框住少女肩颈以上及窗框边缘",
+            "text_cn": "暖橘与冷蓝暗部对比",
             "text_en": ""
           },
           {
@@ -378,37 +382,193 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "背景柔焦虚化",
+            "text_cn": "主体与背景依靠侧光分离",
             "text_en": ""
           },
           {
             "concept_id": "kc_022",
-            "concept_layer": "assembly_guidance",
-            "dimension": "composition",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
             "evidence": "",
-            "importance": "core",
+            "importance": "important",
             "must_cover": true,
-            "notes": "",
+            "notes": "[imp:decorative→important]",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "视觉重心锁定于面部受光与安静神情之间",
+            "text_cn": "领巾金属扣在低光处反出微弱暖光",
             "text_en": ""
           },
           {
             "concept_id": "kc_023",
             "concept_layer": "hard_visual",
-            "dimension": "style",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "傍晚",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_024",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "窗边",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_025",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
             "evidence": "",
             "importance": "core",
             "must_cover": true,
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "日系赛璐璐动画上色风格",
+            "text_cn": "窗口界定空间深度",
             "text_en": ""
           },
           {
-            "concept_id": "kc_024",
+            "concept_id": "kc_026",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖橘侧光从窗口斜射入",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_027",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "侧脸轮廓高光边缘",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_028",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "耳际高光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_029",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "肩头水手服白领高光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_030",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "脸颊光线渐弱形成柔和明暗交界",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_031",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "水手服阴影中呈藏青近黑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_032",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "金属扣低光处微弱暖光反光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_033",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "背景蓝灰冷调暗部",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_034",
+            "concept_layer": "assembly_guidance",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖橘与冷蓝暗部色调对比",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_035",
+            "concept_layer": "assembly_guidance",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "主体与背景依靠侧光分离",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_036",
             "concept_layer": "hard_visual",
             "dimension": "style",
             "evidence": "",
@@ -417,11 +577,11 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "暗部采用偏蓝紫的冷色填充",
+            "text_cn": "写实摄影质感",
             "text_en": ""
           },
           {
-            "concept_id": "kc_025",
+            "concept_id": "kc_037",
             "concept_layer": "assembly_guidance",
             "dimension": "style",
             "evidence": "",
@@ -430,12 +590,12 @@
             "notes": "",
             "prompt_role": "",
             "source": "user_stated",
-            "text_cn": "暖橘光源与蓝紫暗部形成微妙的冷暖对比",
+            "text_cn": "暖橘与冷蓝暗部对比色调",
             "text_en": ""
           }
         ],
         "meta": {
-          "created_at": "2026-10-18T09:59:52Z",
+          "created_at": "2026-10-18T15:27:38Z",
           "language": "zh",
           "producer_node": "intent_blueprint_node",
           "source_type": "intent",
@@ -443,6 +603,20 @@
           "version": "1.1.0"
         }
       }
+    },
+    {
+      "id": "AP-20261018160030-0239",
+      "created_at": "2026-10-18T16:00:30",
+      "prompts": {},
+      "title": "星环第七格 · 窗边回眸立绘",
+      "intent_text": "想做一个关于鸣潮，锁冥的同人图，画质极高的强调光影的插图\n",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "updated_at": "2026-10-18T16:01:03",
+      "status": "draft"
     }
   ]
 }
