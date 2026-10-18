@@ -36,10 +36,10 @@
                 <el-input v-model="models.llm.base" placeholder="https://opencode.ai/zen/go/v1" />
               </el-form-item>
               <el-form-item label="API Key">
-                <el-input v-model="keys.llm" type="password" show-password :placeholder="models.llm.api_key_set ? '已设置，留空保持不变' : '留空则用环境变量 / dsh 凭据'" />
+                <el-input v-model="keys.llm" type="password" show-password :placeholder="models.llm.api_key_set ? '已设置' : 'API Key'" />
               </el-form-item>
               <el-form-item label="Effort">
-                <el-select v-model="models.llm.effort" filterable allow-create clearable placeholder="默认（不发送）" style="max-width:220px">
+                <el-select v-model="models.llm.effort" filterable allow-create clearable placeholder="默认" style="max-width:220px">
                   <el-option label="关 none" value="none" />
                   <el-option label="极简 minimal" value="minimal" />
                   <el-option label="低 low" value="low" />
@@ -56,14 +56,14 @@
               </el-form-item>
               <el-form-item label="模型名">
                 <div style="display:flex;gap:8px;flex:1">
-                  <el-select v-model="models.llm.local_model" filterable allow-create clearable placeholder="下拉选择或输入" style="flex:1">
+                  <el-select v-model="models.llm.local_model" filterable allow-create clearable placeholder="模型 id" style="flex:1">
                     <el-option v-for="o in catalogs.llm" :key="o.id" :label="o.id" :value="o.id" />
                   </el-select>
                   <el-button size="small" :loading="catalogLoading.llm" @click="loadCatalog('llm')">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="Key（可选）">
-                <el-input v-model="keys.llm" type="password" show-password placeholder="llama.cpp 默认不需要" />
+                <el-input v-model="keys.llm" type="password" show-password placeholder="Key" />
               </el-form-item>
             </template>
             <el-form-item>
@@ -94,7 +94,7 @@
                 <el-input v-model="models.vlm.base" placeholder="https://opencode.ai/zen/go/v1" />
               </el-form-item>
               <el-form-item label="API Key">
-                <el-input v-model="keys.vlm" type="password" show-password :placeholder="models.vlm.api_key_set ? '已设置，留空保持不变' : '留空则用环境变量 / dsh 凭据'" />
+                <el-input v-model="keys.vlm" type="password" show-password :placeholder="models.vlm.api_key_set ? '已设置' : 'API Key'" />
               </el-form-item>
             </template>
             <template v-else>
@@ -103,14 +103,14 @@
               </el-form-item>
               <el-form-item label="模型名">
                 <div style="display:flex;gap:8px;flex:1">
-                  <el-select v-model="models.vlm.local_model" filterable allow-create clearable placeholder="下拉选择或输入" style="flex:1">
+                  <el-select v-model="models.vlm.local_model" filterable allow-create clearable placeholder="模型 id" style="flex:1">
                     <el-option v-for="o in catalogs.vlm" :key="o.id" :label="o.id" :value="o.id" />
                   </el-select>
                   <el-button size="small" :loading="catalogLoading.vlm" @click="loadCatalog('vlm')">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="Key（可选）">
-                <el-input v-model="keys.vlm" type="password" show-password placeholder="llama.cpp 默认不需要" />
+                <el-input v-model="keys.vlm" type="password" show-password placeholder="Key" />
               </el-form-item>
             </template>
             <el-form-item>
@@ -133,10 +133,10 @@
               <el-input v-model="models.image.endpoint" :placeholder="models.image.provider === 'comfyui' ? 'http://127.0.0.1:8188' : 'http://127.0.0.1:7860'" />
             </el-form-item>
             <el-form-item label="模型 / Checkpoint">
-              <el-input v-model="models.image.model" placeholder="如 ponyV6 / illustrious，用于提示词工具按模型分流" />
+              <el-input v-model="models.image.model" placeholder="模型名" />
             </el-form-item>
             <el-form-item label="Key（可选）">
-              <el-input v-model="keys.image" type="password" show-password :placeholder="models.image.api_key_set ? '已设置，留空保持不变' : '本地服务一般不需要'" />
+              <el-input v-model="keys.image" type="password" show-password :placeholder="models.image.api_key_set ? '已设置' : 'API Key'" />
             </el-form-item>
             <el-form-item>
               <el-button size="small" :loading="testingModels.image" :disabled="!app.health" @click="testSection('image')">测试连接</el-button>

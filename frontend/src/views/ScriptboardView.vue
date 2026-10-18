@@ -53,7 +53,7 @@
           </el-popconfirm>
         </div>
         <div class="c-desc">
-          <el-input v-model="r.duty" type="textarea" :rows="4" resize="none" placeholder="点击输入内容" @blur="saveRow(r)" />
+          <el-input v-model="r.duty" type="textarea" :rows="4" resize="none" placeholder="内容" @blur="saveRow(r)" />
           <el-input v-model="r.duty_en" type="textarea" :rows="4" resize="none" placeholder="英文正文" @blur="saveRow(r)" />
         </div>
         <div class="c-clip">
@@ -63,10 +63,10 @@
           <el-button v-if="shotByKind(r, 'first') && !uploading[r.id]" link type="danger" size="small" @click="delShotImg(r, shotByKind(r, 'first').name)">删</el-button>
         </div>
         <div class="c-line">
-          <el-input v-model="r.sound" type="textarea" :rows="4" resize="none" placeholder="点击输入台词" @blur="saveRow(r)" />
+          <el-input v-model="r.sound" type="textarea" :rows="4" resize="none" placeholder="台词" @blur="saveRow(r)" />
         </div>
         <div class="c-note">
-          <el-input v-model="r.note" type="textarea" :rows="4" resize="none" placeholder="点击输入内容" @blur="saveRow(r)" />
+          <el-input v-model="r.note" type="textarea" :rows="4" resize="none" placeholder="内容" @blur="saveRow(r)" />
         </div>
         <input :ref="(el: any) => { if (el) shotRefs[r.id] = el }" type="file" accept="image/*" hidden @change="(e: any) => onShotImg(r, e)" />
       </div>

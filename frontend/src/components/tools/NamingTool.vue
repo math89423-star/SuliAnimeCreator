@@ -52,7 +52,7 @@
     <!-- 素材搜索托盘 -->
     <div class="tray suli-card">
       <div class="tray-row">
-        <el-input v-model="query" placeholder="搜索：霜 / Luna / 词根 / 避雷 ..." clearable size="small" class="tray-search" />
+        <el-input v-model="query" placeholder="搜索" clearable size="small" class="tray-search" />
         <span class="suli-muted count">{{ filtered.length }} / {{ allItems.length }}</span>
         <el-button size="small" @click="clearFilter">清空</el-button>
         <el-button size="small" text @click="toggleTray">{{ trayOpen ? '收起 ▲' : '展开 ▼' }}</el-button>
@@ -99,7 +99,7 @@
     <div class="suli-card check-card">
       <h3>撞名自检 · 热门角色避让</h3>
       <div class="check-bar">
-        <el-input v-model="checkInput" placeholder="输入候选名，如：萧炎 / 苏晞 / Luna" clearable @keyup.enter="runCheck" />
+        <el-input v-model="checkInput" placeholder="候选名" clearable @keyup.enter="runCheck" />
         <el-button type="primary" @click="runCheck">检测</el-button>
       </div>
       <div class="check-links">

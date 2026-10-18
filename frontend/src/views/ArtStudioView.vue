@@ -19,16 +19,10 @@
     <div class="studio-grid">
       <!-- 左：方案（与 agent 讨论产出） -->
       <div class="studio-col">
-        <el-input v-model="form.title" size="small" placeholder="标题（如：星环第七格 · 窗边回眸立绘）" />
+        <el-input v-model="form.title" size="small" placeholder="标题" />
 
-        <div class="block-title">
-          方案意图
-          <span class="suli-muted">（与 agent 讨论产出；可极简可口语，发散交给 L-Port）</span>
-        </div>
-        <el-input
-          v-model="form.intent_text" type="textarea" :rows="8"
-          placeholder="主体 / 动作 / 环境 / 风格 / 机位 / 光 / 档位（角色一律成年）…"
-        />
+        <div class="block-title">方案意图</div>
+        <el-input v-model="form.intent_text" type="textarea" :rows="8" />
         <div class="row">
           <el-button size="small" :loading="agentLoading" @click="discussWithAgent">与 agent 讨论方案</el-button>
           <el-button v-if="agentLoading" size="small" text @click="stopAgent">停止</el-button>
@@ -40,15 +34,12 @@
           </el-collapse-item>
         </el-collapse>
 
-        <div class="block-title">
-          目标引擎
-          <span class="suli-muted">（L-Port 那边翻译成各家的提示词形态）</span>
-        </div>
+        <div class="block-title">目标引擎</div>
         <el-checkbox-group v-model="form.engines" size="small" class="engines">
           <el-checkbox v-for="e in ENGINE_OPTS" :key="e.key" :value="e.key" :label="e.label" />
         </el-checkbox-group>
 
-        <div class="block-title">参考图 <span class="suli-muted">（最多 6 张，L-Port 只看不改）</span></div>
+        <div class="block-title">参考图 <span class="suli-muted tnum">{{ form.ref_images.length }}/6</span></div>
         <div class="refs">
           <div v-for="(r, i) in form.ref_images" :key="i" class="ref-item">
             <img v-if="r.url" :src="r.url" :alt="r.name" />
@@ -61,31 +52,24 @@
           <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
         </div>
 
-        <div class="block-title">约束 / 改图指令 <span class="suli-muted">（可选，随包给 L-Port）</span></div>
-        <el-input v-model="form.note" type="textarea" :rows="2" placeholder="如：换成女仆装 / 用这个画风画一个少女 / 保留这张脸的骨相" />
+        <div class="block-title">约束 / 改图指令</div>
+        <el-input v-model="form.note" type="textarea" :rows="2" />
 
         <div class="row" style="margin-top:12px">
           <el-button type="primary" size="small" :loading="pushing" @click="pushToLport">直投 L-Port</el-button>
           <el-button size="small" @click="reload">刷新回传</el-button>
         </div>
         <div class="suli-muted" v-if="pushHint" style="margin-top:6px">{{ pushHint }}</div>
-        <div class="suli-muted" style="margin-top:6px">
-          链路：本页定方案 → 直投 L-Port 收件箱 → 那边发散（intent_divergence）/ 结构化（15 维蓝图）/ 翻译精修（blueprint_to_&lt;引擎&gt;）→ 提示词回传右侧显示。
-        </div>
       </div>
 
       <!-- 右：回传提示词 -->
       <div class="studio-col">
         <div class="block-title">
           回传提示词
-          <span class="suli-muted">（{{ promptKeys.length }} 家 · 逐家可复制）</span>
+          <span class="suli-muted tnum">{{ promptKeys.length }}</span>
           <el-button v-if="promptKeys.length" size="small" text style="margin-left:auto" @click="copyAll">复制全部</el-button>
         </div>
-        <el-empty
-          v-if="!promptKeys.length"
-          description="还没有回传：先「直投 L-Port」，等那边发散翻译精修完回传，这里就亮"
-          :image-size="64"
-        />
+        <el-empty v-if="!promptKeys.length" description="暂无回传" :image-size="64" />
         <div v-for="k in promptKeys" :key="k" class="prompt-card">
           <div class="prompt-head">
             <b>{{ engineLabel(k) }}</b>
@@ -120,10 +104,10 @@ import { api } from '../api/client'
 defineOptions({ name: 'ArtStudioView' })
 
 const ENGINE_OPTS = [
-  { key: 'novelai', label: 'NovelAI（tag 轨）' },
-  { key: 'tsubaki3', label: 'Tsubaki.3（中文自然语言）' },
-  { key: 'seedream', label: 'Seedream（自然语言）' },
-  { key: 'anima', label: 'Anima（通用自然语言）' },
+  { key: 'novelai', label: 'NovelAI' },
+  { key: 'tsubaki3', label: 'Tsubaki.3' },
+  { key: 'seedream', label: 'Seedream' },
+  { key: 'anima', label: 'Anima' },
   { key: 'gpt_image', label: 'GPT Image' },
   { key: 'flux', label: 'FLUX' },
   { key: 'sdxl', label: 'SDXL' },
@@ -257,7 +241,7 @@ async function pushToLport() {
   try {
     const r: any = await api.pushToLport(id)
     const d = r?.data || {}
-    pushHint.value = `已投 ${d.package_id || ''}（${(d.engines || []).join(' / ')}）`
+    pushHint.value = `已投 ${d.package_id || ''}`
     status.value = 'pushed'
     ElMessage.success('已直投 L-Port：' + (d.package_id || ''))
   } catch (e: any) {
@@ -389,6 +373,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 工作台页统一放开 7xl 居中骨架（theme.css 的 .kun-page 是 96rem + margin:auto），
+   否则宽屏下本页卡片被居中封在 1536px，与全宽顶栏（.topbar）左右都对不齐。 */
+.kun-page { max-width:none; margin:0; width:100%; box-sizing:border-box }
 .studio-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .w-plan { width: 240px; }
 .block-title { display:flex; align-items:center; gap:6px; margin:14px 0 6px; font-weight:600; font-size:13px; }

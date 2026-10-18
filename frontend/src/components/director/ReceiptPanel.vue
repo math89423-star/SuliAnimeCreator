@@ -5,12 +5,12 @@
       <el-tag size="small" class="tnum">{{ segList.length }}镜可投</el-tag>
       <el-tag size="small" type="info" class="tnum">{{ projectLabel }}</el-tag>
       <el-tag size="small" type="info" class="tnum">{{ props.episodeId || '无集号' }}</el-tag>
-      <el-tag size="small" type="warning">形式以回执为准（三者互斥）</el-tag>
+      <el-tag size="small" type="warning">三者互斥</el-tag>
       <span style="flex:1" />
       <el-button size="small" text @click="toggleAll">{{ allOpen ? '全部收起' : '全部展开' }}</el-button>
     </div>
-    <div class="suli-muted" style="font-size:11px">首尾帧（锁构图）/ 多图参考（只锚身份）/ 文本（无图T2V）三者互斥，以lport回执单定为准；回执未定前显示组装自动判定。</div>
-    <div v-if="err" class="rc-err">加载失败：{{ err }}（后端未起？）</div>
+    <div class="suli-muted" style="font-size:11px"></div>
+    <div v-if="err" class="rc-err">加载失败：{{ err }}</div>
     <el-empty v-if="!loading && !segList.length" description="本集暂无可执行落地" :image-size="64" />
 
     <el-collapse v-else v-model="openIds" class="rc-collapse">

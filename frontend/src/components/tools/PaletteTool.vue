@@ -2,7 +2,7 @@
   <div class="palette-tool">
     <div class="tray">
       <div class="tray-row">
-        <el-input v-model="query" clearable placeholder="搜索：中文名 / 英文名 / 色值 / 分类" class="search" />
+        <el-input v-model="query" clearable placeholder="搜索" class="search" />
         <span class="suli-muted count">{{ filtered.length }} / {{ totalColors }}</span>
         <el-button size="small" @click="clearFilter">清空</el-button>
         <el-button size="small" text @click="toggleTray">{{ trayOpen ? '收起 ▲' : '展开 ▼' }}</el-button>

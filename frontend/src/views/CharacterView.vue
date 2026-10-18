@@ -68,11 +68,11 @@
               <div class="slot-right">
                 <div class="prompt-block">
                   <div class="slot-title"><div class="slot-name"><el-tag size="small">中文</el-tag><span class="suli-muted tnum">{{ (promptCnMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPromptCn(sec, s)">生成中文</el-button><el-button size="small" @click="savePromptCn(sec, s)">保存中文</el-button><el-popconfirm title="清空中文提示词？" confirm-button-text="清空" cancel-button-text="取消" @confirm="clearPrompt(sec, s, 'cn')"><template #reference><el-button size="small" type="danger" plain>清空</el-button></template></el-popconfirm></div></div>
-                  <el-input v-model="promptCnMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="中文描述：发型 / 表情 / 服装 / 色彩…" class="slot-prompt prompt-cn" />
+                  <el-input v-model="promptCnMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="中文描述" class="slot-prompt prompt-cn" />
                 </div>
                 <div class="prompt-block">
                   <div class="slot-title"><div class="slot-name"><el-tag size="small" type="info">英文</el-tag><span class="suli-muted tnum">{{ (promptMap[pkey(sec, s)] || '').length }}字</span></div><div class="slot-head-btns"><el-button size="small" @click="genPrompt(sec, s)">生成英文</el-button><el-button size="small" type="primary" @click="savePrompt(sec, s)">保存英文</el-button><el-popconfirm title="清空英文提示词？" confirm-button-text="清空" cancel-button-text="取消" @confirm="clearPrompt(sec, s, 'en')"><template #reference><el-button size="small" type="danger" plain>清空</el-button></template></el-popconfirm></div></div>
-                  <el-input v-model="promptMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="English prompt…" class="slot-prompt prompt-en" />
+                  <el-input v-model="promptMap[pkey(sec, s)]" type="textarea" :rows="5" placeholder="English prompt" class="slot-prompt prompt-en" />
                 </div>
               </div>
               </div>
@@ -111,7 +111,7 @@
                   <el-select v-model="editForm.category" style="width:170px"><el-option v-for="c in outCats" :key="c" :label="outCatLabel(c) + '（' + c + '）'" :value="c" /></el-select>
                   <span class="suli-muted" style="font-size:12px">分类说明{{ catDescMap[editForm.category] ? '：' + catDescMap[editForm.category] : '待填（后端 outfit-categories）' }}</span>
                 </div>
-                <el-input v-model="editForm.description" type="textarea" :rows="2" placeholder="服装细节：版型 / 材质 / 配色 / 配饰…（供槽位提示词与交付包引用）" />
+                <el-input v-model="editForm.description" type="textarea" :rows="2" placeholder="服装细节" />
                 <div class="outfit-edit-actions"><el-button size="small" @click="editId = null">取消</el-button><el-button size="small" type="primary" @click="saveOutfitEdit(o.id)">保存</el-button></div>
               </div>
               <div v-else-if="o.description" class="outfit-desc">{{ o.description }}</div>

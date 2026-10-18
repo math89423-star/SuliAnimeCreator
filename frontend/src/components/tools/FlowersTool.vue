@@ -6,7 +6,7 @@
         <el-input
           v-model="query"
           clearable
-          placeholder="搜索：花名 / 花语关键词 / tag"
+          placeholder="搜索"
           class="search-input"
         />
         <span class="suli-muted count">共 {{ visibleFlowers.length }} / {{ FLOWERS.length }}</span>

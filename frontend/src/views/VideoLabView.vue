@@ -3,12 +3,7 @@
     <div class="suli-card head">
       <div class="head-row">
         <h3 style="margin:0">拉片室</h3>
-        <el-tag size="small" effect="plain">找参考 · 抽帧 · 反推手法</el-tag>
         <span style="flex:1" />
-        <span class="suli-muted" style="font-size:12px">抽帧走本项目 ffmpeg 工具；分析由 Agent 逐帧看图产出报告</span>
-      </div>
-      <div class="suli-muted" style="font-size:12px;margin-top:6px">
-        上传对标视频 / 粘贴直链 / 贴 H 站链接自动下载 → 时间轴圈选片段 → 抽关键帧 → Agent 反推运镜 / 节奏 / 钩子。只借手法，不抄画面。
       </div>
       <div style="margin-top:10px">
         <el-radio-group v-model="tab" size="small">
@@ -34,7 +29,7 @@
             @click="pickFile"
           >
             <el-icon :size="26"><UploadFilled /></el-icon>
-            <div>拖入视频文件，或点击选择</div>
+            <div>选择视频</div>
             <div class="suli-muted" style="font-size:12px">≤300MB · mp4 / webm / mov</div>
           </div>
           <div v-else class="src-row">
@@ -48,11 +43,11 @@
             <el-button size="small" text @click="clearSrc">换</el-button>
           </div>
           <div class="url-row">
-            <el-input v-model="url" size="small" placeholder="或粘贴视频直链（http/https）…" clearable @keydown.enter="useUrl" />
+            <el-input v-model="url" size="small" placeholder="视频直链" clearable @keydown.enter="useUrl" />
             <el-button size="small" :disabled="!url.trim()" @click="useUrl">用直链</el-button>
           </div>
           <div class="url-row" style="margin-top:6px">
-            <el-input v-model="hurl" size="small" placeholder="贴 hanime1.me 观看页链接 / 视频 id（如 408633）→ 自动下载入库" clearable @keydown.enter="fetchHanime" />
+            <el-input v-model="hurl" size="small" placeholder="hanime1.me 链接 / id" clearable @keydown.enter="fetchHanime" />
             <el-button size="small" type="primary" :disabled="!hurl.trim()" :loading="hfetching" @click="fetchHanime">{{ hfetching ? '下载中…' : 'H站下载' }}</el-button>
           </div>
           <input ref="fileInput" type="file" accept="video/*" hidden @change="onPick" />
@@ -70,29 +65,25 @@
             <span class="tnum val">{{ scene.toFixed(2) }}</span>
           </div>
           <el-slider v-model="scene" :min="0.1" :max="0.9" :step="0.05" />
-          <div class="suli-muted" style="font-size:12px">灵敏度调低抓更多变化，调高只留强切镜；无切点自动转均匀采样。</div>
           <el-button type="primary" style="width:100%;margin-top:10px" :disabled="!src" :loading="framing" @click="doFrames">
-            {{ framing ? '抽帧中…（下载 + ffmpeg）' : (segIsPartial ? `抽帧（区间 ${segDur.toFixed(1)}s）` : '开始抽帧（全片）') }}
+            {{ framing ? '抽帧中…' : (segIsPartial ? `抽帧（区间 ${segDur.toFixed(1)}s）` : '开始抽帧（全片）') }}
           </el-button>
         </div>
 
         <div class="suli-card sect">
           <div class="sect-title">③ 拉片报告</div>
-          <el-input v-model="ask" type="textarea" :rows="3" placeholder="分析侧重（可选）…例如：重点反推性行为段的机位选择与切换节奏" />
+          <el-input v-model="ask" type="textarea" :rows="3" placeholder="分析侧重" />
           <div class="row" style="margin-top:8px">
-            <el-checkbox v-model="deep" size="small">深度拆解（复刻级）</el-checkbox>
+            <el-checkbox v-model="deep" size="small">深度拆解</el-checkbox>
             <el-select v-if="deep" v-model="deepModel" size="small" style="width:175px">
               <el-option label="LongCat 2.5 Free" value="longcat-2.5-preview-free" />
               <el-option label="DeepSeek V4.1 Flash" value="deepseek-v4.1-flash" />
             </el-select>
           </div>
-          <div v-if="deep" class="suli-muted" style="font-size:12px;margin-top:4px">
-            复刻级：Agent 自己切点 → 逐镜帧墙 → 镜头卡 → 详细设计报告；无需先抽帧，耗时约 10–30 分钟。
-          </div>
           <div class="suli-muted" style="font-size:12px;margin:6px 0">会话：{{ sessionLabel }}</div>
           <div class="row">
             <el-button type="primary" :disabled="deep ? !src : !frames.length" :loading="analyzing" @click="analyze(deep)">
-              <el-icon style="margin-right:4px"><MagicStick /></el-icon>{{ analyzing ? (deep ? '深度拆解中…' : '分析中…') : (report ? '重新分析' : (deep ? '深度拆解（复刻级）' : 'Agent 拉片分析')) }}
+              <el-icon style="margin-right:4px"><MagicStick /></el-icon>{{ analyzing ? (deep ? '深度拆解中…' : '分析中…') : (report ? '重新分析' : (deep ? '深度拆解' : 'Agent 拉片分析')) }}
             </el-button>
             <el-button v-if="analyzing" @click="stopAnalyze">停止</el-button>
           </div>
@@ -105,7 +96,6 @@
         <div class="suli-card sect">
           <div class="sect-title">
             预览与选区
-            <span v-if="src" class="suli-muted" style="font-size:12px;font-weight:400">拖动两侧手柄圈定要拉片的片段；抽帧与报告只针对所选区间</span>
           </div>
           <template v-if="src">
             <video
@@ -149,9 +139,9 @@
               <span class="tnum">{{ fmtT(segStart) }} → {{ fmtT(effEnd) }}</span>
               <span class="suli-muted">（{{ segDur.toFixed(1) }}s{{ segIsFull ? ' · 全片' : '' }}）</span>
             </div>
-            <div v-if="videoErr" class="suli-muted" style="font-size:12px;color:var(--suli-warning)">⚠ 浏览器放不了这个视频编码，时间轴不可用；抽帧仍可走全片。</div>
+            <div v-if="videoErr" class="suli-muted" style="font-size:12px;color:var(--suli-warning)">⚠ 浏览器放不了这个视频编码</div>
           </template>
-          <el-empty v-else description="上传视频后在这里预览并圈选片段" :image-size="72" />
+          <el-empty v-else description="暂无预览" :image-size="72" />
         </div>
 
         <div class="suli-card sect">
@@ -163,7 +153,7 @@
             <span style="flex:1" />
             <el-button v-if="frames.length" size="small" text @click="copyFrameRefs">复制帧引用</el-button>
           </div>
-          <el-empty v-if="!frames.length" description="还没抽帧——先在左侧选视频" :image-size="72" />
+          <el-empty v-if="!frames.length" description="暂无帧" :image-size="72" />
           <div v-else class="grid">
             <div v-for="(f, i) in frames" :key="f.name" class="cell" :title="f.name">
               <el-image

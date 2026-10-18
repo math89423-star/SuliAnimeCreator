@@ -29,9 +29,8 @@
           </div>
           <div class="field-head" style="margin-top:10px">
             <span class="field-title">对白角色名</span>
-            <span class="suli-muted" style="font-size:12px">角色库取角；留空=自动（本集正文说话人 → 角色库 → 主角/对手）</span>
           </div>
-          <el-input v-model="castInput" placeholder="留空自动取角；点名单人用逗号：女主角名, 对手名" @blur="saveCast" />
+          <el-input v-model="castInput" placeholder="选角" @blur="saveCast" />
         </div>
 
         <!-- References -->

@@ -10,7 +10,7 @@
 
     <div class="tray suli-card">
       <div class="tray-row">
-        <el-input v-model="query" clearable placeholder="搜索标题 / 正文 / tag" class="search" />
+        <el-input v-model="query" clearable placeholder="搜索" class="search" />
         <span class="suli-muted count">{{ filtered.length }} / {{ cards.length }}</span>
         <el-button size="small" @click="clearFilter">清空</el-button>
         <el-button size="small" text @click="toggleTray">{{ trayOpen ? '收起 ▲' : '展开 ▼' }}</el-button>

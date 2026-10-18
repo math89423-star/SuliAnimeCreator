@@ -16,7 +16,7 @@
                 @click="editingRef = im.name; refLabelText = im.label || ''"
               >{{ im.label || '未命名' }}</span>
               <el-input
-                v-else v-model="refLabelText" size="small" class="ref-input" placeholder="命名，回车保存"
+                v-else v-model="refLabelText" size="small" class="ref-input" placeholder="命名"
                 maxlength="40" @keydown.enter="saveRefLabel(im)" @keydown.esc="editingRef = ''" @blur="saveRefLabel(im)"
               />
               <el-button link type="danger" @click="delScriptRef(im.name)">×</el-button>
@@ -88,7 +88,7 @@
       </div>
       <span class="bar-spacer" />
       <div class="bar-group">
-        <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级（空=按内容）" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
+        <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
           <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
         </el-select>
         <el-select v-model="engine" size="small" class="w-engine" placeholder="引擎">
@@ -116,7 +116,7 @@
       <el-button v-else size="small" link @click="stopWait(p.pkg)">停止等待</el-button>
     </div>
     <div v-if="otherPushCount" class="push-status">
-      <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集的投递在后台等回执（切回那集可见），到了会弹提示</span>
+      <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集投递在等回执</span>
     </div>
 
     <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
@@ -152,9 +152,7 @@
       </el-tab-pane>
       <el-tab-pane label="提示词" name="prompts">
         <div class="prompt-head">
-          <span class="suli-muted" style="font-size:12px">
-            L-Port 细化后回传的逐镜详细提示词（已回传 {{ lpDoneCount }}/{{ store.shots.length }} 镜）
-          </span>
+          <span class="suli-muted tnum" style="font-size:12px">已回传 {{ lpDoneCount }}/{{ store.shots.length }}</span>
           <span style="flex:1" />
           <el-button size="small" @click="reloadPrompts" :loading="promptRefreshing">刷新</el-button>
           <el-button size="small" type="primary" plain :disabled="!lpDoneCount" @click="copyAllPrompts">复制全部</el-button>
@@ -177,7 +175,7 @@
               <div v-if="(r.lp.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
               <div class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
             </div>
-            <div v-else class="pr-body pr-empty">这镜还没有回传提示词：L-Port 文本工作区点「写详细提示词并回传」后在这里亮</div>
+            <div v-else class="pr-body pr-empty">—</div>
             <div class="pr-right">
               <el-button v-if="r.lp" size="small" @click="copyPrompt(r)">复制</el-button>
             </div>

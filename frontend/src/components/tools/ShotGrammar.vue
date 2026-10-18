@@ -2,7 +2,7 @@
   <div class="shot-tool">
     <div class="tray">
       <div class="tray-inner">
-        <el-input v-model="query" size="small" clearable placeholder="搜索：push / 切镜 / 落幅" class="search" />
+        <el-input v-model="query" size="small" clearable placeholder="搜索" class="search" />
         <div class="filter-chips">
           <el-tag
             v-for="f in FILTERS"
@@ -21,7 +21,7 @@
       </div>
       <template v-if="trayOpen">
       <div class="picked-row">
-        <span class="tray-label">运镜句组合（点卡片加入）:</span>
+        <span class="tray-label">运镜句组合:</span>
         <div class="chips">
           <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无</span>
           <span v-for="(p, i) in picked" :key="p" class="chip">

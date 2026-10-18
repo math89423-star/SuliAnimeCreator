@@ -47,7 +47,7 @@
       <div class="tray-row">
         <el-input
           v-model="query"
-          placeholder="搜索：衬衫 / skirt / 袜 …"
+          placeholder="搜索"
           clearable
           size="small"
           class="tray-search"

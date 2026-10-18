@@ -10,7 +10,7 @@
 
     <div class="tray">
       <div class="tray-inner">
-        <span class="tray-label">镜头句组合（点卡片看详情）：</span>
+        <span class="tray-label">镜头句组合：</span>
         <div class="chips">
           <span v-if="picked.length === 0" class="suli-muted empty-hint">暂无</span>
           <el-tag
@@ -30,7 +30,7 @@
       <div class="tray-inner tray-search">
         <el-input
           v-model="query"
-          placeholder="搜索词条：如 俯视 / dutch / 留白"
+          placeholder="搜索"
           clearable
           size="small"
           class="search"
