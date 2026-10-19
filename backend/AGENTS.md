@@ -188,3 +188,10 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
 **声场**：音量/呼吸/床架由组装层补；台词照原语言写进 `sound`（如 `沈禾：别停…`），组装层会转成 `(S1) <d>[Chinese] 原文</d>`。
 **查词**：词表里没有的术语先查（本地 websearch → booru tag wiki），别现造词；查过的新词在回复里说明可补进词表。
 **降级不出两版**：审核回退是执行侧按 SKILL.md 第 7 节替换表处理的事，库里只存用户要的那一档。
+
+## 运行配置真源（key / 模型）
+
+- 设置页（前端「设置」）的 `llm.api_key` 与 `llm.model` 是唯一真源：
+  后端起 dsh 子进程前把 key 写进 `$DSH_HOME/.credentials.yaml`、按模型附加 `--patch` 覆盖 `agent-default-model`。
+- 不要再手改 `dsh-home/.credentials.yaml`，也不要手工删 `backend/data/model-patches/`（会自动重建）。
+- RightChat 的模型下拉选「跟随设置页」即用设置页模型；显式选了别的才覆盖。

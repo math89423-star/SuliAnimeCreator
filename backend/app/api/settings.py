@@ -135,6 +135,12 @@ def put_models():
             if isinstance(key, str) and key.strip():
                 row["api_key"] = key.strip()[:500]
     save(FILE, doc)
+    # 设置页是 key 唯一真源：dsh 子进程只读 .credentials.yaml，保存即同步
+    try:
+        from .dsh import _sync_dsh_credentials
+        _sync_dsh_credentials()
+    except Exception:
+        pass
     return ok(_public(doc))
 
 

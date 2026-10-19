@@ -19,6 +19,9 @@ backend/data/model_catalog_cache.json
 backend/data/traffic_assets.json
 backend/data/outline_ep*.md
 backend/data/tsubaki_prompt*
+# 设置页落盘（含明文 API key）与据此生成的模型 patch：不入库
+backend/data/model_settings.json
+backend/data/model-patches/
 .dsh-file-claim.audit.jsonl
 *.bak
 *.bak-*

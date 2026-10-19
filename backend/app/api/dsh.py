@@ -4,8 +4,10 @@
 """
 import json
 import os
+import re
 import shutil
 import subprocess
+import tempfile
 import threading
 import uuid
 import time
@@ -38,6 +40,54 @@ TIMEOUT_S = int(os.getenv("DSH_TIMEOUT_S", "180"))
 
 def ok(data):
     return jsonify({"code": 0, "data": data})
+
+
+# —— 设置页 → dsh 凭据同步（前端是 key 唯一真源）——
+# dsh 的 credentials 服务解析 apiKeyEnv 时优先读 $DSH_HOME/.credentials.yaml，
+# 环境变量压不过它；不同步的话，前端换 key 只影响后端直调，agent 仍拿旧 key 请求（401）。
+_CRED_LOCK = threading.Lock()
+_CRED_KEY_RE = re.compile(r"(?m)^([ \t]*OPENCODE_GO_API_KEY:[ \t]*)(\S+)[ \t]*$")
+
+
+def _settings_llm_key():
+    """设置页保存的文本模型 key（llm 优先，回落 vlm）。"""
+    doc = load("model_settings.json", {}) or {}
+    for sec in ("llm", "vlm"):
+        k = (doc.get(sec) or {}).get("api_key")
+        if isinstance(k, str) and k.strip():
+            return k.strip()
+    return ""
+
+
+def _sync_dsh_credentials():
+    """把设置页 key 写进 dsh 凭据文件的 refs.OPENCODE_GO_API_KEY。
+
+    只改这一行，保留文件其余内容与权限；key 没变不落盘，失败不阻断 run。
+    """
+    key = _settings_llm_key()
+    if not key:
+        return
+    p = Path(DSH_HOME) / ".credentials.yaml"
+    try:
+        with _CRED_LOCK:
+            text = p.read_text(encoding="utf-8")
+            m = _CRED_KEY_RE.search(text)
+            if not m or m.group(2).strip("\"'") == key:
+                return
+            new = _CRED_KEY_RE.sub(lambda mm: mm.group(1) + key, text, count=1)
+            # 多 worker 并发安全：唯一临时文件 + 原子替换（固定 .tmp 名会互相踩）
+            fd, tmp = tempfile.mkstemp(prefix=".credentials.", suffix=".tmp",
+                                       dir=str(p.parent))
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    f.write(new)
+                os.chmod(tmp, p.stat().st_mode & 0o777)
+                os.replace(tmp, p)
+            finally:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+    except Exception:
+        pass
 
 
 def _persist():
@@ -222,49 +272,89 @@ def _exec_dsh_with_retry(msg, sid, run, tries=2, delay=30):
     return res
 
 
-# —— 运行级模型切换（2026-10-17 火花）：白名单模型 → dsh --patch 覆盖 agent-default-model。
-# 实测要点：① --patch 是 launcher 选项，必须放在 app 选项（--json/--session-id）之前，
-# 否则 headless 报 unknown option；② resume 同一会话换模型可行（session 与默认模型解耦）。
-_MODEL_DIR = BACKEND_DIR.parent / "data" / "model-patches"
-_RUN_MODELS = {
-    # model_id -> None=默认不附加 patch / dict=生成 --patch（覆盖 agent-default-model）
-    "deepseek-v4.1-flash": None,
-    "longcat-2.5-preview-free": {
-        "provider": "opencode-go",
-        "model": "longcat-2.5-preview-free",
-    },
-}
+# —— 模型真源（设置页）：llm.model → dsh --patch 覆盖 agent-default-model ——
+# 实测要点（2026-10-17）：① --patch 是 launcher 选项，必须放在 app 选项（--json/--session-id）
+# 之前，否则 headless 报 unknown option；② resume 同一会话换模型可行（session 与默认模型解耦）。
+# 两条入口：显式传参（RightChat 下拉）strict 校验，未知 → 400；设置页默认模型非 strict
+# （allow-create 允许手填，拼错时静默回退 profile 默认，不让整轮启动失败）。
+_MODEL_DIR = BACKEND_DIR / "data" / "model-patches"
+_FALLBACK_AGENT_MODEL = "deepseek-v4.1-flash"
 
 
-def _model_patch_path(name):
-    """模型名 → --patch 文件路径（懒生成、幂等）；默认模型或空 → None；白名单外 → ValueError。"""
-    if not name:
+def _settings_llm_model():
+    """设置页保存的对话模型 id（剥掉 opencode-go/ 前缀）。"""
+    doc = load("model_settings.json", {}) or {}
+    m = ((doc.get("llm") or {}).get("model") or "").strip()
+    return re.sub(r"^opencode-go/", "", m)
+
+
+def _profile_patch_text():
+    p = Path(DSH_HOME) / "profiles" / "headless" / "cordis.patch.yml"
+    try:
+        return p.read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
+def _profile_patch_models():
+    """headless profile 里 providers 段名下的模型 id 集合（patch 白名单）。"""
+    text = _profile_patch_text()
+    m = re.search(r"(?ms)^\s*providers:\s*$(.*?)^- id:", text)
+    seg = m.group(1) if m else text
+    return set(re.findall(r"(?m)^\s*- id:\s*([a-z0-9][a-z0-9._-]*)\s*$", seg))
+
+
+def _profile_default_model():
+    text = _profile_patch_text()
+    m = re.search(r"(?ms)^- id: agent-default-model.*?^\s*model:\s*(\S+)\s*$", text)
+    return m.group(1).strip("\"'") if m else _FALLBACK_AGENT_MODEL
+
+
+def _model_patch_path(name, strict=True):
+    """模型名 → --patch 文件路径（懒生成、幂等）。
+
+    空 / profile 默认模型 → None（不附加 patch）；不在 profile 模型列表：
+    strict=True 抛 ValueError（显式传参入口），strict=False 返回 None（设置页兜底）。
+    """
+    mid = (name or "").strip()
+    if not mid:
         return None
-    if name not in _RUN_MODELS:
-        raise ValueError("未知模型：%s（可用：%s）" % (name, "、".join(_RUN_MODELS)))
-    spec = _RUN_MODELS[name]
-    if not spec:
+    mid = re.sub(r"^opencode-go/", "", mid)
+    if mid not in _profile_patch_models():
+        if strict:
+            raise ValueError("未知模型：%s（不在 headless profile 的模型列表中）" % name)
         return None
-    path = _MODEL_DIR / ("use-%s.yml" % name)
-    if not path.is_file():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
-            "- id: agent-default-model\n"
-            "  name: \"@deepseek-ai/dsh-agent-default-model\"\n"
-            "  config:\n"
-            "    provider: %s\n"
-            "    model: %s\n" % (spec["provider"], spec["model"]),
-            encoding="utf-8",
-        )
+    if mid == _profile_default_model():
+        return None
+    path = _MODEL_DIR / ("use-%s.yml" % re.sub(r"[^A-Za-z0-9._-]", "_", mid))
+    content = ("- id: agent-default-model\n"
+               "  name: \"@deepseek-ai/dsh-agent-default-model\"\n"
+               "  config:\n"
+               "    provider: opencode-go\n"
+               "    model: %s\n" % mid)
+    try:
+        if not path.is_file() or path.read_text(encoding="utf-8") != content:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+    except Exception:
+        return None
     return path
+
+
+def _agent_model_patch(override=None):
+    """要附加的 --patch：显式 model 参数优先，否则用设置页 llm.model。"""
+    if override:
+        return _model_patch_path(override)
+    return _model_patch_path(_settings_llm_model(), strict=False)
 
 
 def _run_headless(message, session_id=None, model=None):
     """跑一次 headless --json，返回 (dsh_session_id, answer, events)。"""
     if not shutil.which(DSH_BIN):
         raise FileNotFoundError(f"dsh binary not found: {DSH_BIN}")
+    _sync_dsh_credentials()
     cmd = [DSH_BIN, "headless"]
-    mp = _model_patch_path(model)
+    mp = _agent_model_patch(override=model)
     if mp:
         cmd += ["--patch", str(mp)]
     cmd += ["--json"]
@@ -629,8 +719,9 @@ def _find_run(run, where):
 
 def _exec_dsh(msg, sid, run):
     """跑一次 headless，事件追加进 run["events"]（客户端断线也照跑）。"""
+    _sync_dsh_credentials()
     cmd = [DSH_BIN, "headless"]
-    mp = _model_patch_path(run.get("model"))
+    mp = _agent_model_patch(override=run.get("model"))
     if mp:
         cmd += ["--patch", str(mp)]
     cmd += ["--json"]
