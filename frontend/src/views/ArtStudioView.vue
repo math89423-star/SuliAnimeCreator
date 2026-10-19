@@ -25,17 +25,6 @@
         <div class="grow">
           <el-input v-model="form.intent_text" type="textarea" :rows="8" />
         </div>
-        <div class="row">
-          <el-button size="small" :loading="agentLoading" @click="discussWithAgent">与 agent 讨论方案</el-button>
-          <el-button v-if="agentLoading" size="small" text @click="stopAgent">停止</el-button>
-          <span class="suli-muted" v-if="agentProgress">{{ agentProgress }}</span>
-        </div>
-        <el-collapse v-if="agentAnswer" class="agent-answer">
-          <el-collapse-item title="agent 回话" name="a">
-            <pre class="agent-pre">{{ agentAnswer }}</pre>
-          </el-collapse-item>
-        </el-collapse>
-
         <div class="block-title">目标引擎</div>
         <el-checkbox-group v-model="form.engines" size="small" class="engines">
           <el-checkbox v-for="e in ENGINE_OPTS" :key="e.key" :value="e.key" :label="e.label" />
@@ -101,9 +90,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/client'
+import { useStudioStore } from '../stores/studio'
 
 defineOptions({ name: 'ArtStudioView' })
 
@@ -134,15 +124,23 @@ const plans = ref<any[]>([])
 const curPlanId = ref('')
 const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '' })
 const form = ref<PlanForm>(blankForm())
+const studio = useStudioStore()
+// 右侧 Agent 的页面感知：把当前方案原样同步给 store（切方案/打字都跟着变）
+watch([form, curPlanId], () => {
+  studio.setPlan({
+    id: curPlanId.value,
+    title: form.value.title,
+    intent_text: form.value.intent_text,
+    engines: form.value.engines,
+    note: form.value.note,
+    ref_images: form.value.ref_images,
+  })
+}, { deep: true })
 const prompts = ref<Record<string, any>>({})
 const status = ref('draft')
 const saving = ref(false)
 const pushing = ref(false)
 const pushHint = ref('')
-const agentLoading = ref(false)
-const agentProgress = ref('')
-const agentAnswer = ref('')
-const agentAborter = ref<AbortController | null>(null)
 const refInput = ref<HTMLInputElement | null>(null)
 const refUploading = ref(false)
 
@@ -171,8 +169,6 @@ function newPlan() {
   prompts.value = {}
   status.value = 'draft'
   pushHint.value = ''
-  agentAnswer.value = ''
-  agentProgress.value = ''
 }
 
 async function loadPlan(id: string) {
@@ -306,70 +302,6 @@ function copyAll() {
   copyText(blocks.join('\n\n----------\n\n'))
 }
 
-function stopAgent() {
-  agentAborter.value?.abort()
-}
-
-/** 讨论 brief：让 agent 与主人对齐方案，定稿后调本仓 API 落库（页面刷新即见）。 */
-function agentBrief(planId: string): string {
-  return [
-    `我们来做一张单图的创作方案（Suli 单图创作页，方案 id=${planId}）。`,
-    '先在回复里跟我讨论：主体 / 动作 / 环境 / 风格 / 机位 / 光 / 档位（档位只能 SFW|TEEN|NSFW 之一；角色一律成年设定）。',
-    '讨论定稿后，把最终方案写成一段「意图文本」——可极简、可口语、可含圈子术语，只承载画面意图（发散成完整叙事与 15 维蓝图是 L-Port 的活）。',
-    '然后调接口保存（HTTP POST，JSON）：',
-    'POST /api/v1/art/plans',
-    `{"id":"${planId}","title":"<标题>","intent_text":"<意图文本>","engines":["novelai","tsubaki3","seedream"],"note":"<约束/改图指令，可空>"}`,
-    '保存成功后回复「方案已保存：<标题>」。',
-  ].join('\n')
-}
-
-async function discussWithAgent() {
-  const id = await savePlan()
-  if (!id) return
-  agentLoading.value = true
-  agentProgress.value = '建会话…'
-  agentAnswer.value = ''
-  try {
-    await api.dshEnsure('art', id)
-  } catch {
-    ElMessage.error('Agent 会话建失败，后端未起？')
-    agentLoading.value = false
-    agentProgress.value = ''
-    return
-  }
-  const ac = new AbortController()
-  agentAborter.value = ac
-  agentProgress.value = '讨论中…'
-  try {
-    let done: any = null
-    let errMsg = ''
-    await api.dshRunStream(
-      { scope: 'art', key: id, message: agentBrief(id) },
-      (ev: string, d: any) => {
-        if (ev === 'dsh') agentProgress.value = `讨论中…事件 ${d.n ?? ''}`
-        else if (ev === 'retry') agentProgress.value = '检测到拒答，自动重试中…'
-        else if (ev === 'done') done = d
-        else if (ev === 'error') errMsg = d?.msg || '调用失败'
-      },
-      ac.signal,
-    )
-    if (done) {
-      agentAnswer.value = done.answer || '(空回包)'
-      agentProgress.value = '讨论完成'
-      await loadPlan(id) // agent 若已落库，这里就刷出来
-    } else {
-      agentAnswer.value = '[失败] ' + (errMsg || '流中断')
-      agentProgress.value = ''
-    }
-  } catch (e: any) {
-    agentAnswer.value = '[失败] ' + (e?.message || e)
-    agentProgress.value = ''
-  } finally {
-    agentLoading.value = false
-    agentAborter.value = null
-  }
-}
-
 onMounted(async () => {
   await loadPlans()
   if (plans.value.length) await loadPlan(plans.value[0].id)
@@ -400,8 +332,6 @@ onMounted(async () => {
 .ref-item { display:flex; align-items:center; gap:6px; border:1px solid var(--el-border-color-lighter); border-radius:8px; padding:4px 8px; }
 .ref-item img { width:40px; height:40px; object-fit:cover; border-radius:6px; }
 .ref-name { font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.agent-answer { margin-top:8px; }
-.agent-pre { white-space:pre-wrap; font-size:12px; margin:0; max-height:260px; overflow:auto; }
 .prompt-card { border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:10px; margin-bottom:10px; }
 .prompt-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .prompt-row { display:flex; gap:8px; margin-top:6px; }

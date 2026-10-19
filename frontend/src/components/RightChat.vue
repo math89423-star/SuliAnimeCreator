@@ -1,18 +1,18 @@
 <template>
   <div class="right">
-    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-button size="small" circle title="会话历史（集号会话）" @click="histOpen = true"><el-icon><Clock /></el-icon></el-button><el-button size="small" circle title="本集会话（名即集号）" @click="backToEpisode"><el-icon><Plus /></el-icon></el-button><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
+    <div class="head"><h4 style="margin:0">Agent</h4><span style="flex:1" /><el-button size="small" circle title="会话历史" @click="histOpen = true"><el-icon><Clock /></el-icon></el-button><el-button size="small" circle :title="`${pageSessionLabel}（名即${pageKindLabel}）`" @click="backToPageSession"><el-icon><Plus /></el-icon></el-button><el-button size="small" circle @click="store.toggleRight()">›</el-button></div>
     <div class="agent-sub">
-      <span class="suli-muted" style="font-size:12px">本集 {{ store.episodeId }} · skill {{ skills.length ? `${skills.length}已载` : '载入中…' }}</span>
+      <span class="suli-muted" style="font-size:12px">{{ pageKindLabel }} {{ pageKey || '未选' }} · skill {{ skills.length ? `${skills.length}已载` : '载入中…' }}</span>
       <span style="flex:1" />
       <el-select v-model="model" size="small" style="width:178px" title="Agent 运行模型（每次发送按当前选择生效）">
         <el-option v-for="m in MODEL_OPTIONS" :key="m.value" :label="m.label" :value="m.value" />
       </el-select>
-      <el-button size="small" text @click="backToEpisode">本集会话</el-button>
+      <el-button size="small" text @click="backToPageSession">{{ pageSessionLabel }}</el-button>
     </div>
     <!-- 当前会话卡：点击打开会话历史（照参考：标题行 + 会话名） -->
-    <div class="suli-card cur-card" @click="histOpen = true" title="打开集号会话历史（一集一会）">
-      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话即集号</span><span class="cur-count tnum">{{ sessions.length }}个</span></div>
-      <div class="cur-key">{{ store.episodeId || curKey || '先选集号' }}</div>
+    <div class="suli-card cur-card" @click="histOpen = true" :title="`打开${pageKindLabel}会话历史`">
+      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话即{{ pageKindLabel }}</span><span class="cur-count tnum">{{ pageSessions.length }}个</span></div>
+      <div class="cur-key">{{ pageKey || '未选' }}</div>
     </div>
     <div v-if="loadingList" style="margin-top:8px"><div class="skeleton" style="height:32px" /></div>
 
@@ -138,12 +138,12 @@
         <el-button size="small" text circle title="关闭" @click="histOpen = false"><el-icon><Close /></el-icon></el-button>
       </div>
       <div class="hist-tools">
-        <el-input v-model="histKw" size="small" placeholder="搜索集号" clearable style="flex:1;min-width:0">
+        <el-input v-model="histKw" size="small" :placeholder="`搜索${pageKindLabel}`" clearable style="flex:1;min-width:0">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
-        <el-button size="small" type="primary" @click="backToEpisode(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>本集会话</el-button>
+        <el-button size="small" type="primary" @click="backToPageSession(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>{{ pageSessionLabel }}</el-button>
       </div>
-      <div class="suli-muted" style="font-size:11px;padding:0 12px 6px">一集一会：会话名即集号，点击切换中央集号</div>
+      <div class="suli-muted" style="font-size:11px;padding:0 12px 6px">{{ pageKindLabel === '方案' ? '一方案一会话：点卡片即切到该方案' : '一集一会：会话名即集号，点击切换中央集号' }}</div>
       <div class="hist-list">
         <div v-if="!filteredSessions.length" class="hist-empty">暂无历史会话</div>
         <div
@@ -158,7 +158,7 @@
               <el-button size="small" text circle title="导出该会话" @click.stop="exportOne(s)"><el-icon><Download /></el-icon></el-button>
               <el-button size="small" text circle title="删除该会话" @click.stop="delSession(s)"><el-icon><Close /></el-icon></el-button>
             </div>
-            <div class="hist-meta tnum">集号会话 · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
+            <div class="hist-meta tnum">{{ pageKindLabel }}会话 · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
         </div>
       </div>
     </div>
@@ -172,11 +172,13 @@ import { api } from '../api/client'
 import { Close, Check, Paperclip, Picture, CircleClose, Clock, Plus, Download, Delete, Search, VideoCamera } from '@element-plus/icons-vue'
 import MarkdownView from './MarkdownView.vue'
 import { useAppStore } from '../stores/app'
+import { useStudioStore } from '../stores/studio'
 
 interface Att { name: string; url: string; path: string; kind: 'image' | 'file' | 'video'; dur?: number; size?: number }
 interface Turn { q: string; a: string; files?: Att[]; applied?: boolean }
 
 const store = useAppStore()
+const studio = useStudioStore()
 const route = useRoute()
 // 不再按故事/角色/分镜分页：单会话列表，scope 只剩存储字段（存量历史沿用原值）
 const curScope = ref('episode')
@@ -184,12 +186,20 @@ const sessions = ref<any[]>([])
 const curKey = ref('')
 const curSid = ref('')
 const msg = ref('')
+// 页面感知：单图创作页绑当前方案（scope=art），其余页仍绑集号（scope=episode）
+const isStudio = computed(() => route.path === '/studio')
+const pageScope = computed(() => (isStudio.value ? 'art' : 'episode'))
+const pageKey = computed(() => (isStudio.value ? (studio.planId || 'studio-draft') : (store.episodeId || '')))
+const pageKindLabel = computed(() => (isStudio.value ? '方案' : '本集'))
+const pageSessionLabel = computed(() => (isStudio.value ? '本方案会话' : '本集会话'))
+const pageSessions = computed(() => sessions.value.filter(s => (s.scope || 'episode') === pageScope.value))
 // Agent 运行模型（2026-10-17）：白名单与后端 _RUN_MODELS 对齐；每次发送按当前选择生效
 const MODEL_OPTIONS = [
+  { label: '跟随设置页', value: '' },
   { label: 'DeepSeek V4.1 Flash', value: 'deepseek-v4.1-flash' },
   { label: 'LongCat 2.5 Preview Free', value: 'longcat-2.5-preview-free' },
 ]
-const model = ref('deepseek-v4.1-flash')
+const model = ref('')
 try { const m = localStorage.getItem('suli.agent.model'); if (m && MODEL_OPTIONS.some(x => x.value === m)) model.value = m } catch {}
 // 选择持久化：watch 实现（不依赖组件事件绑定，刷新后保持选择）
 watch(model, v => { try { localStorage.setItem('suli.agent.model', v) } catch {} })
@@ -201,10 +211,9 @@ function findSession(scope: string, key: string) {
 const histOpen = ref(false)
 const histKw = ref('')
 const filteredSessions = computed(() => {
-  // 一集一会：历史只显示集号会话（scope=episode），旧的多后缀/异域会话保留在后端但不再新建
+  // 历史按当前页面的域过滤：单图创作页看方案会话（art），其余页看集号会话（episode）
   const kw = histKw.value.trim().toLowerCase()
-  const rows = [...sessions.value]
-    .filter(s => (s.scope || 'episode') === 'episode')
+  const rows = [...pageSessions.value]
     .sort((a, b) => (b.last_active || 0) - (a.last_active || 0))
   if (!kw) return rows
   return rows.filter(s => String(s.key || '').toLowerCase().includes(kw))
@@ -269,10 +278,6 @@ const probingIdx = ref(-1)
 const probe = ref<Record<number, any>>({})
 const applyMsg = ref<Record<number, string>>({})
 
-function autoKey() {
-  // 会话名即集号：直接取中央集号，无集号返回空（调用方拦截提示）
-  return store.episodeId || ''
-}
 function rel(ts: number) {
   if (!ts) return '未开始'
   const s = Math.floor((Date.now() - ts) / 1000)
@@ -440,17 +445,16 @@ async function reload() {
   try {
     const r = await api.dshSessions('')
     sessions.value = r.data as any[]
-    // 一集一会：当前会话恒等于中央集号；有集号就收敛过去，无集号才兜底旧选中/首个
-    const epKey = store.episodeId
-    if (epKey) {
-      curKey.value = epKey
-      curScope.value = 'episode'
-      curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
+    // 当前会话恒等于当前页面锚点：studio=方案 id（未保存用 studio-draft），其余=集号
+    const scope = pageScope.value
+    const key = pageKey.value
+    curScope.value = scope
+    if (key) {
+      curKey.value = key
+      curSid.value = (findSession(scope, key) || {}).dsh_session_id || ''
     } else {
-      const cur = findSession(curScope.value, curKey.value) || sessions.value[0]
-      curKey.value = (cur || {}).key || ''
-      curScope.value = (cur || {}).scope || 'episode'
-      curSid.value = (cur || {}).dsh_session_id || ''
+      curKey.value = ''
+      curSid.value = ''
     }
     loadLocal()
     scrollBottom()
@@ -464,41 +468,44 @@ async function loadSkills() {
     skills.value = ((r as any)?.data?.skills ?? (r as any)?.skills ?? []) as any[]
   } catch { skills.value = [] }
 }
-async function backToEpisode() {
-  // 一键回到本集单会话：没有就建，有就选中
-  const epKey = store.episodeId
-  if (!epKey) return ElMessage.warning('先选集号')
-  try { await api.dshEnsureEpisode(epKey) } catch {}
+async function backToPageSession() {
+  // 回到当前页面的锚点会话：studio=当前方案，其余=本集（没有就建，有就选中）
+  const key = pageKey.value
+  if (!key) return ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选集号')
+  const scope = pageScope.value
+  try { await api.dshEnsure(scope, key) } catch {}
   await reload()
-  curKey.value = epKey
-  curScope.value = 'episode'
-  curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
+  curKey.value = key
+  curScope.value = scope
+  curSid.value = (findSession(scope, key) || {}).dsh_session_id || ''
   loadLocal()
   scrollBottom()
   await resumeIfAny()
 }
 async function ensure(silent = false) {
-  // 一集一会：只确保本集会话存在，不再产生 EP-xxx-2 后缀
-  const epKey = store.episodeId
-  if (!epKey) { if (!silent) ElMessage.warning('先选择或新建集号'); return }
+  // 只确保当前页面锚点会话存在（集号/方案），不再产生 EP-xxx-2 后缀
+  const key = pageKey.value
+  const scope = pageScope.value
+  if (!key) { if (!silent) ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选择或新建集号'); return }
   try {
-    await api.dshEnsureEpisode(epKey)
+    await api.dshEnsure(scope, key)
   } catch { if (!silent) ElMessage.error('新建会话失败，后端未起？'); return }
   await reload()
-  curKey.value = epKey
-  curScope.value = 'episode'
-  curSid.value = (findSession('episode', epKey) || {}).dsh_session_id || ''
+  curKey.value = key
+  curScope.value = scope
+  curSid.value = (findSession(scope, key) || {}).dsh_session_id || ''
   loadLocal()
   await resumeIfAny()
-  if (!silent) ElMessage.success(`已切到本集会话 ${epKey}`)
+  if (!silent) ElMessage.success(`已切到${pageSessionLabel.value} ${key}`)
 }
 function pick(s: any) {
-  // 一集一会：点历史即切中央集号（集号会话联动）
-  if (s && s.scope === 'episode' && s.key && s.key !== store.episodeId && /^EP-/.test(s.key)) {
+  // 集号会话：点历史即切中央集号；方案会话（art）只切右侧会话，不动中央集号
+  const scope = s?.scope || pageScope.value
+  if (scope === 'episode' && s.key && s.key !== store.episodeId && /^EP-/.test(s.key)) {
     store.episodeId = s.key
   }
   curKey.value = s.key
-  curScope.value = 'episode'
+  curScope.value = scope
   curSid.value = s.dsh_session_id || ''
   loadLocal()
   scrollBottom()
@@ -566,9 +573,9 @@ async function delSession(s: any) {
   try { localStorage.removeItem(`dsh-turns:${s.scope || curScope.value}:${s.key}`) } catch {}
   sessions.value = sessions.value.filter(x => !(x.key === s.key && (x.scope || '') === (s.scope || '')))
   if (curKey.value === s.key) {
-    // 一集一会：删的是当前集会话，仍收敛回本集（下次发送自动重建）
-    curKey.value = store.episodeId || ''
-    curScope.value = 'episode'
+    // 删的是当前锚点会话：仍收敛回当前页面锚点（下次发送自动重建）
+    curKey.value = pageKey.value
+    curScope.value = pageScope.value
     curSid.value = ''
     loadLocal()
     scrollBottom()
@@ -652,15 +659,18 @@ async function extractFrames(f: Att) {
 async function send() {
   const text = msg.value.trim()
   if ((!text && !pending.value.length) || loading.value) return
-  // 一集一会：无集号不让发；有集号先确保本集会话存在，会话名恒为集号
-  if (!store.episodeId) return ElMessage.warning('先选择或新建集号，会话名即集号')
-  if (!curKey.value || curKey.value !== store.episodeId || !findSession('episode', store.episodeId)) {
+  // 会话锚点跟着页面走：studio=当前方案（未保存用 studio-draft），其余=集号
+  const key = pageKey.value
+  const scope = pageScope.value
+  if (!key) return ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选择或新建集号，会话名即集号')
+  if (!curKey.value || curKey.value !== key || !findSession(scope, key)) {
     try { await ensure(true) } catch { ElMessage.error('新建会话失败，后端未起？'); return }
   }
   if (!curKey.value) return
   // 附件以后端 cwd 为基准的 @path 引用拼进消息，dsh 侧可直接读取；分镜域默认带上集号，防 agent 从图片文件名猜集号
   const refs = pending.value.map(f => `@data/uploads/${f.path}`).join('\n')
-  const ctx = /^EP-/.test(curKey.value) ? `集号：${curKey.value}` : ''
+  // 页面感知：studio 把当前页方案（id/标题/意图/引擎/约束/参考图）原文贴给 agent；其余页带集号
+  const ctx = isStudio.value ? studio.contextBlock() : (/^EP-/.test(curKey.value) ? `集号：${curKey.value}` : '')
   const q = [ctx, text, refs].filter(Boolean).join('\n')
   const files = pending.value.slice()
   msg.value = ''
@@ -803,12 +813,12 @@ async function resumeIfAny() {
   } else if (r.stoppedFlag) { forgetRun(); fillAAt(idx, '[已停止]') }
   else { forgetRun(); fillAAt(idx, '[失败] ' + String(r.errMsg || '流中断').slice(0, 200)) }
 }
-watch(() => [store.episodeId, route.path], async () => {
-  // 一集一会：切集即切会话（只断跟随不杀任务，切回自动重连）；无集号只刷新列表不建垃圾会话
+watch(() => [store.episodeId, route.path, studio.planId], async () => {
+  // 页面锚点变化即切会话（只断跟随不杀任务，切回自动重连）；无锚点只刷新列表不建垃圾会话
   try { aborter.value?.abort() } catch {}
   loading.value = false
   progress.value = ''
-  if (store.episodeId && !findSession('episode', store.episodeId)) {
+  if (!isStudio.value && store.episodeId && !findSession('episode', store.episodeId)) {
     try { await api.dshEnsureEpisode(store.episodeId) } catch {}
   }
   await reload()
@@ -818,11 +828,11 @@ onMounted(async () => {
   purgeLegacyDomainCaches()
   await loadSkills()
   await reload()
-  await backToEpisodeSilent()
+  await backToPageSessionSilent()
   await resumeIfAny()   // 刷新后把后台还在跑/刚跑完的那一轮接回来
 })
 // 一次性迁移：一集一会之前攒下的异域旧缓存（story/character/traffic/global 的 turns 与 run 游标）清掉，
-// 只保留 episode 域；旧后缀 EP-xxx-2 的 turns 一起清（后端映射本就只剩 episode 域，删本地即对齐）。
+// 只保留 episode 与 art 域；旧后缀 EP-xxx-2 的 turns 一起清（后端映射本就只剩这两域，删本地即对齐）。
 function purgeLegacyDomainCaches() {
   try {
     if (localStorage.getItem('suli.dsh.purged-v1')) return
@@ -831,15 +841,16 @@ function purgeLegacyDomainCaches() {
       const k = localStorage.key(i) || ''
       if (k.startsWith('dsh-turns:') || k.startsWith('dsh-run:')) {
         const scope = k.split(':')[1] || ''
-        if (scope && scope !== 'episode') drop.push(k)
+        if (scope && scope !== 'episode' && scope !== 'art') drop.push(k)
       }
     }
     drop.forEach(k => { try { localStorage.removeItem(k) } catch {} })
     try { localStorage.setItem('suli.dsh.purged-v1', String(Date.now())) } catch {}
   } catch {}
 }
-async function backToEpisodeSilent() {
-  // 首屏自动收敛到本集单会话（已有就不建，不打扰）
+async function backToPageSessionSilent() {
+  // 首屏自动收敛到当前页面锚点会话（已有就不建，不打扰）；studio 页只在发送时建
+  if (isStudio.value) return
   const epKey = store.episodeId
   if (!epKey || findSession('episode', epKey)) return
   try { await api.dshEnsureEpisode(epKey); await reload() } catch {}
