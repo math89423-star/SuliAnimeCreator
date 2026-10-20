@@ -1,34 +1,6 @@
 {
   "plans": [
     {
-      "id": "AP-20261019132150-6913",
-      "created_at": "2026-10-19T13:21:50",
-      "prompts": {},
-      "title": "测试",
-      "intent_text": "鸣潮·锁暝同人插画（方向B·华亭夜话）：梦州华亭古风夜景，红发红瞳双马尾、古风服饰的成年女性锁暝手持半拢纸伞，暖红灯笼为主光、冷月色为辅光的柔和侧光，清冷但有人气的基调；画质极高、强调光影的单人插图",
-      "engines": [
-        "novelai"
-      ],
-      "ref_images": [
-        {
-          "name": "suoming_activity_banner.webp",
-          "path": "data/uploads/suoming_activity_banner.webp",
-          "url": "/api/images/suoming_activity_banner.webp"
-        }
-      ],
-      "note": "方向B·华亭夜话：梦州华亭古风夜景，暖红灯笼主光+冷月色辅光的柔和侧光，朱红/玄黑/暖金配色，纸伞半拢+锁链点缀，清冷但有人气基调；参考图 suoming_activity_banner.webp 为锁暝官方活动立绘，作 Character Reference 锁角色长相与服饰（一次只挂一张）；目标引擎 NovelAI V5，tag 轨写法，质量标签走开关",
-      "updated_at": "2026-10-19T16:38:06",
-      "status": "pushed",
-      "push": {
-        "package_id": "PKG-ART-20261019163806-3635",
-        "at": "2026-10-19T16:38:06",
-        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261019163806-3635",
-        "engines": [
-          "novelai"
-        ]
-      }
-    },
-    {
       "id": "AP-20261020141039-1034",
       "created_at": "2026-10-20T14:10:39",
       "prompts": {
