@@ -6,6 +6,8 @@ export const artPlanApi = {
   listPlans: () => http.get('/v1/art/plans').then(r => r.data),
   /** 方案详情（带 prompts / blueprint）。 */
   getPlan: (id: string) => http.get(`/v1/art/plans/${id}`).then(r => r.data),
+  /** 方案轻量状态（回传等待轮询：不含提示词正文）。 */
+  planStatus: (id: string) => http.get(`/v1/art/plans/${id}/status`).then(r => r.data),
   /** 建/改方案（agent 讨论定稿后也调这里落库）。 */
   savePlan: (body: any) => http.post('/v1/art/plans', body).then(r => r.data),
   deletePlan: (id: string) => http.delete(`/v1/art/plans/${id}`).then(r => r.data),

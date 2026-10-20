@@ -79,6 +79,7 @@ from pathlib import Path as _Path
 from io import BytesIO as _BytesIO
 import json as _json
 import time as _time
+import datetime as _dt
 import random as _random
 import zipfile as _zipfile
 import urllib.parse as _urlparse
@@ -96,7 +97,8 @@ def _apersist():
 
 
 def _anow():
-    return _time.strftime("%Y-%m-%dT%H:%M:%S")
+    """带时区偏移的 ISO 时间（容器跑 UTC，不带偏移的话前端会当本地时间解析，差 8 小时）。"""
+    return _dt.datetime.now().astimezone().isoformat(timespec="seconds")
 
 
 def _plan(pid):
@@ -209,6 +211,26 @@ def get_plan(plan_id):
     return ok(d)
 
 
+@bp.get("/plans/<plan_id>/status")
+def plan_status(plan_id):
+    """轻量状态（回传等待轮询用）：只给状态/引擎清单/投递信息，不带提示词正文。"""
+    p = _plan(plan_id)
+    if p is None:
+        return jsonify({"code": 4003, "msg": "方案不存在：%s" % plan_id}), 404
+    pr = p.get("prompts") or {}
+    push = p.get("push") or {}
+    return ok({
+        "id": p.get("id"),
+        "status": p.get("status") or "draft",
+        "prompt_engines": sorted(pr.keys()),
+        "prompt_count": len(pr),
+        "prompt_at": max([str((v or {}).get("at") or "") for v in pr.values()] or [""]),
+        "package_id": push.get("package_id") or "",
+        "pushed_at": push.get("at") or "",
+        "updated_at": p.get("updated_at"),
+    })
+
+
 @bp.post("/plans")
 def upsert_plan():
     """建/改方案。agent 与主人讨论出的方案也调这里落库（brief 里点名本接口）。
@@ -283,6 +305,7 @@ def push_lport():
         return jsonify({"code": 4004,
                         "msg": "L-Port 素材库未挂载（/lport-lib 缺失）：先起 L-Port"}), 400
 
+    t0 = _time.perf_counter()
     pkg_id = "PKG-ART-%s-%04d" % (_time.strftime("%Y%m%d%H%M%S"), _random.randint(0, 9999))
     art_plan = {
         "package_id": pkg_id, "kind": "art_plan",
@@ -336,6 +359,7 @@ def push_lport():
     return ok({
         "package_id": pkg_id, "plan_id": pid, "pkg_dir": str(pkgdir),
         "engines": engines, "ref_count": len(refs),
+        "zip_bytes": len(buf.getvalue()), "elapsed_ms": int((_time.perf_counter() - t0) * 1000),
         "hint": "已落 L-Port 收件箱 suli_packages/%s（art_plan.json）：L-Port 侧跑发散翻译精修后调 "
                 "push-art-prompts-to-suli 回传（plan_id=%s），本页刷新即见各引擎提示词。" % (pkg_id, pid),
     })

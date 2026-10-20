@@ -60,10 +60,21 @@
           </div>
 
           <div class="row">
-            <el-button type="primary" size="small" :loading="pushing" @click="pushToLport">直投 L-Port</el-button>
-            <el-button size="small" @click="reload">刷新回传</el-button>
+            <el-button type="primary" size="small" :loading="pushing" :disabled="pushing" @click="pushToLport">直投 L-Port</el-button>
+            <el-button size="small" :disabled="pushing" @click="reload">刷新回传</el-button>
           </div>
-          <div class="suli-muted" v-if="pushHint" style="margin-top:4px">{{ pushHint }}</div>
+          <div v-if="pushing || pushStage" class="push-progress">
+            <el-progress
+              :percentage="pushPct" :indeterminate="pushing && pushPct >= 25"
+              :status="pushErr ? 'exception' : (pushDone ? 'success' : undefined)"
+              :stroke-width="6" :show-text="false"
+            />
+            <div class="push-line">
+              <span class="push-stage">{{ pushStage }}</span>
+              <span class="suli-muted tnum">{{ (pushMs / 1000).toFixed(1) }}s</span>
+            </div>
+          </div>
+          <div class="suli-muted" v-if="pushHint && !pushStage" style="margin-top:4px">{{ pushHint }}</div>
         </div>
       </div>
 
@@ -74,7 +85,18 @@
           <span class="suli-muted tnum">{{ promptKeys.length }}</span>
           <el-button v-if="promptKeys.length" size="small" text style="margin-left:auto" @click="copyAll">复制全部</el-button>
         </div>
-        <el-empty v-if="!promptKeys.length" class="empty-fill" description="暂无回传" :image-size="64" />
+        <div v-if="waiting" class="wait-panel">
+          <el-progress :percentage="100" :indeterminate="true" :stroke-width="5" :show-text="false" />
+          <div class="wait-line">
+            <span class="wait-text">等待 L-Port 回传 · 已等 <span class="tnum">{{ fmtDur(waitSec) }}</span> · 第 {{ waitChecks }} 次检查</span>
+            <el-button link size="small" @click="stopWait('已停止等待')">停止</el-button>
+          </div>
+        </div>
+        <div v-else-if="waitNote" class="wait-note">{{ waitNote }}</div>
+        <el-empty
+          v-if="!promptKeys.length" class="empty-fill" :image-size="64"
+          :description="waiting ? '等待 L-Port 回传' : '暂无回传'"
+        />
         <div v-else class="prompt-scroll">
           <div v-for="k in promptKeys" :key="k" class="prompt-card">
             <div class="prompt-head">
@@ -95,7 +117,7 @@
               <span class="lbl">备注</span>
               <pre>{{ prompts[k]?.note }}</pre>
             </div>
-            <div class="suli-muted" v-if="prompts[k]?.at" style="font-size:12px">回传于 {{ prompts[k]?.at }}</div>
+            <div class="suli-muted" v-if="prompts[k]?.at" style="font-size:12px">回传于 {{ fmtTs(prompts[k]?.at) }}</div>
           </div>
         </div>
       </div>
@@ -104,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { api } from '../api/client'
@@ -159,6 +181,119 @@ const pushHint = ref('')
 const refInput = ref<HTMLInputElement | null>(null)
 const refUploading = ref(false)
 
+// 直投进度：保存 → 打包参考图/写收件箱（不确定阶段走 indeterminate）→ 完成/失败
+const pushPct = ref(0)
+const pushStage = ref('')
+const pushMs = ref(0)
+const pushDone = ref(false)
+const pushErr = ref(false)
+let pushT0 = 0
+let pushTicker: number | null = null
+let pushHideTimer: number | null = null
+function pushStep(text: string, pct: number) { pushStage.value = text; pushPct.value = pct }
+function pushStopTicker() { if (pushTicker !== null) { clearInterval(pushTicker); pushTicker = null } }
+function pushReset() {
+  pushPct.value = 0
+  pushStage.value = ''
+  pushMs.value = 0
+  pushDone.value = false
+  pushErr.value = false
+}
+// 回传等待：直投成功后（或载入一个刚投递的方案）轮询轻量状态，收敛即拉提示词。
+// L-Port 跑节点是它自己的事、没有跨仓进度接口，所以这里只做「等结果」的诚实进度：
+// 流动条 + 已等时长 + 检查次数，收到回传立刻拉取并停下。
+const WAIT_INTERVAL = 3000
+const WAIT_MAX_CHECKS = 240 // 3s × 240 ≈ 12 分钟
+const waiting = ref(false)
+const waitSec = ref(0)
+const waitChecks = ref(0)
+const waitNote = ref('')
+let waitTick: number | null = null
+let waitTimer: number | null = null
+let waitT0 = 0
+let waitBaseCount = 0
+let waitBaseAt = ''
+
+/** 后端时间戳统一按 UTC 解析：容器跑 UTC 且老数据没有时区后缀，浏览器会当本地时间 → 差 8 小时。 */
+function tsMs(s: string): number {
+  if (!s) return NaN
+  return Date.parse(/[zZ]|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z')
+}
+/** 时间戳按浏览器本地时区展示。 */
+function fmtTs(s: string): string {
+  const ms = tsMs(s)
+  if (!isFinite(ms)) return s || ''
+  const d = new Date(ms)
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
+}
+function fmtDur(sec: number): string {
+  const v = Math.max(0, Math.round(sec))
+  const m = Math.floor(v / 60)
+  return m ? `${m}:${String(v % 60).padStart(2, '0')}` : `${v}s`
+}
+function maxPromptAt(): string {
+  return Object.values(prompts.value as Record<string, any>).map((p: any) => String(p?.at || '')).sort().pop() || ''
+}
+function waitClearTimers() {
+  if (waitTick !== null) { clearInterval(waitTick); waitTick = null }
+  if (waitTimer !== null) { clearTimeout(waitTimer); waitTimer = null }
+}
+function stopWait(note = '') {
+  waitClearTimers()
+  waiting.value = false
+  if (note) waitNote.value = note
+}
+function startWait() {
+  waitClearTimers()
+  if (!curPlanId.value) return
+  waiting.value = true
+  waitNote.value = ''
+  waitSec.value = 0
+  waitChecks.value = 0
+  waitT0 = Date.now()
+  waitBaseCount = promptKeys.value.length
+  waitBaseAt = maxPromptAt()
+  waitTick = window.setInterval(() => { waitSec.value = Math.floor((Date.now() - waitT0) / 1000) }, 1000)
+  waitTimer = window.setTimeout(pollWait, 1200)
+}
+async function pollWait() {
+  if (!waiting.value || !curPlanId.value) return
+  waitChecks.value += 1
+  try {
+    const r: any = await api.planStatus(curPlanId.value)
+    const d = r?.data || {}
+    const count = Number(d.prompt_count || 0)
+    const at = String(d.prompt_at || '')
+    if (count > waitBaseCount || (at && at > waitBaseAt)) {
+      await applyReturned(d)
+      return
+    }
+  } catch { /* 网络抖动：下一轮再看 */ }
+  if (!waiting.value) return
+  if (waitChecks.value >= WAIT_MAX_CHECKS) {
+    stopWait(`已等 ${fmtDur(waitSec.value)} 还没收到回传：去 L-Port 看链路，或点「刷新回传」`)
+    return
+  }
+  waitTimer = window.setTimeout(pollWait, WAIT_INTERVAL)
+}
+async function applyReturned(st: any) {
+  const id = curPlanId.value
+  waitClearTimers()
+  waiting.value = false
+  try {
+    const r: any = await api.getPlan(id)
+    if (r?.data?.prompts) prompts.value = r.data.prompts
+    if (r?.data?.status) status.value = r.data.status
+  } catch { /* 拉详情失败就等下一轮刷新按钮 */ }
+  const keys: string[] = (st?.prompt_engines?.length ? st.prompt_engines : promptKeys.value)
+  const names = keys.map(engineLabel)
+  waitNote.value = `已回传 ${names.length} 个引擎：${names.join(' / ')} · 用时 ${fmtDur(waitSec.value)}`
+  ElMessage.success('已回传：' + names.join(' / '))
+  await loadPlans()
+}
+
+
 const promptKeys = computed(() => Object.keys(prompts.value))
 
 /** 参考图地址：优先 url；老数据只存了 path/name 时按 basename 兜底（/api/images/<name>）。 */
@@ -187,6 +322,8 @@ async function loadPlans() {
 }
 
 function newPlan() {
+  stopWait('')
+  waitNote.value = ''
   curPlanId.value = ''
   form.value = blankForm()
   prompts.value = {}
@@ -199,6 +336,7 @@ async function loadPlan(id: string) {
   try {
     const r: any = await api.getPlan(id)
     const d = r?.data || {}
+    curPlanId.value = d.id || id // 自动载入也要认领 id，否则保存/直投会新建重复方案
     form.value = {
       title: d.title || '',
       intent_text: d.intent_text || '',
@@ -209,6 +347,12 @@ async function loadPlan(id: string) {
     prompts.value = d.prompts || {}
     status.value = d.status || 'draft'
     pushHint.value = d.push?.package_id ? '已投 ' + d.push.package_id : ''
+    // 续上回传等待：只有「已投递且还没有提示词」且投递在 30 分钟内的方案才自动等
+    stopWait('')
+    waitNote.value = ''
+    const pushedAt = String(d.push?.at || '')
+    const ageMin = pushedAt ? (Date.now() - tsMs(pushedAt)) / 60000 : 1e9
+    if (curPlanId.value && status.value === 'pushed' && !promptKeys.value.length && ageMin <= 30) startWait()
   } catch (e: any) {
     ElMessage.error('方案拉取失败：' + (e?.response?.data?.msg || e?.message || e))
   }
@@ -257,20 +401,39 @@ async function delPlan() {
 }
 
 async function pushToLport() {
-  const id = await savePlan() // 直投前先存，保证包里是最新方案
-  if (!id) return
+  if (pushing.value) return
+  if (pushHideTimer !== null) { clearTimeout(pushHideTimer); pushHideTimer = null }
+  pushReset()
+  stopWait('')
   if (!form.value.intent_text.trim()) return ElMessage.warning('方案还没有意图文本：先与 agent 讨论出方案')
   pushing.value = true
+  pushT0 = performance.now()
+  pushTicker = window.setInterval(() => { pushMs.value = Math.round(performance.now() - pushT0) }, 100)
   try {
+    pushStep('保存方案', 8)
+    const id = await savePlan() // 直投前先存，保证包里是最新方案
+    if (!id) { pushErr.value = true; pushStage.value = '保存失败，未投递'; return }
+    const n = form.value.ref_images.length
+    pushStep(n ? `打包 ${n} 张参考图 · 写 L-Port 收件箱` : '写 L-Port 收件箱', 25)
     const r: any = await api.pushToLport(id)
     const d = r?.data || {}
+    pushPct.value = 100
+    pushDone.value = true
+    const ms = d.elapsed_ms != null ? `${d.elapsed_ms}ms` : `${(pushMs.value / 1000).toFixed(1)}s`
+    const size = d.zip_bytes ? ` · ${Math.max(1, Math.round(d.zip_bytes / 1024))} KB` : ''
+    pushStage.value = `已投 ${d.package_id || ''} · ${n} 张参考图${size} · 后端 ${ms}`
     pushHint.value = `已投 ${d.package_id || ''}`
     status.value = 'pushed'
     ElMessage.success('已直投 L-Port：' + (d.package_id || ''))
+    startWait() // 投完进等待：L-Port 那边跑完会自动回传，这边自动亮
+    pushHideTimer = window.setTimeout(pushReset, 4000)
   } catch (e: any) {
+    pushErr.value = true
+    pushStage.value = '直投失败：' + (e?.response?.data?.msg || e?.message || e)
     ElMessage.error('直投失败：' + (e?.response?.data?.msg || e?.message || e))
   } finally {
     pushing.value = false
+    pushStopTicker()
   }
 }
 
@@ -325,6 +488,12 @@ function copyAll() {
   copyText(blocks.join('\n\n----------\n\n'))
 }
 
+onUnmounted(() => {
+  pushStopTicker()
+  waitClearTimers()
+  if (pushHideTimer !== null) { clearTimeout(pushHideTimer); pushHideTimer = null }
+})
+
 onMounted(async () => {
   await loadPlans()
   if (plans.value.length) await loadPlan(plans.value[0].id)
@@ -359,6 +528,16 @@ onMounted(async () => {
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }
 .empty-fill { flex:1; display:flex; flex-direction:column; justify-content:center }
 .row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
+/* 直投进度：细进度条 + 阶段文案 + 已用时间 */
+.push-progress { margin-top:8px }
+.push-line { display:flex; align-items:flex-start; gap:8px; margin-top:4px; font-size:12px; line-height:1.45 }
+.push-stage { flex:1; min-width:0; word-break:break-all }
+.push-line .suli-muted { flex:0 0 auto }
+/* 回传等待：流动条 + 已等时长 + 检查次数（L-Port 那边没有进度接口，靠轮询状态收敛） */
+.wait-panel { margin:0 0 8px; padding:8px 10px; border:1px solid var(--el-border-color-lighter); border-radius:8px; background:var(--el-fill-color-lighter) }
+.wait-line { display:flex; align-items:center; gap:8px; margin-top:4px; font-size:12px; line-height:1.4 }
+.wait-text { flex:1; min-width:0 }
+.wait-note { font-size:12px; color:var(--el-text-color-secondary); margin:0 0 8px; line-height:1.4 }
 .engines { display:flex; flex-wrap:wrap; gap:4px 12px; }
 .refs { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
 .ref-item { display:flex; align-items:center; gap:8px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:4px 10px 4px 4px; }
