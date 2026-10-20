@@ -81,12 +81,14 @@ import json as _json
 import time as _time
 import random as _random
 import zipfile as _zipfile
+import urllib.parse as _urlparse
 
 from ..services.disk_store import load as _load_store, save as _save_store
 
 _ART_DB = _load_store("art_db.json", {"plans": []})
 _ENGINE_CAP = 20000  # 单引擎提示词字段上限（防超长灌库）
 _ENGINES = ("novelai", "tsubaki3", "seedream", "anima", "gpt_image", "flux", "sdxl", "pony", "cloud")
+_UPLOADS = _Path(__file__).resolve().parents[2] / "data" / "uploads"
 
 
 def _apersist():
@@ -114,7 +116,11 @@ def _norm_engines(raw):
 
 
 def _norm_refs(raw):
-    """参考图归一：[{name, path, url}]，最多 6 张（对齐 L-Port ref_images 上限）。"""
+    """参考图归一：[{name, path, url}]，最多 6 张（对齐 L-Port ref_images 上限）。
+
+    path 统一成相对 backend 的 uploads 路径（直投打包按它找文件）；url 缺省按 basename
+    补 /api/images/<name>，前端缩略图直接用——agent 只给 path 的旧写法也能看图。
+    """
     out = []
     for it in (raw if isinstance(raw, (list, tuple)) else []):
         if not isinstance(it, dict):
@@ -124,8 +130,45 @@ def _norm_refs(raw):
         url = str(it.get("url") or "").strip()[:500]
         if not (name or path):
             continue
+        base = (path or name).replace("\\", "/").split("/")[-1]
+        if not name:
+            name = base
+        if not path or "/" not in path:
+            path = "data/uploads/%s" % base
+        if not url:
+            url = "/api/images/%s" % _urlparse.quote(base)
         out.append({"name": name, "path": path, "url": url})
     return out[:6]
+
+
+def _ref_file(r):
+    """参考图落盘位置：path 原样 → data/uploads/<basename> 兜底。"""
+    base = _Path(str(r.get("path") or r.get("name") or "")).name
+    for cand in (str(r.get("path") or ""), str(_UPLOADS / base) if base else ""):
+        if not cand:
+            continue
+        p = _Path(cand)
+        if p.is_file():
+            return p
+    return None
+
+
+def _migrate_refs():
+    """老数据兼容：只有 name/path、没有 url 的参考图，进内存时补齐（缩略图与直投打包都要用）。"""
+    dirty = False
+    for p in _ART_DB.get("plans") or []:
+        raw = p.get("ref_images")
+        if not isinstance(raw, list):
+            continue
+        fixed = _norm_refs(raw)
+        if fixed != raw:
+            p["ref_images"] = fixed
+            dirty = True
+    if dirty:
+        _apersist()
+
+
+_migrate_refs()
 
 
 def _trim(v):
@@ -267,10 +310,11 @@ def push_lport():
         z.writestr("manifest.json", _json.dumps(manifest, ensure_ascii=False, indent=2))
         z.writestr("refs.json", _json.dumps(refs, ensure_ascii=False, indent=2))
         for r in refs:
-            src = _Path(r.get("path") or "")
+            src = _ref_file(r)
+            if src is None:
+                continue
             try:
-                if src.is_file():
-                    z.write(str(src), "ref_images/%s" % (r.get("name") or src.name))
+                z.write(str(src), "ref_images/%s" % (r.get("name") or src.name))
             except OSError:
                 continue
 

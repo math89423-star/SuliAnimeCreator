@@ -25,32 +25,46 @@
         <div class="grow">
           <el-input v-model="form.intent_text" type="textarea" :rows="8" />
         </div>
-        <div class="block-title">目标引擎</div>
-        <el-checkbox-group v-model="form.engines" size="small" class="engines">
-          <el-checkbox v-for="e in ENGINE_OPTS" :key="e.key" :value="e.key" :label="e.label" />
-        </el-checkbox-group>
 
-        <div class="block-title">参考图 <span class="suli-muted tnum">{{ form.ref_images.length }}/6</span></div>
-        <div class="refs">
-          <div v-for="(r, i) in form.ref_images" :key="i" class="ref-item">
-            <img v-if="r.url" :src="r.url" :alt="r.name" />
-            <span class="ref-name">{{ r.name }}</span>
-            <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
+        <div class="lower">
+          <div class="lower-body">
+            <div class="block-title">目标引擎</div>
+            <el-checkbox-group v-model="form.engines" size="small" class="engines">
+              <el-checkbox v-for="e in ENGINE_OPTS" :key="e.key" :value="e.key" :label="e.label" />
+            </el-checkbox-group>
+
+            <div class="block-title">参考图 <span class="suli-muted tnum">{{ form.ref_images.length }}/6</span></div>
+            <div class="refs">
+              <div v-for="(r, i) in form.ref_images" :key="i" class="ref-item">
+                <el-image
+                  class="ref-thumb" :src="refUrl(r)" fit="cover" :alt="r.name"
+                  :preview-src-list="refPreview" :initial-index="i" preview-teleported hide-on-click-modal
+                >
+                  <template #error><div class="ref-thumb-ph"><el-icon><Picture /></el-icon></div></template>
+                </el-image>
+                <div class="ref-meta">
+                  <span class="ref-name" :title="r.name">{{ r.name }}</span>
+                  <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
+                </div>
+              </div>
+              <el-button class="ref-add" size="small" :loading="refUploading" :disabled="form.ref_images.length >= 6" @click="refInput?.click()">
+                + 参考图
+              </el-button>
+              <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
+            </div>
+
+            <div class="block-title">约束 / 改图指令</div>
+            <div class="note-grow">
+              <el-input v-model="form.note" type="textarea" :rows="2" />
+            </div>
           </div>
-          <el-button size="small" :loading="refUploading" :disabled="form.ref_images.length >= 6" @click="refInput?.click()">
-            + 参考图
-          </el-button>
-          <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
-        </div>
 
-        <div class="block-title">约束 / 改图指令</div>
-        <el-input v-model="form.note" type="textarea" :rows="2" />
-
-        <div class="row" style="margin-top:12px">
-          <el-button type="primary" size="small" :loading="pushing" @click="pushToLport">直投 L-Port</el-button>
-          <el-button size="small" @click="reload">刷新回传</el-button>
+          <div class="row">
+            <el-button type="primary" size="small" :loading="pushing" @click="pushToLport">直投 L-Port</el-button>
+            <el-button size="small" @click="reload">刷新回传</el-button>
+          </div>
+          <div class="suli-muted" v-if="pushHint" style="margin-top:4px">{{ pushHint }}</div>
         </div>
-        <div class="suli-muted" v-if="pushHint" style="margin-top:6px">{{ pushHint }}</div>
       </div>
 
       <!-- 右：回传提示词 -->
@@ -92,6 +106,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Picture } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useStudioStore } from '../stores/studio'
 
@@ -145,6 +160,14 @@ const refInput = ref<HTMLInputElement | null>(null)
 const refUploading = ref(false)
 
 const promptKeys = computed(() => Object.keys(prompts.value))
+
+/** 参考图地址：优先 url；老数据只存了 path/name 时按 basename 兜底（/api/images/<name>）。 */
+function refUrl(r: RefImg): string {
+  if (r?.url) return r.url
+  const base = String(r?.path || r?.name || '').replace(/\\/g, '/').split('/').pop() || ''
+  return base ? `/api/images/${encodeURIComponent(base)}` : ''
+}
+const refPreview = computed(() => form.value.ref_images.map(refUrl))
 const statusLabel = computed(() =>
   ({ draft: '草案', pushed: '已投 L-Port', returned: '已回传' } as Record<string, string>)[status.value] || status.value)
 const statusTagType = computed<'success' | 'warning' | 'info'>(() =>
@@ -320,18 +343,30 @@ onMounted(async () => {
 .studio-grid { display:grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); gap:18px; margin-top:12px; flex:1 0 auto; min-height:0 }
 @media (max-width: 1000px) { .studio-grid { grid-template-columns: 1fr; flex:0 0 auto } }
 .studio-col { min-width:0; display:flex; flex-direction:column; min-height:0 }
-/* 意图框吃掉左栏剩余高度；右栏提示词列表内部滚动 */
-.grow { flex:1 1 0; min-height:130px; display:flex }
+/* 左栏纵向平分：意图框上半 / 引擎·参考图·约束下半（各占一半；下半内容多时中段内滚，按钮常驻底部） */
+.grow { flex:1 1 0; min-height:120px; display:flex }
 .grow :deep(.el-textarea) { flex:1; display:flex }
 .grow :deep(.el-textarea__inner) { height:100%; resize:none }
+.lower { flex:1 1 0; min-height:0; display:flex; flex-direction:column }
+.lower-body { flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px; display:flex; flex-direction:column }
+.lower .block-title { margin:8px 0 4px }
+.lower > .lower-body > .block-title:first-child { margin-top:0 }
+.lower .engines { gap:2px 12px }
+.lower .refs { gap:8px }
+.note-grow { flex:1 1 auto; min-height:44px; display:flex }
+.note-grow :deep(.el-textarea) { flex:1; display:flex }
+.note-grow :deep(.el-textarea__inner) { height:100%; resize:none }
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }
 .empty-fill { flex:1; display:flex; flex-direction:column; justify-content:center }
 .row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
 .engines { display:flex; flex-wrap:wrap; gap:4px 12px; }
-.refs { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-.ref-item { display:flex; align-items:center; gap:6px; border:1px solid var(--el-border-color-lighter); border-radius:8px; padding:4px 8px; }
-.ref-item img { width:40px; height:40px; object-fit:cover; border-radius:6px; }
-.ref-name { font-size:12px; max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.refs { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
+.ref-item { display:flex; align-items:center; gap:8px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:4px 10px 4px 4px; }
+.ref-thumb { width:64px; height:64px; border-radius:8px; overflow:hidden; display:block; flex:0 0 auto; background:var(--el-fill-color-light); cursor:zoom-in; }
+.ref-thumb-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--el-text-color-placeholder); }
+.ref-meta { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
+.ref-name { font-size:12px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ref-add { align-self:center; }
 .prompt-card { border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:10px; margin-bottom:10px; }
 .prompt-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .prompt-row { display:flex; gap:8px; margin-top:6px; }
