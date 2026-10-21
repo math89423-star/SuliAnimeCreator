@@ -16,19 +16,21 @@
 需要查资料（服饰考据、历史、技术术语、任何不确定的事实）时，先调本地搜索，
 不要直接编答案，也不要先猜网址去 fetch：
 
-- 搜：`curl -s "http://127.0.0.1:5001/api/v1/tools/websearch?q=<关键词>&n=8"`
+- 搜：`curl -s -G "http://127.0.0.1:5001/api/v1/tools/websearch" --data-urlencode "q=<关键词>" -d "n=8"`
   返回 `data.results[]`（title / url / snippet / source）。
-  注意：q 必须 URL 编码（中文用 `--data-urlencode "q=xxx"` 或 `%XX` 形式），裸中文会 400。
+  注意：`--data-urlencode` 必须配 `-G` 才是 GET（接口也收 POST，但 PUT/裸表单会 405）；裸中文不编码会 400。
 - 精读：`curl -s "http://127.0.0.1:5001/api/v1/tools/webfetch?url=<结果url>"`
   返回去标签正文（截断 12000 字）。自带 fetch 工具也可直接用。
+- `web_fetch` 只打开搜索结果里的具体文章 URL；不要拿它抓搜索引擎结果页——
+  bing.com 会 302 到 cn.bing.com，dsh 只跟随同源重定向，必报 cross-origin redirect。
 
-来源以本地 SearXNG（通用网页）+ Wikipedia 为主；不要尝试直调外部搜索 API
+来源以本地 SearXNG（通用网页）+ Bing 中文站 + Wikipedia 为主；不要尝试直调外部搜索 API
 （DDG 对机房 IP 弹验证，deepseek 搜索 key 已 401）。
 
 ## 视频参考（用户要找灵感/对标爆款时：搜片 → 抽帧 → 看图）
 触发词：用户说"找参考/对标/灵感/看看别人怎么拍"，或大纲要求明显缺行业锚点时主动问一句要不要找。
 流程（本目录 curl 直调，不用猜 URL）：
-1. 搜片：`curl -s "http://127.0.0.1:5001/api/v1/tools/websearch" --data-urlencode "q=<题材+运镜/爆款关键词>"`
+1. 搜片：`curl -s -G "http://127.0.0.1:5001/api/v1/tools/websearch" --data-urlencode "q=<题材+运镜/爆款关键词>"`
    挑 1-2 个有直链视频的结果（mp4 直链优先；平台播放页下不到就换一个，不要折腾解析）。
    用户已上传视频（消息里 `@data/uploads/<name>.mp4`）直接跳第 2 步。
    找片方向（按档位走，不混）：

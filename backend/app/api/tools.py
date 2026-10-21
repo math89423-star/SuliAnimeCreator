@@ -1,5 +1,5 @@
 """tools 蓝图：给项目 Agent 补联网能力（免 key，无第三方依赖）。
-GET /api/v1/tools/websearch?q=关键词&n=8  → SearXNG(本地8888) 主路 + Wikipedia/DDG 兜底。
+GET /api/v1/tools/websearch?q=关键词&n=8  → SearXNG(本地) 主路 + Bing 中文站 + Wikipedia/DDG 兜底。
 GET /api/v1/tools/webfetch?url=...        → 抓页面正文（去标签，截断），供搜索后精读。
 headless Agent 经 backend/AGENTS.md 发现这两个接口（curl 直调）。
 """
@@ -11,13 +11,14 @@ import subprocess as _subprocess
 import urllib.parse
 import urllib.request
 import uuid as _uuid
+from concurrent.futures import ThreadPoolExecutor as _ThreadPoolExecutor
 
 from flask import Blueprint, request, jsonify
 
 bp = Blueprint("tools", __name__, url_prefix="/api/v1/tools")
 
 _UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
-_TIMEOUT = 12
+_TIMEOUT = 8
 _SEARXNG = os.getenv("SEARXNG_URL", "http://127.0.0.1:8888").rstrip("/")
 
 
@@ -37,7 +38,7 @@ def _searxng(q, limit=10):
     url = ("%s/search?q=%s&format=json&language=zh-CN" % (_SEARXNG, urllib.parse.quote(q)))
     try:
         req = urllib.request.Request(url, headers=_UA)
-        with urllib.request.urlopen(req, timeout=25) as r:
+        with urllib.request.urlopen(req, timeout=4) as r:
             items = _json.loads(r.read().decode("utf-8", "replace")).get("results", [])
     except Exception:
         return []
@@ -48,6 +49,34 @@ def _searxng(q, limit=10):
         out.append({"title": it.get("title") or it["url"], "url": it["url"],
                     "snippet": (it.get("content") or "")[:300],
                     "source": "searxng-%s" % (it.get("engine") or "?")})
+    return out
+
+
+def _bing(q, limit=8):
+    """Bing 中文站 HTML 兜底：免 key；中文长尾词/游戏角色名比 Wikipedia 稳。"""
+    url = "https://cn.bing.com/search?q=%s&setlang=zh-CN" % urllib.parse.quote(q)
+    try:
+        req = urllib.request.Request(url, headers={**_UA, "Accept-Language": "zh-CN,zh;q=0.9"})
+        with urllib.request.urlopen(req, timeout=10) as r:
+            page = r.read().decode("utf-8", "replace")
+    except Exception:
+        return []
+    out = []
+    for block in re.findall(r'<li class="b_algo".*?</li>', page, re.S):
+        m = re.search(r'<h2[^>]*><a[^>]*href="([^"]+)"[^>]*>(.*?)</a>', block, re.S)
+        if not m:
+            continue
+        link = _html.unescape(m.group(1)).strip()
+        if not link.startswith("http"):
+            continue
+        title = _html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip()
+        snip = ""
+        p = re.search(r"<p[^>]*>(.*?)</p>", block, re.S)
+        if p:
+            snip = _html.unescape(re.sub(r"<[^>]+>", "", p.group(1))).strip()
+        out.append({"title": title or link, "url": link, "snippet": snip[:300], "source": "bing-cn"})
+        if len(out) >= limit:
+            break
     return out
 
 
@@ -105,20 +134,24 @@ def _ddg_instant(q):
     return out
 
 
-@bp.get("/websearch")
+@bp.route("/websearch", methods=["GET", "POST"])
 def websearch():
-    q = (request.args.get("q") or "").strip()
+    body = request.get_json(silent=True) or {}
+    q = (request.args.get("q") or request.form.get("q") or body.get("q") or "").strip()
     if not q:
         return jsonify({"code": 4001, "msg": "q 为空"}), 400
     try:
-        n = max(1, min(int(request.args.get("n", "8")), 20))
+        n = max(1, min(int(request.args.get("n") or request.form.get("n") or body.get("n") or 8), 20))
     except ValueError:
         n = 8
-    rows = _searxng(q, limit=n)
-    if len(rows) < n:
-        rows += _wiki_search(q, "zh") + _wiki_search(q, "en") + _ddg_instant(q)
+    # SearXNG 与 Bing 并发：中文长尾词 Bing 常 0.5s 回；SearXNG 慢也不拖住整体
+    with _ThreadPoolExecutor(max_workers=2) as ex:
+        f_searx = ex.submit(_searxng, q, n)
+        f_bing = ex.submit(_bing, q, n)
+        rows = f_searx.result() + f_bing.result()
     if not rows:
-        rows = _wiki_fulltext(q, "zh") + _wiki_fulltext(q, "en")
+        rows = (_wiki_search(q, "zh") + _wiki_search(q, "en") + _ddg_instant(q)
+                + _wiki_fulltext(q, "zh") + _wiki_fulltext(q, "en"))
     seen, uniq = set(), []
     for r in rows:
         if not r["url"] or r["url"] in seen:
