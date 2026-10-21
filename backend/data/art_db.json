@@ -1,3 +1,66 @@
 {
-  "plans": []
+  "plans": [
+    {
+      "id": "AP-20261021112538-3023",
+      "created_at": "2026-10-21T11:25:38+00:00",
+      "prompts": {
+        "mango3": {
+          "positive": "A girl with short pale pink-and-white hair and blue eyes, wearing a black turtleneck, stands on a wooden boardwalk at the edge of a flower field by the sea at dusk, warm golden sunset backlight tracing her silhouette, waist-up portrait, 35mm.",
+          "negative": "",
+          "params": {},
+          "note": "",
+          "source": "lport:intent_chain",
+          "package_id": "PKG-ART-20261021112540-3685",
+          "at": "2026-10-21T12:11:23+00:00"
+        }
+      },
+      "title": "Mango3 端到端验证",
+      "intent_text": "黄昏的花海边，浅粉白短发、蓝色眼眸的少女穿黑色高领毛衣站在木栈道上，夕阳逆光勾出暖金色轮廓，半身构图，35mm。",
+      "engines": [
+        "mango3"
+      ],
+      "ref_images": [],
+      "note": "",
+      "updated_at": "2026-10-21T12:11:23+00:00",
+      "status": "returned",
+      "push": {
+        "package_id": "PKG-ART-20261021112540-3685",
+        "at": "2026-10-21T11:25:40+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261021112540-3685",
+        "engines": [
+          "mango3"
+        ]
+      },
+      "blueprint": {
+        "meta": {
+          "source_type": "intent",
+          "task_mode": "general",
+          "language": "zh"
+        },
+        "dimension_narratives": {
+          "character": {
+            "cn": "浅粉白短发少女，蓝色眼眸，黑色高领毛衣",
+            "en": "a girl with pale pink short hair and blue eyes in a black turtleneck"
+          },
+          "scene": {
+            "cn": "黄昏花海边的木栈道",
+            "en": "a wooden boardwalk at the edge of a flower field at dusk"
+          },
+          "lighting": {
+            "cn": "夕阳逆光，暖金色边缘光",
+            "en": "warm golden backlight"
+          },
+          "composition": {
+            "cn": "半身构图，35mm",
+            "en": "waist-up portrait, 35mm"
+          },
+          "director_notes": {
+            "cn": "黄昏逆光下的少女",
+            "en": "a girl in sunset backlight"
+          }
+        },
+        "key_concepts": []
+      }
+    }
+  ]
 }
