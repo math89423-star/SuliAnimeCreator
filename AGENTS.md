@@ -59,7 +59,7 @@
 
 - craft canonical：`skills/video/nsfw-directing/SKILL.md`（四档 tease/undress/explicit/closeup、体位与行为词表、微动作预算、连续性账本、降级替换表）。
 - 视频主力引擎口径：`skills/video/pixai-video-prompting/SKILL.md`（`@image` 参考语义、`[0-Xs]` beat、Voice/SFX 行）。
-- 出图三家写法：`skills/image/production-image-models/SKILL.md`（NovelAI tag 轨 / Tsubaki.3 中文五槽 / Seedream 自然语言）。
+- 出图四家写法：`skills/image/production-image-models/SKILL.md`（NovelAI tag 轨 / Tsubaki.3 中文五槽 / Seedream 自然语言 / Mango 3 主体→场景→光→取景）。
 - 流程与字段、集号锁定、落盘标记、`APPLY:` 规则、目标引擎分叉 → 全在 `backend/AGENTS.md`，动手前照它执行。
 
 ## 文档写作纪律（正式文档不写过程日志）

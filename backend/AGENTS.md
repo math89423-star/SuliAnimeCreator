@@ -145,9 +145,9 @@
 Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片 API 可用（`api.pixai.art`，`POST /v2/image/create` + 轮询 `/v1/task/{id}`），
 但**按 POSITIONING §4 红线，本项目不直连生成**，接口留给执行侧。详见 `../skills/video/pixai-video-prompting/references/api-status.md`。
 
-## 出图引擎（图像侧：NovelAI / Tsubaki.3 / Seedream）
+## 出图引擎（图像侧：NovelAI / Tsubaki.3 / Seedream / Mango 3）
 
-本项目的三家主力出图引擎，写法各不相同，**别用一套提示词打天下**。
+本项目的四家主力出图引擎，写法各不相同，**别用一套提示词打天下**。
 先读 `../skills/image/production-image-models/SKILL.md`，再按需翻 references：
 
 - **NovelAI**（`references/novelai.md`）：逗号 tag 为主（可夹短句）；**质量标签走开关，别手写**
@@ -160,8 +160,11 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
 - **Seedream**（`references/seedream.md`）：自然语言连贯短句（主体+行为+环境+美学），**开头一句写用途/类型**；
   编辑用「增加/删除/替换/修改」，说不清就用箭头/线框/涂鸦指位置；参考图必须写两段（指明参考对象 + 描述生成画面）；
   组图用"一系列/一套/组图"或直接给张数；图上文字直接写原文。
+- **Mango 3**（`references/mango3.md`，mage 平台 `mango-v3`）：自然语言，四件套顺序 = 主体 → 场景 → 光 → 取景（光与取景必写）；
+  `@handle` 挂账号已存的角色/参考图（**只写真实存在的**，凭空造会被接口 400 拒单；3/3S/2 支持，共享 10 张额度，一代不支持）；
+  **无负向栏**（要排除就正向改写）；无 LoRA/ControlNet；分辨率 1K·2K（3S 3K / v2 4K）、比例 9 档；垫图重绘写 Edit 指令。
 
-**接口真源**：`GET /api/v1/art/image-models` 返回三家的形态/质量标签/权重语法/纪律/参考文件路径。
+**接口真源**：`GET /api/v1/art/image-models` 返回四家的形态/质量标签/权重语法/纪律/参考文件路径。
 角色槽位提示词生成（`POST /api/v1/characters/<id>/slot-prompts/generate`）吃 `engine` 参数：
 `novelai`（tag 轨）/ `tsubaki3`（中文五槽）/ `seedream`（自然语言）；不传则走旧的兼容输出。
 角色页已加「槽位提示词出稿引擎」下拉（中文按钮走所选引擎，英文按钮固定 NovelAI tag 轨）。

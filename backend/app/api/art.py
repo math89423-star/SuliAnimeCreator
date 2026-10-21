@@ -1,5 +1,5 @@
 """art 蓝图：美术工具页数据化。7个工具已原生化为前端组件（frontend/src/components/tools/），此处只给索引。
-另含出图引擎画像（image-models）：三家生产引擎的提示词形态/质量标签/纪律，craft 归
+另含出图引擎画像（image-models）：四家生产引擎的提示词形态/质量标签/纪律，craft 归
 skills/image/production-image-models（本文件只给机器可读真源，不重写规范）。
 """
 from flask import Blueprint, jsonify, request
@@ -48,6 +48,16 @@ IMAGE_MODELS = [
         "notes": "编辑用增加/删除/替换/修改 + 箭头线框涂鸦定位；参考图写“参考对象 + 生成画面”两部分；组图用“一系列/一套/组图”或给张数；限流约 500 IPM",
         "ref": "skills/image/production-image-models/references/seedream.md",
     },
+    {
+        "key": "mango3", "label": "Mango 3（mage 平台 mango-v3）",
+        "form": "natural",
+        "quality_tags": "",
+        "weight_syntax": "无",
+        "hint": "四件套顺序：主体 → 场景 → 光 → 取景（景别+镜头）；逗号串联的连贯短句，主体在最前；光与取景必写",
+        "negative_hint": "Mango 无负向栏：不输出负向段；要排除元素用正向改写，或换有负向栏的引擎",
+        "notes": "@handle 挂载角色/参考图（Mango 3/3S/2 支持，共享 10 张额度；一代不支持；凭空造的 handle 会被拒）；无 LoRA/ControlNet；分辨率 1K·2K（3S 3K / v2 4K）；比例 9 档（默认 4:5）；seed 可复现",
+        "ref": "skills/image/production-image-models/references/mango3.md",
+    },
 ]
 
 
@@ -88,7 +98,7 @@ from ..services.disk_store import load as _load_store, save as _save_store
 
 _ART_DB = _load_store("art_db.json", {"plans": []})
 _ENGINE_CAP = 20000  # 单引擎提示词字段上限（防超长灌库）
-_ENGINES = ("novelai", "tsubaki3", "seedream", "anima", "gpt_image", "flux", "sdxl", "pony", "cloud")
+_ENGINES = ("novelai", "tsubaki3", "seedream", "mango3", "anima", "gpt_image", "flux", "sdxl", "pony", "cloud")
 _UPLOADS = _Path(__file__).resolve().parents[2] / "data" / "uploads"
 
 

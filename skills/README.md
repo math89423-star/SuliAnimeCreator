@@ -27,7 +27,7 @@
 | `video/h3-prompt-writing` | `ComfyUIAgent .agents/h3-prompt-writing` | H3视频字段校准 |
 | `video/nsfw-directing` | 本项目原创（单图成人向导演） | 四档分级+微动作预算+降级替换表，H3格式仍归 h3-prompt-writing |
 | `video/pixai-video-prompting` | PixAI 官方文档与博客实战教程 | PixAI 视频格式：@image 参考/时间分块/语音SFX/迭代循环；主力引擎口径 |
-| `image/production-image-models` | NovelAI 官方文档 + PixAI Tsubaki.3 官方 guide + 火山方舟 Seedream 提示词指南 | 三家主力出图引擎的提示词写法与硬规则 |
+| `image/production-image-models` | NovelAI 官方文档 + PixAI Tsubaki.3 官方 guide + 火山方舟 Seedream 提示词指南 + mage 平台 Mango 3 官方文档 | 四家主力出图引擎的提示词写法与硬规则 |
 
 ## character 域精修边界（有交叉已去重）
 - `character-design`：身份层 canonical（三锚/三色/选型单/身份对标/评审清单），唯一写 `character.md`。
@@ -38,7 +38,7 @@
 
 ## image/story/video 域精修边界（同类一起修）
 - image：机位构图透视底/镜头语法/空间覆盖→`composition-camera`；8-block/tag转译/风格头/Vague ban→`illustration-prompt`（机位词表不重定）；通用SVG图层渲染→`svg-illustration-craft`（服饰flat归 garment-flat）；
-  三家主力出图引擎（NovelAI / Tsubaki.3 / Seedream）的提示词形态、质量标签、参考图通道、文字与组图写法→`production-image-models`（本地 SD 系仍归 illustration-prompt，机位词表不重定）。
+  四家主力出图引擎（NovelAI / Tsubaki.3 / Seedream / Mango 3）的提示词形态、质量标签、参考图通道、文字与组图写法→`production-image-models`（本地 SD 系仍归 illustration-prompt，机位词表不重定）。
 - Scene Bible：空间覆盖表→composition，prompt措辞（母版/派生/入场）→illustration，验收→review，建立→storyboard。
 - story：发散→`creative-divergence`（身份发散归 character-design）；剧本→write；资产锁面建立→assets；分镜注入+边界→storyboard；审查验收→review；`drama-director`只借导演判断不走生成。
 - video/运镜：落幅是什么+动因→composition，H3对齐行/句式/时间预算→`h3-prompt-writing`；

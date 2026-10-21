@@ -149,6 +149,7 @@ const ENGINE_OPTS = [
   { key: 'novelai', label: 'NovelAI' },
   { key: 'tsubaki3', label: 'Tsubaki.3' },
   { key: 'seedream', label: 'Seedream' },
+  { key: 'mango3', label: 'Mango 3' },
   { key: 'anima', label: 'Anima' },
   { key: 'gpt_image', label: 'GPT Image' },
   { key: 'flux', label: 'FLUX' },
