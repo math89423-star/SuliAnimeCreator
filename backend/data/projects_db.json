@@ -1,13 +1,3 @@
 {
-  "items": [
-    {
-      "id": "PRJ-E44147",
-      "name": "测试",
-      "episode_ids": [],
-      "episode_titles": {},
-      "current_episode_id": "",
-      "created_at": 1792168439725,
-      "updated_at": 1792168625665
-    }
-  ]
+  "items": []
 }
