@@ -8,6 +8,8 @@ __pycache__/
 .env
 # dsh 运行家（sessions/凭据/profiles 挂载目录）：含明文 API key，永不入库
 dsh-home/
+# dsh CLI 各版本（宿主安装目录，600+ 包/版本）：不入库，用 scripts/dsh-runtime.sh install 装
+dsh-runtime/
 # 运行期数据/素材（容器写入、可能含敏感素材，不入库）
 backend/data/uploads/
 backend/data/traffic_out/

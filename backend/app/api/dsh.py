@@ -64,17 +64,18 @@ def _sync_dsh_credentials():
     """把设置页 key 写进 dsh 凭据文件的 refs.OPENCODE_GO_API_KEY。
 
     只改这一行，保留文件其余内容与权限；key 没变不落盘，失败不阻断 run。
+    返回 key（供环境变量通道用，见 _dsh_env）。
     """
     key = _settings_llm_key()
     if not key:
-        return
+        return ""
     p = Path(DSH_HOME) / ".credentials.yaml"
     try:
         with _CRED_LOCK:
             text = p.read_text(encoding="utf-8")
             m = _CRED_KEY_RE.search(text)
             if not m or m.group(2).strip("\"'") == key:
-                return
+                return key
             new = _CRED_KEY_RE.sub(lambda mm: mm.group(1) + key, text, count=1)
             # 多 worker 并发安全：唯一临时文件 + 原子替换（固定 .tmp 名会互相踩）
             fd, tmp = tempfile.mkstemp(prefix=".credentials.", suffix=".tmp",
@@ -89,6 +90,23 @@ def _sync_dsh_credentials():
                     os.remove(tmp)
     except Exception:
         pass
+    return key
+
+
+def _dsh_env(key=""):
+    """起 dsh 子进程用的环境。
+
+    两条凭据通道同时给，覆盖不同 dsh 版本的取 key 方式：
+      · 写进 $DSH_HOME/.credentials.yaml 的 refs（0.2.0 及更早：交互式凭据存储）；
+      · 进程环境 OPENCODE_GO_API_KEY（0.2.1+：headless bundle 刻意禁用 credentials/
+        authorization/deepseek-account，改用「启动时凭据」，见 dsh-headless 的 cordis.patch.yml）。
+    缺任一条都不阻断 run —— dsh 会报缺凭据，错误信息已经够指明。
+    """
+    env = dict(os.environ, DSH_HOME=DSH_HOME, DSH_PROFILE="headless")
+    env.pop("DSH_PROFILE_DIR", None)
+    if key:
+        env["OPENCODE_GO_API_KEY"] = key
+    return env
 
 
 def _persist():
@@ -342,11 +360,24 @@ def _agent_model_patch(override=None):
     return _model_patch_path(_settings_llm_model(), strict=False)
 
 
+def _resolve_dsh_bin():
+    """定位 dsh 可执行文件。
+
+    DSH_BIN 现在是**绝对路径**（/opt/dsh/<版本>/bin/dsh，dsh 已移出镜像，
+    装在宿主 dsh-runtime/ 目录，版本由 DSH_VERSION 选）——
+    shutil.which 只在 PATH 里搜，给绝对路径会返回 None，所以这里分开处理：
+    带路径分隔符的直接查可执行位，否则按 PATH 搜裸名。
+    """
+    if os.sep in DSH_BIN:
+        return DSH_BIN if os.access(DSH_BIN, os.X_OK) else None
+    return shutil.which(DSH_BIN)
+
+
 def _run_headless(message, session_id=None, model=None):
     """跑一次 headless --json，返回 (dsh_session_id, answer, events)。"""
-    if not shutil.which(DSH_BIN):
+    if not _resolve_dsh_bin():
         raise FileNotFoundError(f"dsh binary not found: {DSH_BIN}")
-    _sync_dsh_credentials()
+    key = _sync_dsh_credentials()
     cmd = [DSH_BIN, "headless"]
     mp = _agent_model_patch(override=model)
     if mp:
@@ -355,8 +386,7 @@ def _run_headless(message, session_id=None, model=None):
     if session_id:
         cmd += ["--session-id", session_id]
     cmd += [message]
-    env = dict(os.environ, DSH_HOME=DSH_HOME, DSH_PROFILE="headless")
-    env.pop("DSH_PROFILE_DIR", None)
+    env = _dsh_env(key)
     proc = subprocess.run(cmd, cwd=str(BACKEND_DIR), env=env,
                           capture_output=True, text=True, timeout=TIMEOUT_S)
     events = []
@@ -713,7 +743,9 @@ def _find_run(run, where):
 
 def _exec_dsh(msg, sid, run):
     """跑一次 headless，事件追加进 run["events"]（客户端断线也照跑）。"""
-    _sync_dsh_credentials()
+    if not _resolve_dsh_bin():
+        raise FileNotFoundError(f"dsh binary not found: {DSH_BIN}")
+    key = _sync_dsh_credentials()
     cmd = [DSH_BIN, "headless"]
     mp = _agent_model_patch(override=run.get("model"))
     if mp:
@@ -723,8 +755,7 @@ def _exec_dsh(msg, sid, run):
         cmd += ["--session-id", sid]
     cmd += [msg]
     # 固定 headless profile：避免继承外层 `dsh web` 的 DSH_PROFILE=web
-    env = dict(os.environ, DSH_HOME=DSH_HOME, DSH_PROFILE="headless")
-    env.pop("DSH_PROFILE_DIR", None)
+    env = _dsh_env(key)
     proc = subprocess.Popen(cmd, cwd=str(BACKEND_DIR), env=env,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     run["proc"] = proc

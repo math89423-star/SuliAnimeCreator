@@ -211,6 +211,12 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
 
 - 设置页（前端「设置」）的 `llm.api_key` 与 `llm.model` 是唯一真源：
   后端起 dsh 子进程前把 key 写进 `$DSH_HOME/.credentials.yaml`、按模型附加 `--patch` 覆盖 `agent-default-model`。
+- **key 走两条通道**（缺一条，对应 dsh 版本就报缺凭据）：
+  写 `$DSH_HOME/.credentials.yaml` 的 `refs`（dsh ≤0.2.0 的交互式凭据存储）；
+  注入进程环境 `OPENCODE_GO_API_KEY`（dsh ≥0.2.1：headless bundle 刻意禁用 credentials/authorization，
+  改用「启动时凭据」，见 dsh-headless 的 cordis.patch.yml）。
+- dsh CLI 版本由 `.env` 的 `DSH_VERSION` 选（装在宿主 `dsh-runtime/<版本>/`，容器挂载）：
+  升版用 `cmd.bash dsh install <版本>` + `cmd.bash dsh use <版本>`，**不重建后端镜像**。
 - 不要再手改 `dsh-home/.credentials.yaml`，也不要手工删 `backend/data/model-patches/`（会自动重建）。
 - RightChat 的模型下拉选「跟随设置页」即用设置页模型；显式选了别的才覆盖。
 - **模型能不能真跑，看 headless profile 的 provider 分组**（`$DSH_HOME/profiles/headless/cordis.patch.yml`

@@ -52,10 +52,11 @@ Go 客户端要求：典型 agent 流量 + 自带 UA + `x-opencode-session` 头�
 ### 2026-10-17 对齐记录
 
 1. `~/dsh-corebreak` 改名 → `~/LLMCoreBreak/dsh`（包名保留 `dsh-corebreak` 兼容 link/条目 id）：
-   - `docker-compose.yml` 挂载源 → `/home/administrator/LLMCoreBreak/dsh:/root/dsh-corebreak:ro`
    - `dsh-home/profiles/{headless,web}/package.json` 的 `link:` → `.../LLMCoreBreak/dsh`
    - 验证：容器内 dump-config **无 corebreak skipping** ✓
-2. `dsh-home` 两个 `cordis.patch.yml` 以宿主 `~/.dsh` 版覆盖（三组 provider + tool-web 段；
+   - 挂载路径现为 `/home/administrator/LLMCoreBreak/dsh:/home/administrator/LLMCoreBreak/dsh:ro`
+     （2026-10-22 起改挂宿主同路径：profile 里 dsh-corebreak 是指向该绝对路径的软链，
+     两边路径一致则宿主/容器共用同一份 profile 软链，不再依赖「容器内相对路径恰好落到挂载点」）。2. `dsh-home` 两个 `cordis.patch.yml` 以宿主 `~/.dsh` 版覆盖（三组 provider + tool-web 段；
    旧手工 `opencode-go-free` route 移除——longcat 已在组 1）。备份：`*.bak-huohua-20261017-140036`
 3. **修复**：flash 的「全 null reasoningEfforts」块（作者 10-17 尝试）已全部移除：
    - `none` 键违反 schema（枚举仅 off/minimal/low/medium/high/xhigh/max）；

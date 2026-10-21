@@ -1,6 +1,11 @@
 services:
-  backend:
+  # service 名不叫 backend：compose 会把 service 名注册成该服务所在**每个**网络的别名，
+  # 叫 backend 就会在共享网络 infra 上跟 L-Port 的 lport_backend 抢同一个名字
+  # （DNS 随机返回两个 IP → 解析到对方再连 :5001 必被拒，「有时通有时不通」）。
+  # 改名后 infra 上只有 suli-anime-backend；私有网络上额外挂 backend 别名给自家 frontend。
+  suli-anime-backend:
     build: ./backend
+    container_name: sulianimecreator-backend-1
     ports:
       - "5001:5001"
     volumes:
@@ -15,10 +20,16 @@ services:
       # 首次部署先 mkdir dsh-home，把宿主 ~/.dsh/{profiles,.credentials.yaml} 拷进去；
       # sessions/凭据全落这里，不进镜像。详见 README 部署节。
       - ./dsh-home:/root/.dsh
-      # 破甲内核（提示词层/策略层）源码：profile 里 dsh-corebreak 是 link: 软链，
-      # 目标路径 = /root/dsh-corebreak（= 宿主 LLMCoreBreak/dsh，2026-10-17 改名对齐），
-      # 不挂进来容器内解析失败，表现是启动 stderr「skipping profile bundle "dsh-corebreak"」。
-      - /home/administrator/LLMCoreBreak/dsh:/root/dsh-corebreak:ro
+      # dsh CLI 各版本（宿主 dsh-runtime/<版本>/，由 scripts/dsh-runtime.sh 安装 + 打破甲补丁）：
+      # 挂进来后容器按 DSH_VERSION 选版本跑，dsh 升版不必重建镜像。
+      # 每版本目录自带完整的 @deepseek-ai/* bundle（profile 的 dsh-base/dsh-headless 从这里解析），
+      # 所以不同版本互不干扰。
+      - ./dsh-runtime:/opt/dsh
+      # 破甲内核（提示词层/策略层）源码：profile 里 dsh-corebreak 是指向
+      # /home/administrator/LLMCoreBreak/dsh 的**绝对**软链，容器内挂同一路径即可解析
+      # （路径与宿主一致 = 宿主/容器两边都能用同一份 profile 软链，不挂进来会报
+      # 「skipping profile bundle "dsh-corebreak"」）。
+      - /home/administrator/LLMCoreBreak/dsh:/home/administrator/LLMCoreBreak/dsh:ro
       # 项目指令链：容器 WORKDIR=/app，AGENTS.md 走"cwd 向上收集"，两处都要挂。
       - ./backend/AGENTS.md:/app/AGENTS.md:ro
       - ./AGENTS.md:/AGENTS.md:ro
@@ -32,9 +43,16 @@ services:
     environment:
       - DATABASE_URL=sqlite:///suli.db
       - FLASK_DEBUG=0
-      - DSH_BIN=dsh
+      # dsh CLI 版本：装在宿主 dsh-runtime/<版本>/，容器挂载后按此选版本。
+      # 升版 = scripts/dsh-runtime.sh install <版本> + 改 .env 的 DSH_VERSION + 重启容器，
+      # 不重建镜像（dsh 已移出镜像，见 backend/Dockerfile）。
+      - DSH_VERSION=${DSH_VERSION:-0.2.0-rc.2}
+      - DSH_BIN=/opt/dsh/${DSH_VERSION:-0.2.0-rc.2}/bin/dsh
       - DSH_HOME=/root/.dsh
       - DSH_TIMEOUT_S=180
+      # dsh 是 Node 进程，默认只认 Node 内置根（编在二进制里，apt/pip 都管不到）。
+      # 让它改用 OpenSSL 系统库：ca-certificates 一升级就同步生效，不再三处漂移。
+      - NODE_OPTIONS=--use-openssl-ca
       - SEARXNG_URL=http://searxng:8080
       - OPENCODE_API_KEY=${OPENCODE_API_KEY:-}
       - OPENCODE_BASE=${OPENCODE_BASE:-https://opencode.ai/zen/go/v1}
@@ -46,15 +64,22 @@ services:
       - path: ./.env
         required: false
     networks:
-      - default
-      - infra
+      default:
+        # 私有网络：backend 这个名字只归我们（frontend 的 nginx proxy_pass http://backend:5001 走这里）。
+        aliases: [backend]
+      infra:
+        # 共享网络 infra 上**不叫 backend** —— 那个名字已归 L-Port 的 lport_backend
+        # （同一个 infra 上两个容器都注册 backend 时，DNS 会随机返回两个 IP：
+        #  解析到 L-Port 那台再连 :5001 必然被拒，表现为「有时通有时不通」）。
+        # 这里用项目唯一别名，谁要调我们走 suli-anime-backend:5001。
+        aliases: [suli-anime-backend]
     restart: unless-stopped
   frontend:
     build: ./frontend
     ports:
       - "5173:80"
     depends_on:
-      - backend
+      - suli-anime-backend
     restart: unless-stopped
 networks:
   infra:
