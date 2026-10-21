@@ -194,9 +194,10 @@ const curKey = ref('')
 const curSid = ref('')
 const msg = ref('')
 // 页面感知：单图创作页绑当前方案（scope=art），其余页仍绑集号（scope=episode）
+// 方案没选中就没有会话键（不再用 studio-draft 占位）：占位会话会自己复活，删不干净
 const isStudio = computed(() => route.path === '/studio')
 const pageScope = computed(() => (isStudio.value ? 'art' : 'episode'))
-const pageKey = computed(() => (isStudio.value ? (studio.planId || 'studio-draft') : (store.episodeId || '')))
+const pageKey = computed(() => (isStudio.value ? (studio.planId || '') : (store.episodeId || '')))
 const pageKindLabel = computed(() => (isStudio.value ? '方案' : '本集'))
 const pageSessionLabel = computed(() => (isStudio.value ? '本方案会话' : '本集会话'))
 const pageSessions = computed(() => sessions.value.filter(s => (s.scope || 'episode') === pageScope.value))
@@ -507,7 +508,7 @@ async function reload() {
   try {
     const r = await api.dshSessions('')
     sessions.value = r.data as any[]
-    // 当前会话恒等于当前页面锚点：studio=方案 id（未保存用 studio-draft），其余=集号
+    // 当前会话恒等于当前页面锚点：studio=选中的方案 id（没选就没有会话），其余=集号
     const scope = pageScope.value
     const key = pageKey.value
     curScope.value = scope
@@ -722,7 +723,7 @@ async function extractFrames(f: Att) {
 async function send() {
   const text = msg.value.trim()
   if ((!text && !pending.value.length) || loading.value) return
-  // 会话锚点跟着页面走：studio=当前方案（未保存用 studio-draft），其余=集号
+  // 会话锚点跟着页面走：studio=选中的方案（没选方案就没会话，不建占位会话），其余=集号
   const key = pageKey.value
   const scope = pageScope.value
   if (!key) return ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选择或新建集号，会话名即集号')
@@ -917,6 +918,15 @@ function purgeLegacyDomainCaches() {
     }
     drop.forEach(k => { try { localStorage.removeItem(k) } catch {} })
     try { localStorage.setItem('suli.dsh.purged-v1', String(Date.now())) } catch {}
+  } catch {}
+  // 一次性：单图页的占位会话键 studio-draft（没选方案时的兜底键）留下的旧桶
+  try {
+    if (!localStorage.getItem('suli.dsh.purged-v2')) {
+      for (const k of ['dsh-turns:art:studio-draft', 'dsh-run:art:studio-draft']) {
+        try { localStorage.removeItem(k) } catch {}
+      }
+      localStorage.setItem('suli.dsh.purged-v2', String(Date.now()))
+    }
   } catch {}
 }
 async function backToPageSessionSilent() {
