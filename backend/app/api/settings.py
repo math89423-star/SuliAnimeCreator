@@ -11,6 +11,7 @@ from flask import Blueprint, jsonify, request
 
 from ..services.disk_store import load, save
 from ..services import llm as llm_svc
+from ..services import dsh_profile
 
 bp = Blueprint("settings", __name__, url_prefix="/api/v1/settings")
 
@@ -227,15 +228,19 @@ def models_catalog_get():
 
 @bp.post("/models/catalog")
 def models_catalog_post():
-    """POST 查目录，body: {provider, base?, key?}。"""
+    """POST 查目录，body: {provider, base?, key?, force?}。
+
+    force=1 跳过 TTL 缓存真打网关——手动点「刷新」用这个；不给 force 就吃缓存。
+    """
     body = request.get_json(silent=True) or {}
     provider = (body.get("provider") or "").strip()
     base = (body.get("base") or "").strip()
     key = (body.get("key") or "").strip()
-    return _catalog(provider, base, key)
+    force = str(body.get("force") or "").strip().lower() in ("1", "true", "yes")
+    return _catalog(provider, base, key, force=force)
 
 
-def _catalog(provider, base_q, key_q):
+def _catalog(provider, base_q, key_q, force=False):
     """provider=opencode 走网关（有 key 则 live，无 key 试公开接口，失败给兜底）；
     provider=llamacpp 走本地服务 /v1/models。返回 {models:[{id, endpoint}], source}。"""
     if provider not in ("opencode", "llamacpp"):
@@ -258,7 +263,8 @@ def _catalog(provider, base_q, key_q):
     except ValueError as e:
         return err(str(e))
     mkey = "opencode|" + base
-    if not key_q:
+    # TTL 缓存只给「页面自己拉」用；手动刷新（force）必须真打网关，否则刷新按钮空转
+    if not key_q and not force:
         row = _memo_get(mkey)
         if row and time.time() - float(row.get("ts") or 0) < CATALOG_TTL:
             return ok(dict(row.get("payload") or {}))
@@ -283,9 +289,11 @@ def _catalog(provider, base_q, key_q):
         ids, source = list(CURATED_OPENCODE), "curated"
     import re as _re
     out = []
+    dsh_models = set(dsh_profile.servable_models())
     for raw in ids:
         mid = _re.sub(r"^opencode-go/", "", raw)
-        out.append({"id": raw, "endpoint": llm_svc._endpoint_for(mid).lstrip("/")})
+        out.append({"id": raw, "endpoint": llm_svc._endpoint_for(mid).lstrip("/"),
+                    "dsh": mid in dsh_models})
     data = {"models": out, "source": source, "base": base}
     if source == "live" and not key_q:
         _memo_put(mkey, data)

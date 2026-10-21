@@ -201,3 +201,11 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
   后端起 dsh 子进程前把 key 写进 `$DSH_HOME/.credentials.yaml`、按模型附加 `--patch` 覆盖 `agent-default-model`。
 - 不要再手改 `dsh-home/.credentials.yaml`，也不要手工删 `backend/data/model-patches/`（会自动重建）。
 - RightChat 的模型下拉选「跟随设置页」即用设置页模型；显式选了别的才覆盖。
+- **模型能不能真跑，看 headless profile 的 provider 分组**（`$DSH_HOME/profiles/headless/cordis.patch.yml`
+  的 `llm-pi-ai` 段）：网关按模型路由线协议，dsh 的 api 是 provider 级字段，所以拆成
+  `opencode-go`(chat/completions) / `opencode-go-responses`(/responses) / `opencode-go-anthropic`(/messages) 三组；
+  模型不在自己那组里 = dsh 解析不到 = 设了也等于没设（后端会静默跳过 patch）。
+  设置页下拉已按这个分组标「不可用」。要加新模型：改 `LLMCoreBreak/dsh/patches/llm-opencode-go.yml` 的对应组，
+  再跑 `python3 scripts/apply-opencode-providers.py <profile>/cordis.patch.yml`（幂等，只补缺失项）。
+- 后端自己直连网关用哪条协议，也以 profile 分组为准（`services/dsh_profile.py`），别按模型名前缀猜——
+  `minimax-m3.1-flash-free` 走 openai/chat，不是 /messages。

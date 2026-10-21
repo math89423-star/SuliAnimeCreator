@@ -8,6 +8,8 @@ import json
 import urllib.request
 from pathlib import Path
 
+from . import dsh_profile
+
 OPENCODE_BASE = "https://opencode.ai/zen/go/v1"
 LLAMACPP_DEFAULT = "http://127.0.0.1:8080"
 
@@ -83,7 +85,18 @@ def vlm_cfg():
 
 
 def _endpoint_for(model_id):
-    m = model_id.lower()
+    """模型走哪条线协议（/chat/completions | /responses | /messages）。
+
+    真源 = headless profile 的 provider 分组（那边是按网关实际路由分好的，
+    实测出来的）；profile 里没有的才走前缀启发式兜底。
+    前缀启发式会错：minimax-m3.1-flash-free 实际走 openai/chat，
+    按前缀猜成 /messages 会被网关判 ModelProtocolUnsupported。
+    """
+    mid = re.sub(r"^opencode-go/", "", (model_id or "").strip())
+    group = dsh_profile.group_of(mid)
+    if group:
+        return dsh_profile.GROUP_PROTOCOL[group]
+    m = mid.lower()
     if m.startswith(("muse-spark", "grok-", "gpt-")):
         return "/responses"
     if m.startswith(("minimax-", "qwen")):

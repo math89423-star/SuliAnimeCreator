@@ -27,9 +27,9 @@
               <el-form-item label="模型 id">
                 <div style="display:flex;gap:8px;flex:1">
                   <el-select v-model="models.llm.model" filterable allow-create clearable placeholder="下拉选择" style="flex:1" @change="fillBaseIfEmpty('llm')">
-                    <el-option v-for="o in catalogs.llm" :key="o.id" :label="o.id" :value="o.id" />
+                    <el-option v-for="o in llmOptions" :key="o.id" :label="o.dsh === false ? `${o.id}（不可用）` : o.id" :value="o.id" :disabled="o.dsh === false" />
                   </el-select>
-                  <el-button size="small" :loading="catalogLoading.llm" @click="loadCatalog('llm')">刷新</el-button>
+                  <el-button size="small" :loading="catalogLoading.llm" @click="loadCatalog('llm', true)">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="网关地址">
@@ -59,7 +59,7 @@
                   <el-select v-model="models.llm.local_model" filterable allow-create clearable placeholder="模型 id" style="flex:1">
                     <el-option v-for="o in catalogs.llm" :key="o.id" :label="o.id" :value="o.id" />
                   </el-select>
-                  <el-button size="small" :loading="catalogLoading.llm" @click="loadCatalog('llm')">刷新</el-button>
+                  <el-button size="small" :loading="catalogLoading.llm" @click="loadCatalog('llm', true)">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="Key（可选）">
@@ -87,7 +87,7 @@
                   <el-select v-model="models.vlm.model" filterable allow-create clearable placeholder="下拉选择" style="flex:1" @change="fillBaseIfEmpty('vlm')">
                     <el-option v-for="o in vlmOptions" :key="o.id" :label="o.id" :value="o.id" />
                   </el-select>
-                  <el-button size="small" :loading="catalogLoading.vlm" @click="loadCatalog('vlm')">刷新</el-button>
+                  <el-button size="small" :loading="catalogLoading.vlm" @click="loadCatalog('vlm', true)">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="网关地址">
@@ -106,7 +106,7 @@
                   <el-select v-model="models.vlm.local_model" filterable allow-create clearable placeholder="模型 id" style="flex:1">
                     <el-option v-for="o in catalogs.vlm" :key="o.id" :label="o.id" :value="o.id" />
                   </el-select>
-                  <el-button size="small" :loading="catalogLoading.vlm" @click="loadCatalog('vlm')">刷新</el-button>
+                  <el-button size="small" :loading="catalogLoading.vlm" @click="loadCatalog('vlm', true)">刷新</el-button>
                 </div>
               </el-form-item>
               <el-form-item label="Key（可选）">
@@ -265,26 +265,35 @@ const testingModels = ref<Record<string, boolean>>({})
 
 // ---- 模型下拉目录 ----
 const OPENCODE_DEFAULT_BASE = 'https://opencode.ai/zen/go/v1'
-const catalogs = ref<Record<'llm' | 'vlm', { id: string; endpoint: string }[]>>({ llm: [], vlm: [] })
+interface CatalogItem { id: string; endpoint: string; dsh?: boolean }
+const catalogs = ref<Record<'llm' | 'vlm', CatalogItem[]>>({ llm: [], vlm: [] })
 const catalogLoading = ref<Record<string, boolean>>({})
+// VLM 走后端直连网关：只要 chat 协议就能用
 const vlmOptions = computed(() => catalogs.value.vlm.filter(o => o.endpoint === 'chat/completions'))
+// LLM 是 dsh 跑的：profile 里没有的模型选了也不生效（后端 dsh=True 才算可跑）
+const llmOptions = computed(() => catalogs.value.llm)
+const llmRunnable = computed(() => catalogs.value.llm.filter(o => o.dsh !== false))
 
 function fillBaseIfEmpty(sec: 'llm' | 'vlm', base = OPENCODE_DEFAULT_BASE) {
   if (!models.value[sec].base.trim()) models.value[sec].base = base
 }
 
-async function loadCatalog(sec: 'llm' | 'vlm') {
+async function loadCatalog(sec: 'llm' | 'vlm', force = false) {
   const cfg = models.value[sec]
   const url = cfg.provider === 'opencode' ? cfg.base : cfg.local_url
   const key = keys.value[sec]
   catalogLoading.value[sec] = true
   try {
     // 并发去重：llm/vlm 同配置、页面重挂载、连点刷新都只发一次请求
-    const d = (await once(`catalog|${cfg.provider}|${url}|${key}`, () => api.getModelCatalog(cfg.provider, url, key))).data
+    // force 的请求不进这个池：手动刷新要真打网关，不能被上一次的结果顶掉
+    const d = (await once(`catalog|${force ? 'f' : 'n'}|${cfg.provider}|${url}|${key}`, () => api.getModelCatalog(cfg.provider, url, key, force))).data
     catalogs.value[sec] = d?.models || []
     if (cfg.provider === 'opencode' && d?.base) fillBaseIfEmpty(sec, d.base)
     const src = d?.source === 'curated' ? '，离线兜底' : d?.source === 'cache' ? '，缓存' : ''
-    testResults.value[sec] = `模型列表已更新（${(d?.models || []).length} 个${src}）`
+    // 个数按这栏真能选的数量报：VLM 只给 chat 协议模型（后端 vlm_chat 也只收 chat）；
+    // LLM 只给 dsh 真跑得起来的（profile 里没有的选了也不生效）
+    const n = sec === 'vlm' ? vlmOptions.value.length : llmRunnable.value.length
+    testResults.value[sec] = `模型列表已更新（${n} 个${src}）`
   } catch (e: any) {
     testResults.value[sec] = '列表失败：' + (e?.response?.data?.msg || e?.message || '未知错误')
   } finally {

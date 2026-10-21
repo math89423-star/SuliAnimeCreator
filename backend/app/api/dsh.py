@@ -16,6 +16,7 @@ from pathlib import Path
 from flask import Blueprint, request, jsonify, Response, stream_with_context
 
 from ..services.disk_store import load, save
+from ..services import dsh_profile
 
 bp = Blueprint("dsh", __name__, url_prefix="/api/v1/dsh")
 
@@ -278,7 +279,6 @@ def _exec_dsh_with_retry(msg, sid, run, tries=2, delay=30):
 # 两条入口：显式传参（RightChat 下拉）strict 校验，未知 → 400；设置页默认模型非 strict
 # （allow-create 允许手填，拼错时静默回退 profile 默认，不让整轮启动失败）。
 _MODEL_DIR = BACKEND_DIR / "data" / "model-patches"
-_FALLBACK_AGENT_MODEL = "deepseek-v4.1-flash"
 
 
 def _settings_llm_model():
@@ -289,25 +289,16 @@ def _settings_llm_model():
 
 
 def _profile_patch_text():
-    p = Path(DSH_HOME) / "profiles" / "headless" / "cordis.patch.yml"
-    try:
-        return p.read_text(encoding="utf-8")
-    except Exception:
-        return ""
+    return dsh_profile._patch_text()
 
 
 def _profile_patch_models():
     """headless profile 里 providers 段名下的模型 id 集合（patch 白名单）。"""
-    text = _profile_patch_text()
-    m = re.search(r"(?ms)^\s*providers:\s*$(.*?)^- id:", text)
-    seg = m.group(1) if m else text
-    return set(re.findall(r"(?m)^\s*- id:\s*([a-z0-9][a-z0-9._-]*)\s*$", seg))
+    return set(dsh_profile.servable_models())
 
 
 def _profile_default_model():
-    text = _profile_patch_text()
-    m = re.search(r"(?ms)^- id: agent-default-model.*?^\s*model:\s*(\S+)\s*$", text)
-    return m.group(1).strip("\"'") if m else _FALLBACK_AGENT_MODEL
+    return dsh_profile.default_model()
 
 
 def _model_patch_path(name, strict=True):
@@ -315,12 +306,15 @@ def _model_patch_path(name, strict=True):
 
     空 / profile 默认模型 → None（不附加 patch）；不在 profile 模型列表：
     strict=True 抛 ValueError（显式传参入口），strict=False 返回 None（设置页兜底）。
+    provider 必须写模型自己那组（chat / responses / messages 三组分开），
+    写错组 = dsh 解析不到这个模型，等于没换。
     """
     mid = (name or "").strip()
     if not mid:
         return None
     mid = re.sub(r"^opencode-go/", "", mid)
-    if mid not in _profile_patch_models():
+    group = dsh_profile.group_of(mid)
+    if not group:
         if strict:
             raise ValueError("未知模型：%s（不在 headless profile 的模型列表中）" % name)
         return None
@@ -330,8 +324,8 @@ def _model_patch_path(name, strict=True):
     content = ("- id: agent-default-model\n"
                "  name: \"@deepseek-ai/dsh-agent-default-model\"\n"
                "  config:\n"
-               "    provider: opencode-go\n"
-               "    model: %s\n" % mid)
+               "    provider: %s\n"
+               "    model: %s\n" % (group, mid))
     try:
         if not path.is_file() or path.read_text(encoding="utf-8") != content:
             path.parent.mkdir(parents=True, exist_ok=True)
