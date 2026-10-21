@@ -286,9 +286,11 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { UploadFilled, VideoCamera, MagicStick, CaretRight, VideoPause, DArrowLeft, DArrowRight } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
+import { useUiStore } from '../stores/ui'
 import MarkdownView from '../components/MarkdownView.vue'
 
 const store = useAppStore()
+const ui = useUiStore()
 
 type Src = { name: string; path: string; url: string; dur: number; bytes: number } | null
 
@@ -396,6 +398,15 @@ function restore() {
   } catch {}
 }
 watch([tab, src, url, maxFrames, scene, frames, durationS, mode, segInfo, segStart, segEnd, loopSeg, ask, report, deep, deepModel], persistSoon, { deep: true })
+
+// 拉片会话的对象 = 当前参考素材（不再跟剧集的集号混一个会话）
+watch(src, (s) => { ui.videoAnchor = s?.name || '' }, { immediate: true })
+// 右栏点了别的拉片会话 → 切到那个素材
+watch(() => ui.videoPick, (name) => {
+  if (!name) return
+  const row = media.value.find(m => m.name === name)
+  if (row) loadMaterial(row)
+})
 
 /* —— 素材源（拉片室已拉素材库：uploads 视频列表）—— */
 type MediaItem = { name: string; url: string; bytes: number; mtime: number; dur?: number }
@@ -703,8 +714,10 @@ function buildDeepBrief(): string {
 async function analyze(deepMode = false) {
   if (analyzing.value) return
   if (deepMode ? !src.value : !frames.value.length) return
-  const scope = store.episodeId ? 'episode' : 'lab'
-  const key = store.episodeId || 'video-lab'
+  // 拉片会话独立成域（scope=video，键=素材名）：不跟剧集的集号会话混，
+  // 剧集上下文里不再塞拉片报告，右栏的追问也跟这里同一条会话。
+  const scope = 'video'
+  const key = ui.videoAnchor || src.value?.name || 'video-lab'
   analyzing.value = true
   progress.value = '建会话…'
   report.value = ''

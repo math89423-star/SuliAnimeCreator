@@ -371,6 +371,12 @@ watch(() => studio.remoteChange, async (c) => {
   if (!formDirty.value) await loadPlan(c.planId)
 })
 
+/** 右栏点了别的方案会话：方案页切到那个方案（会话和表单必须是同一个方案） */
+watch(() => studio.planPick, async (id) => {
+  if (!id || id === curPlanId.value) return
+  await loadPlan(id)
+})
+
 async function loadPlan(id: string) {
   if (!id) return newPlan()
   try {

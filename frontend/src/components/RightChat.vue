@@ -146,9 +146,10 @@
         <el-input v-model="histKw" size="small" :placeholder="`搜索${pageKindLabel}`" clearable style="flex:1;min-width:0">
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
+        <el-checkbox v-model="histAll" size="small" style="margin:0">全部</el-checkbox>
         <el-button size="small" type="primary" @click="backToPageSession(); histOpen = false"><el-icon style="margin-right:2px"><Plus /></el-icon>{{ pageSessionLabel }}</el-button>
       </div>
-      <div class="suli-muted" style="font-size:11px;padding:0 12px 6px">{{ pageKindLabel === '方案' ? '一方案一会话：点卡片即切到该方案' : '一集一会：会话名即集号，点击切换中央集号' }}</div>
+      <div class="suli-muted" style="font-size:11px;padding:0 12px 6px">{{ histHint }}</div>
       <div class="hist-list">
         <div v-if="!filteredSessions.length" class="hist-empty">暂无历史会话</div>
         <div
@@ -163,7 +164,7 @@
               <el-button size="small" text circle title="导出该会话" @click.stop="exportOne(s)"><el-icon><Download /></el-icon></el-button>
               <el-button size="small" text circle title="删除该会话" @click.stop="delSession(s)"><el-icon><Close /></el-icon></el-button>
             </div>
-            <div class="hist-meta tnum">{{ pageKindLabel }}会话 · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
+            <div class="hist-meta tnum">{{ scopeKind(s.scope) }}会话 · {{ rel(s.last_active) }} · {{ fmtTime(s.last_active) }}</div>
         </div>
       </div>
     </div>
@@ -179,6 +180,7 @@ import MarkdownView from './MarkdownView.vue'
 import PlanChangeCard from './PlanChangeCard.vue'
 import { diffPlanRows } from '../utils/planDiff'
 import { useAppStore } from '../stores/app'
+import { useUiStore } from '../stores/ui'
 import { useStudioStore } from '../stores/studio'
 
 interface Att { name: string; url: string; path: string; kind: 'image' | 'file' | 'video'; dur?: number; size?: number }
@@ -186,21 +188,59 @@ interface Turn { q: string; a: string; files?: Att[]; applied?: boolean }
 
 const store = useAppStore()
 const studio = useStudioStore()
+const ui = useUiStore()
 const route = useRoute()
-// 不再按故事/角色/分镜分页：单会话列表，scope 只剩存储字段（存量历史沿用原值）
+// 会话列表：scope 是存储字段（各域并存，见 ANCHORS）
 const curScope = ref('episode')
 const sessions = ref<any[]>([])
 const curKey = ref('')
 const curSid = ref('')
 const msg = ref('')
-// 页面感知：单图创作页绑当前方案（scope=art），其余页仍绑集号（scope=episode）
-// 方案没选中就没有会话键（不再用 studio-draft 占位）：占位会话会自己复活，删不干净
-const isStudio = computed(() => route.path === '/studio')
-const pageScope = computed(() => (isStudio.value ? 'art' : 'episode'))
-const pageKey = computed(() => (isStudio.value ? (studio.planId || '') : (store.episodeId || '')))
-const pageKindLabel = computed(() => (isStudio.value ? '方案' : '本集'))
-const pageSessionLabel = computed(() => (isStudio.value ? '本方案会话' : '本集会话'))
+// 页面感知：右栏的会话键 = 这一页「正在改的那个对象」，不是页面本身，也不是整个项目。
+//   有对象 → 跟对象（方案 / 集号 / 参考素材 / 投流批次）；没对象 → 跟页面各自分桶。
+//   同一集号的四个页（导演/剧本分镜/故事/角色）共享集号会话——它们改的是同一样东西。
+type AgentCtx = 'plan' | 'episode' | 'none'
+interface AgentAnchor { scope: string; kind: string; label: string; ctx: AgentCtx; need: string }
+const ANCHORS: Record<string, AgentAnchor> = {
+  '/studio':    { scope: 'art',     kind: '方案', label: '本方案会话', ctx: 'plan',    need: '先新建或选择方案' },
+  '/director':  { scope: 'episode', kind: '本集', label: '本集会话',   ctx: 'episode', need: '先选择或新建集号' },
+  '/board':     { scope: 'episode', kind: '本集', label: '本集会话',   ctx: 'episode', need: '先选择或新建集号' },
+  '/story':     { scope: 'episode', kind: '本集', label: '本集会话',   ctx: 'episode', need: '先选择或新建集号' },
+  '/character': { scope: 'episode', kind: '本集', label: '本集会话',   ctx: 'episode', need: '先选择或新建集号' },
+  '/video':     { scope: 'video',   kind: '本片', label: '本片会话',   ctx: 'none',    need: '先选一个参考视频' },
+  '/traffic':   { scope: 'traffic', kind: '本批', label: '本批会话',   ctx: 'episode', need: '先选一个母集号' },
+  '/art':       { scope: 'page',    kind: '本页', label: '本页会话',   ctx: 'none',    need: '' },
+  '/settings':  { scope: 'page',    kind: '本页', label: '本页会话',   ctx: 'none',    need: '' },
+  '/':          { scope: 'page',    kind: '本页', label: '本页会话',   ctx: 'none',    need: '' },
+}
+const SCOPE_KIND: Record<string, string> = { art: '方案', episode: '本集', video: '本片', traffic: '本批', page: '本页', lab: '实验', global: '全局' }
+const anchor = computed<AgentAnchor>(() => ANCHORS[route.path] || ANCHORS['/'])
+const pageScope = computed(() => anchor.value.scope)
+const pageKey = computed(() => {
+  const a = anchor.value
+  if (a.scope === 'art') return studio.planId || ''
+  if (a.scope === 'episode') return store.episodeId || ''
+  if (a.scope === 'video') return ui.videoAnchor || ''
+  if (a.scope === 'traffic') return ui.trafficAnchor || ''
+  return String(route.meta?.title || route.path || 'page')   // page 域：一页一个桶，互不串
+})
+const pageKindLabel = computed(() => anchor.value.kind)
+const pageSessionLabel = computed(() => anchor.value.label)
 const pageSessions = computed(() => sessions.value.filter(s => (s.scope || 'episode') === pageScope.value))
+// 给 agent 看什么：方案原文 / 集号 / 参考片 / 什么都不给（工具页与设置页不塞剧集上下文）
+const pageContext = computed(() => {
+  const a = anchor.value
+  if (a.ctx === 'plan') return studio.contextBlock()
+  if (a.ctx === 'episode') {
+    const k = pageKey.value
+    return /^EP-/.test(k) ? `集号：${k}` : ''
+  }
+  if (a.scope === 'video') {
+    const k = pageKey.value
+    return k ? `参考片：${k}` : ''
+  }
+  return ''
+})
 // Agent 运行模型（2026-10-17）：白名单与后端 _RUN_MODELS 对齐；每次发送按当前选择生效
 const MODEL_OPTIONS = [
   { label: '跟随设置页', value: '' },
@@ -218,10 +258,23 @@ function findSession(scope: string, key: string) {
 // 会话历史抽屉（右侧滑入，标题左 + 导出/清空/关闭右）
 const histOpen = ref(false)
 const histKw = ref('')
+const histAll = ref(false)   // 勾上 = 看所有域的会话（不只当前页的对象域）
+function scopeKind(scope: string): string {
+  return SCOPE_KIND[scope || 'episode'] || '会话'
+}
+const histHint = computed(() => {
+  if (histAll.value) return '全部域：点卡片即切到那条会话'
+  const a = anchor.value
+  if (a.scope === 'art') return '一方案一会话：点卡片即切到该方案'
+  if (a.scope === 'episode') return '一集一会：会话名即集号，点击切换中央集号'
+  if (a.scope === 'video') return '一素材一会话：点卡片即切到该素材'
+  if (a.scope === 'traffic') return '一批一会话：点卡片即切到该批'
+  return '一页一会话：点卡片即切到那条会话'
+})
 const filteredSessions = computed(() => {
-  // 历史按当前页面的域过滤：单图创作页看方案会话（art），其余页看集号会话（episode）
+  // 历史按当前页面的对象域过滤；勾「全部」则所有域一起看
   const kw = histKw.value.trim().toLowerCase()
-  const rows = [...pageSessions.value]
+  const rows = [...(histAll.value ? sessions.value : pageSessions.value)]
     .sort((a, b) => (b.last_active || 0) - (a.last_active || 0))
   if (!kw) return rows
   return rows.filter(s => String(s.key || '').toLowerCase().includes(kw))
@@ -297,7 +350,7 @@ let planIdsBefore: string[] = []
 async function snapPlan() {
   planBefore = null
   planIdsBefore = []
-  if (!isStudio.value) return
+  if (pageScope.value !== 'art') return
   try {
     const r: any = await api.listPlans()
     planIdsBefore = (r?.data || []).map((x: any) => String(x?.id || ''))
@@ -312,7 +365,7 @@ async function snapPlan() {
 
 /** 回合结束后核方案：变了 → 右栏出变更卡 + 通知方案页。 */
 async function checkPlanChange(idx: number) {
-  if (!isStudio.value) return
+  if (pageScope.value !== 'art') return
   const id = planBefore?.id || studio.planId
   // 原来没有方案（agent 自己新建了一个）：按方案列表找新出现的
   if (!id) {
@@ -532,9 +585,9 @@ async function loadSkills() {
   } catch { skills.value = [] }
 }
 async function backToPageSession() {
-  // 回到当前页面的锚点会话：studio=当前方案，其余=本集（没有就建，有就选中）
+  // 回到当前页面的锚点会话（没有就建，有就选中）
   const key = pageKey.value
-  if (!key) return ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选集号')
+  if (!key) return ElMessage.warning(anchor.value.need || '先选一个对象')
   const scope = pageScope.value
   try { await api.dshEnsure(scope, key) } catch {}
   await reload()
@@ -546,10 +599,10 @@ async function backToPageSession() {
   await resumeIfAny()
 }
 async function ensure(silent = false) {
-  // 只确保当前页面锚点会话存在（集号/方案），不再产生 EP-xxx-2 后缀
+  // 只确保当前页面锚点会话存在（集号/方案/素材/批次），不再产生 EP-xxx-2 后缀
   const key = pageKey.value
   const scope = pageScope.value
-  if (!key) { if (!silent) ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选择或新建集号'); return }
+  if (!key) { if (!silent) ElMessage.warning(anchor.value.need || '先选一个对象'); return }
   try {
     await api.dshEnsure(scope, key)
   } catch { if (!silent) ElMessage.error('新建会话失败，后端未起？'); return }
@@ -562,10 +615,17 @@ async function ensure(silent = false) {
   if (!silent) ElMessage.success(`已切到${pageSessionLabel.value} ${key}`)
 }
 function pick(s: any) {
-  // 集号会话：点历史即切中央集号；方案会话（art）只切右侧会话，不动中央集号
+  // 点历史卡 = 切到那条会话对应的对象：集号切中央、方案切方案页、素材切拉片室、批次切投流页
   const scope = s?.scope || pageScope.value
-  if (scope === 'episode' && s.key && s.key !== store.episodeId && /^EP-/.test(s.key)) {
-    store.episodeId = s.key
+  const key = s?.key || ''
+  if (scope === 'episode' && key && key !== store.episodeId && /^EP-/.test(key)) {
+    store.episodeId = key
+  } else if (scope === 'art' && key) {
+    studio.pickPlan(key)
+  } else if (scope === 'video' && key) {
+    ui.pickVideo(key)
+  } else if (scope === 'traffic' && key) {
+    ui.trafficAnchor = key
   }
   curKey.value = s.key
   curScope.value = scope
@@ -723,18 +783,18 @@ async function extractFrames(f: Att) {
 async function send() {
   const text = msg.value.trim()
   if ((!text && !pending.value.length) || loading.value) return
-  // 会话锚点跟着页面走：studio=选中的方案（没选方案就没会话，不建占位会话），其余=集号
+  // 会话锚点 = 这一页正在改的对象（没对象就没有会话，不建占位会话）
   const key = pageKey.value
   const scope = pageScope.value
-  if (!key) return ElMessage.warning(isStudio.value ? '先新建或选择方案' : '先选择或新建集号，会话名即集号')
+  if (!key) return ElMessage.warning(anchor.value.need || '先选一个对象')
   if (!curKey.value || curKey.value !== key || !findSession(scope, key)) {
     try { await ensure(true) } catch { ElMessage.error('新建会话失败，后端未起？'); return }
   }
   if (!curKey.value) return
   // 附件以后端 cwd 为基准的 @path 引用拼进消息，dsh 侧可直接读取；分镜域默认带上集号，防 agent 从图片文件名猜集号
   const refs = pending.value.map(f => `@data/uploads/${f.path}`).join('\n')
-  // 页面感知：studio 把当前页方案（id/标题/意图/引擎/约束/参考图）原文贴给 agent；其余页带集号
-  const ctx = isStudio.value ? studio.contextBlock() : (/^EP-/.test(curKey.value) ? `集号：${curKey.value}` : '')
+  // 页面感知：给 agent 看这一页的对象（方案原文 / 集号 / 什么都不给）
+  const ctx = pageContext.value
   const q = [ctx, text, refs].filter(Boolean).join('\n')
   const files = pending.value.slice()
   msg.value = ''
@@ -885,12 +945,12 @@ async function resumeIfAny() {
   } else if (r.stoppedFlag) { forgetRun(); fillAAt(idx, '[已停止]') }
   else { forgetRun(); fillAAt(idx, '[失败] ' + String(r.errMsg || '流中断').slice(0, 200)) }
 }
-watch(() => [store.episodeId, route.path, studio.planId], async () => {
+watch(() => [store.episodeId, route.path, studio.planId, ui.videoAnchor, ui.trafficAnchor], async () => {
   // 页面锚点变化即切会话（只断跟随不杀任务，切回自动重连）；无锚点只刷新列表不建垃圾会话
   try { aborter.value?.abort() } catch {}
   loading.value = false
   progress.value = ''
-  if (!isStudio.value && store.episodeId && !findSession('episode', store.episodeId)) {
+  if (pageScope.value === 'episode' && store.episodeId && !findSession('episode', store.episodeId)) {
     try { await api.dshEnsureEpisode(store.episodeId) } catch {}
   }
   await reload()
@@ -930,8 +990,8 @@ function purgeLegacyDomainCaches() {
   } catch {}
 }
 async function backToPageSessionSilent() {
-  // 首屏自动收敛到当前页面锚点会话（已有就不建，不打扰）；studio 页只在发送时建
-  if (isStudio.value) return
+  // 首屏自动收敛到当前页面锚点会话（已有就不建，不打扰）；非集号域只在发送时建
+  if (pageScope.value !== 'episode') return
   const epKey = store.episodeId
   if (!epKey || findSession('episode', epKey)) return
   try { await api.dshEnsureEpisode(epKey); await reload() } catch {}

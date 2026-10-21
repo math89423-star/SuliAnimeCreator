@@ -145,10 +145,15 @@ import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
+import { useUiStore } from '../stores/ui'
 
 const store = useAppStore()
+const ui = useUiStore()
 const motherId = ref((store as any).episodeId || 'EP-DEMO01');
 const libSource = ref('')
+// 投流会话的对象 = 母集号（右栏按它分「本批会话」；跟剧集的集号会话分开，不互相污染）
+watch(motherId, (v) => { ui.trafficAnchor = v || '' }, { immediate: true })
+watch(() => ui.trafficAnchor, (v) => { if (v && v !== motherId.value) motherId.value = v })
 watch(() => (store as any).episodeId, v => {
   if (!v || v === motherId.value) return
   saveSnap()

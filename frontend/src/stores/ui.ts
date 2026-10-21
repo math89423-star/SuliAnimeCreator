@@ -19,5 +19,11 @@ export const useUiStore = defineStore('ui', () => {
   // 投流页历史包弹窗信号：顶栏按钮只发信号，弹窗状态归 TrafficView
   const trafficHistSignal = ref(0)
   function openTrafficHist() { trafficHistSignal.value++ }
-  return { module, health, leftCollapsed, rightCollapsed, quickRef, openQuickRef, closeQuickRef, minimizeQuickRef, switchModule, toggleLeft, toggleRight, trafficHistSignal, openTrafficHist }
+  // 各页「正在改的那个对象」标识：右栏按它分会话桶（拉片=素材名，投流=母集号）
+  const videoAnchor = ref('')
+  const trafficAnchor = ref('')
+  // 右栏点了别的会话：拉片室/投流页据此切到那个对象
+  const videoPick = ref('')
+  function pickVideo(name: string) { videoPick.value = name }
+  return { module, health, leftCollapsed, rightCollapsed, quickRef, openQuickRef, closeQuickRef, minimizeQuickRef, switchModule, toggleLeft, toggleRight, trafficHistSignal, openTrafficHist, videoAnchor, trafficAnchor, videoPick, pickVideo }
 })

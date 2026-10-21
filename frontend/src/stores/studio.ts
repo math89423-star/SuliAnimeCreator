@@ -11,6 +11,9 @@ export const useStudioStore = defineStore('studio', () => {
   const refNames = ref<string[]>([])
   /** agent 改盘后由右栏写入：方案页据此重拉表单并显示变更卡 */
   const remoteChange = ref<{ planId: string; rows: PlanDiffRow[]; created?: boolean } | null>(null)
+  /** 右栏点了别的方案会话：方案页据此切到那个方案（会话和表单必须同一个方案） */
+  const planPick = ref('')
+  function pickPlan(id: string) { planPick.value = id }
 
   function setPlan(p: {
     id?: string
@@ -46,5 +49,5 @@ export const useStudioStore = defineStore('studio', () => {
     return lines.join('\n')
   }
 
-  return { planId, planTitle, intentText, engines, note, refNames, remoteChange, setPlan, setRemoteChange, contextBlock }
+  return { planId, planTitle, intentText, engines, note, refNames, remoteChange, planPick, setPlan, setRemoteChange, pickPlan, contextBlock }
 })
