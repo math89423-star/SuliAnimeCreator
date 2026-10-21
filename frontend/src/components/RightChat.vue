@@ -49,6 +49,11 @@
             <div class="bubble agent-b">
               <div v-if="!t.a" class="a thinking">思考中…</div>
               <MarkdownView v-else class="a-md" :content="displayAnswer(t)" />
+          <PlanChangeCard
+            v-if="changeCard[i]"
+            :plan-id="changeCard[i].planId"
+            :rows="changeCard[i].rows"
+          />
           <div v-if="canApply(t)" class="turn-apply">
             <template v-if="!probe[i]">
               <span class="apply-hint">{{ applyHint(t) }}</span>
@@ -171,6 +176,8 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { api } from '../api/client'
 import { Close, Check, Paperclip, Picture, CircleClose, Clock, Plus, Download, Delete, Search, VideoCamera } from '@element-plus/icons-vue'
 import MarkdownView from './MarkdownView.vue'
+import PlanChangeCard from './PlanChangeCard.vue'
+import { diffPlanRows } from '../utils/planDiff'
 import { useAppStore } from '../stores/app'
 import { useStudioStore } from '../stores/studio'
 
@@ -277,6 +284,61 @@ const applyingIdx = ref(-1)
 const probingIdx = ref(-1)
 const probe = ref<Record<number, any>>({})
 const applyMsg = ref<Record<number, string>>({})
+// 方案变更卡：回合结束后 agent 改了方案就挂在那一轮下面
+const changeCard = ref<Record<number, { planId: string; rows: any[] }>>({})
+
+// ── 方案变更对比（单图创作页）──────────────────────────────────────────────
+// 发消息前抓一份服务端方案快照，回合结束再拉一次比对：变了就出变更卡，
+// 并通知方案页重拉表单（agent 挂的参考图、改的约束当场可见）。
+let planBefore: any = null
+let planIdsBefore: string[] = []
+
+async function snapPlan() {
+  planBefore = null
+  planIdsBefore = []
+  if (!isStudio.value) return
+  try {
+    const r: any = await api.listPlans()
+    planIdsBefore = (r?.data || []).map((x: any) => String(x?.id || ''))
+  } catch { planIdsBefore = [] }
+  const id = studio.planId
+  if (!id) return
+  try {
+    const r: any = await api.getPlan(id)
+    planBefore = r?.data || null
+  } catch { planBefore = null }
+}
+
+/** 回合结束后核方案：变了 → 右栏出变更卡 + 通知方案页。 */
+async function checkPlanChange(idx: number) {
+  if (!isStudio.value) return
+  const id = planBefore?.id || studio.planId
+  // 原来没有方案（agent 自己新建了一个）：按方案列表找新出现的
+  if (!id) {
+    try {
+      const r: any = await api.listPlans()
+      const rows: any[] = r?.data || []
+      const fresh = rows.find(x => x?.id && !planIdsBefore.includes(String(x.id)))
+      if (!fresh) return
+      const d: any = (await api.getPlan(fresh.id))?.data
+      const rr = diffPlanRows({}, d)
+      if (!rr.length) return
+      changeCard.value = { ...changeCard.value, [idx]: { planId: fresh.id, rows: rr } }
+      studio.setRemoteChange({ planId: fresh.id, rows: rr, created: true })
+    } catch { /* 后端未起就静默 */ }
+    return
+  }
+  let after: any = null
+  try { after = (await api.getPlan(id))?.data || null } catch { return }
+  if (!after) return
+  // 基准：回合前快照（只算这一轮 agent 改了什么）；没有快照（重连/刷新）才用后端留的改前快照
+  const rows = planBefore
+    ? diffPlanRows(planBefore, after)
+    : (after.prev ? diffPlanRows(after.prev, after) : [])
+  if (!rows.length) return
+  changeCard.value = { ...changeCard.value, [idx]: { planId: id, rows } }
+  studio.setRemoteChange({ planId: id, rows })
+}
 
 function rel(ts: number) {
   if (!ts) return '未开始'
@@ -553,9 +615,10 @@ async function copyText(s: string) {
 }
 function delTurn(i: number) {
   turns.value.splice(i, 1)
-  // 索引键的状态（验盘/回执）一起清，免得错位挂到别的轮
+  // 索引键的状态（验盘/回执/变更卡）一起清，免得错位挂到别的轮
   probe.value = {}
   applyMsg.value = {}
+  changeCard.value = {}
   saveLocal()
 }
 
@@ -682,6 +745,8 @@ async function send() {
   loading.value = true
   progress.value = '运行中…'
   scrollBottom()
+  // 方案快照先抓：这轮 agent 改了什么，回合结束靠它算差
+  await snapPlan()
   const ac = new AbortController()
   let runId = ''
   try {
@@ -696,23 +761,27 @@ async function send() {
       if (r.done.session_id && r.done.session_id !== curSid.value) { curSid.value = r.done.session_id; await reload() }
       fillAAt(idx, r.done.answer || '(空回包)')
       if (r.done.retried) ElMessage.info('上一轮被拒答，已自动重试并替换结果')
+      void checkPlanChange(idx)
     } else if (r.aborted) {
       // 断开跟随（切页/刷新）：任务在后端继续跑，run_id 已记住，回来会自动重连
     } else if (r.stoppedFlag) {
       forgetRun()
       fillAAt(idx, '[已停止]')
+      void checkPlanChange(idx)
     } else {
       // 流断了（切页/刷新/网络）：去问 run 的真实状态——任务可能还在跑，也可能已经跑完
       let st: any = null
       try { st = (await api.dshRunState(runId))?.data } catch {}
       if (st && st.status !== 'running') { forgetRun(); applyFinished(st) }
       else { rememberRun(runId) }   // 保留 run_id，回来/刷新后自动重连
+      void checkPlanChange(idx)
     }
   } catch (e: any) {
     forgetRun()
     const m = (e?.message || '调用失败').slice(0, 200)
     fillAAt(idx, '[失败] ' + m)
     ElMessage.error(m.slice(0, 120))
+    void checkPlanChange(idx)
   } finally {
     loading.value = false
     progress.value = ''
@@ -804,12 +873,14 @@ async function resumeIfAny() {
   rememberRun(rid)
   const idx = Math.max(0, turns.value.length - 1)
   const ac = new AbortController()
+  await snapPlan()
   const r = await followRun(rid, 0, idx, ac, '（已重连）')
   if (r.aborted) return
   if (r.done) {
     forgetRun()
     if (r.done.session_id && r.done.session_id !== curSid.value) { curSid.value = r.done.session_id; await reload() }
     fillAAt(idx, r.done.answer || '(空回包)')
+    void checkPlanChange(idx)
   } else if (r.stoppedFlag) { forgetRun(); fillAAt(idx, '[已停止]') }
   else { forgetRun(); fillAAt(idx, '[失败] ' + String(r.errMsg || '流中断').slice(0, 200)) }
 }

@@ -177,6 +177,21 @@ def _trim(v):
     return str(v or "")[:_ENGINE_CAP]
 
 
+def _plan_snapshot(p):
+    """方案状态快照（变更 diff 的对照基准）：五个可改字段的归一化值。"""
+    return {
+        "title": p.get("title") or "",
+        "intent_text": p.get("intent_text") or "",
+        "engines": list(p.get("engines") or []),
+        "ref_images": [
+            {"name": r.get("name") or "", "path": r.get("path") or "", "url": r.get("url") or ""}
+            for r in (p.get("ref_images") or [])
+            if isinstance(r, dict)
+        ],
+        "note": p.get("note") or "",
+    }
+
+
 def _plan_projection(p):
     """列表/详情投影：列表不拉全量提示词正文（只给计数），详情才带 prompts。"""
     pr = p.get("prompts") or {}
@@ -208,6 +223,8 @@ def get_plan(plan_id):
     d = _plan_projection(p)
     d["prompts"] = p.get("prompts") or {}
     d["blueprint"] = p.get("blueprint") or None
+    d["prev"] = p.get("prev") or None
+    d["prev_at"] = p.get("prev_at") or None
     return ok(d)
 
 
@@ -235,7 +252,8 @@ def plan_status(plan_id):
 def upsert_plan():
     """建/改方案。agent 与主人讨论出的方案也调这里落库（brief 里点名本接口）。
 
-    body: {id?, title?, intent_text?, engines?, ref_images?, note?}
+    body: {id?, title?, intent_text?, engines?, ref_images?, note?, source?}
+    source=ui 表示是页面上主人自己改的（不带待审快照）；其余来源（agent 写盘）留改前快照 prev。
     """
     b = request.get_json(force=True, silent=True) or {}
     pid = str(b.get("id") or "").strip()
@@ -245,6 +263,7 @@ def upsert_plan():
         pid = pid or ("AP-%s-%04d" % (_time.strftime("%Y%m%d%H%M%S"), _random.randint(0, 9999)))
         p = {"id": pid, "created_at": now, "prompts": {}}
         _ART_DB.setdefault("plans", []).append(p)
+    before = _plan_snapshot(p)
     if "title" in b:
         p["title"] = str(b.get("title") or "").strip()[:200]
     if "intent_text" in b:
@@ -255,6 +274,14 @@ def upsert_plan():
         p["ref_images"] = _norm_refs(b.get("ref_images"))
     if "note" in b:
         p["note"] = _trim(b.get("note"))
+    # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
+    # source=ui 是主人在页面上自己改的——人已经看过了，清掉待审快照。
+    if str(b.get("source") or "").strip().lower() == "ui":
+        p.pop("prev", None)
+        p.pop("prev_at", None)
+    elif _plan_snapshot(p) != before:
+        p["prev"] = before
+        p["prev_at"] = now
     p["updated_at"] = now
     p.setdefault("status", "draft")
     _apersist()

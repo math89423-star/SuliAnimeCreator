@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import type { PlanDiffRow } from '../utils/planDiff'
 /** 单图创作域：当前方案快照（右侧 Agent 按它做页面感知） */
 export const useStudioStore = defineStore('studio', () => {
   const planId = ref('')
@@ -8,6 +9,8 @@ export const useStudioStore = defineStore('studio', () => {
   const engines = ref<string[]>([])
   const note = ref('')
   const refNames = ref<string[]>([])
+  /** agent 改盘后由右栏写入：方案页据此重拉表单并显示变更卡 */
+  const remoteChange = ref<{ planId: string; rows: PlanDiffRow[]; created?: boolean } | null>(null)
 
   function setPlan(p: {
     id?: string
@@ -25,6 +28,11 @@ export const useStudioStore = defineStore('studio', () => {
     refNames.value = (p.ref_images || []).map(x => x?.name || '').filter(Boolean)
   }
 
+  /** 右栏发现 agent 改了方案：记下变更，方案页据此重拉并出变更卡 */
+  function setRemoteChange(c: { planId: string; rows: PlanDiffRow[]; created?: boolean } | null) {
+    remoteChange.value = c || null
+  }
+
   /** 当前页文本块：原样贴进消息，agent 看到的就是屏幕上这份方案 */
   function contextBlock(): string {
     const lines = ['页面：单图创作（studio）']
@@ -34,9 +42,9 @@ export const useStudioStore = defineStore('studio', () => {
     if (engines.value.length) lines.push(`目标引擎：${engines.value.join('、')}`)
     if (note.value.trim()) lines.push(`约束/改图：${note.value.trim()}`)
     if (refNames.value.length) lines.push(`参考图：${refNames.value.join('、')}`)
-    lines.push('（本页方案落库：POST /api/v1/art/plans，字段 id / title / intent_text / engines / note）')
+    lines.push('（本页方案落库：POST /api/v1/art/plans，字段 id / title / intent_text / engines / ref_images[{name,path}] / note）')
     return lines.join('\n')
   }
 
-  return { planId, planTitle, intentText, engines, note, refNames, setPlan, contextBlock }
+  return { planId, planTitle, intentText, engines, note, refNames, remoteChange, setPlan, setRemoteChange, contextBlock }
 })

@@ -59,6 +59,15 @@
             </div>
           </div>
 
+          <PlanChangeCard
+            v-if="changeRows.length"
+            class="chg-card"
+            :plan-id="curPlanId"
+            :rows="changeRows"
+            :action="formDirty"
+            @action="reloadPlan"
+          />
+
           <div class="row">
             <el-button type="primary" size="small" :loading="pushing" :disabled="pushing" @click="pushToLport">直投 L-Port</el-button>
             <el-button size="small" :disabled="pushing" @click="reload">刷新回传</el-button>
@@ -131,6 +140,8 @@ import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useStudioStore } from '../stores/studio'
+import PlanChangeCard from '../components/PlanChangeCard.vue'
+import { planChangeRows, refNames } from '../utils/planDiff'
 
 defineOptions({ name: 'ArtStudioView' })
 
@@ -174,6 +185,8 @@ watch([form, curPlanId], () => {
   })
 }, { deep: true })
 const prompts = ref<Record<string, any>>({})
+/** 最近一次从服务端读到的方案原样（含 prev 改前快照） */
+const planRaw = ref<any>(null)
 const status = ref('draft')
 const saving = ref(false)
 const pushing = ref(false)
@@ -325,11 +338,38 @@ function newPlan() {
   stopWait('')
   waitNote.value = ''
   curPlanId.value = ''
+  planRaw.value = null
   form.value = blankForm()
   prompts.value = {}
   status.value = 'draft'
   pushHint.value = ''
 }
+
+/** 方案变更卡：后端留的改前快照 vs 现在这份（没有改前快照 = 没有待审变更） */
+const changeRows = computed(() => planChangeRows(planRaw.value?.prev, planRaw.value))
+
+/** 表单相对服务端最新状态有没有未保存的改动（有就别自动覆盖主人的手输） */
+const formDirty = computed(() => {
+  const p = planRaw.value
+  if (!p) return false
+  if (form.value.title !== (p.title || '')) return true
+  if (form.value.intent_text !== (p.intent_text || '')) return true
+  if (form.value.note !== (p.note || '')) return true
+  if (form.value.engines.join(',') !== (p.engines || []).join(',')) return true
+  if (refNames(form.value.ref_images).join(',') !== refNames(p.ref_images).join(',')) return true
+  return false
+})
+
+function reloadPlan() {
+  if (curPlanId.value) return loadPlan(curPlanId.value)
+}
+
+/** 右栏发现 agent 改了方案：表单没被手输改动就直接同步过去，有手输就只出变更卡 */
+watch(() => studio.remoteChange, async (c) => {
+  if (!c?.planId) return
+  if (c.planId !== curPlanId.value) { await loadPlan(c.planId); return }
+  if (!formDirty.value) await loadPlan(c.planId)
+})
 
 async function loadPlan(id: string) {
   if (!id) return newPlan()
@@ -337,6 +377,7 @@ async function loadPlan(id: string) {
     const r: any = await api.getPlan(id)
     const d = r?.data || {}
     curPlanId.value = d.id || id // 自动载入也要认领 id，否则保存/直投会新建重复方案
+    planRaw.value = d
     form.value = {
       title: d.title || '',
       intent_text: d.intent_text || '',
@@ -372,12 +413,15 @@ async function savePlan(): Promise<string> {
       engines: form.value.engines,
       ref_images: form.value.ref_images,
       note: form.value.note,
+      source: 'ui',   // 页面自己改的：不算待审变更，后端不留改前快照
     }
     if (curPlanId.value) body.id = curPlanId.value
     const r: any = await api.savePlan(body)
     const d = r?.data || {}
     curPlanId.value = d.id || curPlanId.value
     status.value = d.status || status.value
+    // 自己改的算「人已看过」：本地这份待审快照同步清掉，变更卡收起
+    planRaw.value = { ...(planRaw.value || {}), ...d, prev: null, prev_at: null }
     await loadPlans()
     return curPlanId.value
   } catch (e: any) {
@@ -525,6 +569,8 @@ onMounted(async () => {
 .note-grow { flex:1 1 auto; min-height:44px; display:flex }
 .note-grow :deep(.el-textarea) { flex:1; display:flex }
 .note-grow :deep(.el-textarea__inner) { height:100%; resize:none }
+/* 方案变更卡：夹在内容区和操作行之间，自身不参与伸缩 */
+.chg-card { flex:0 0 auto }
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }
 .empty-fill { flex:1; display:flex; flex-direction:column; justify-content:center }
 .row { display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap; }
