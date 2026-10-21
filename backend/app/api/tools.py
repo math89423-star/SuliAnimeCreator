@@ -1,5 +1,7 @@
 """tools 蓝图：给项目 Agent 补联网能力（免 key，无第三方依赖）。
-GET /api/v1/tools/websearch?q=关键词&n=8  → SearXNG(本地) 主路 + Bing 中文站 + Wikipedia/DDG 兜底。
+GET /api/v1/tools/websearch?q=关键词&n=8  → 直连 Bing 中文站 + Wikipedia 中英 + DDG 即时 + 本地 SearXNG，
+    全部按「查询词是否真出现在结果里」过相关性闸门（泛结果/乱码/无关站点一律丢掉）；
+    一条都不相关时 results 为空并回 note（让 agent 止损换源，别反复换措辞空搜）。
 GET /api/v1/tools/webfetch?url=...        → 抓页面正文（去标签，截断），供搜索后精读。
 headless Agent 经 backend/AGENTS.md 发现这两个接口（curl 直调）。
 """
@@ -8,6 +10,8 @@ import os
 import re
 import shutil as _shutil
 import subprocess as _subprocess
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid as _uuid
@@ -20,16 +24,62 @@ bp = Blueprint("tools", __name__, url_prefix="/api/v1/tools")
 _UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 _TIMEOUT = 8
 _SEARXNG = os.getenv("SEARXNG_URL", "http://127.0.0.1:8888").rstrip("/")
+# 搜索结果短 TTL 缓存：同一 query 反复打引擎容易被限流（bing 会返回首页壳）
+_CACHE = {}
+_CACHE_TTL = 180
 
 
 def ok(data):
     return jsonify({"code": 0, "data": data})
 
 
-def _get_json(url):
-    req = urllib.request.Request(url, headers=_UA)
-    with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
-        return r.read().decode("utf-8", "replace")
+# 容器内 DNS 对被墙域名只给污染地址（fandom.com → 31.13.96.x = Facebook 段），
+# 直连必然 "Network is unreachable"；走代理后域名由代理侧解析，污染域名也能通。
+# 两条代理出口其实是同一套（212.135.212.105）：公共 clash 容器在 infra 网内（与本容器同网，
+# 不依赖 Windows 常驻）→ 优先；宿主机那台（HANIME_PROXY，WSL 默认网关上的 Windows 侧）→ 备选。
+_PROXIES = []
+for _p in (os.getenv("WEB_PROXY"), "http://clash:7890", os.getenv("HANIME_PROXY")):
+    if _p and _p not in _PROXIES:
+        _PROXIES.append(_p)
+_PROXY_OPENERS = [urllib.request.build_opener(
+    urllib.request.ProxyHandler({"http": p, "https": p})) for p in _PROXIES]
+_DIRECT_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+# 路由记忆：直连失败过的主机（被墙/污染）在 10 分钟内直接走代理，不再白等一次直连超时
+_ROUTE = {}
+
+
+def _read_url(url, timeout=_TIMEOUT, headers=None):
+    """读 URL 正文（文本）。直连优先，失败再依次走代理。
+
+    直连快（bing/ddg/wikipedia 1–4s），但容器内 DNS 对被墙域名给污染地址 →
+    直连必失败（Network is unreachable），这时代理接管（域名由代理侧解析）。
+    哪个主机走过哪条路会记下来（_ROUTE，10 分钟），避免每次先白等一次直连超时。
+    全都不行才抛错（抛直连那条，错误更贴近本地事实）。
+    """
+    host = urllib.parse.urlsplit(url).hostname or ""
+    req = urllib.request.Request(url, headers=headers or _UA)
+    seen = _ROUTE.get(host)
+    proxy_first = bool(seen) and (time.time() - seen[1]) < 600
+    plan = ([(op, "proxy") for op in _PROXY_OPENERS] + [(_DIRECT_OPENER, "direct")]
+            if proxy_first else
+            [(_DIRECT_OPENER, "direct")] + [(op, "proxy") for op in _PROXY_OPENERS])
+    direct_err = None
+    for op, kind in plan:
+        try:
+            with op.open(req, timeout=timeout) as r:
+                body = r.read()[:600000].decode("utf-8", "replace")
+            if host:
+                _ROUTE[host] = (kind, time.time())
+            return body
+        except Exception as e:
+            if kind == "direct" and direct_err is None:
+                direct_err = e
+            continue
+    raise direct_err if direct_err is not None else RuntimeError("抓取失败")
+
+
+def _get_json(url, timeout=5):
+    return _read_url(url, timeout=timeout)
 
 
 def _searxng(q, limit=10):
@@ -37,9 +87,7 @@ def _searxng(q, limit=10):
     import json as _json
     url = ("%s/search?q=%s&format=json&language=zh-CN" % (_SEARXNG, urllib.parse.quote(q)))
     try:
-        req = urllib.request.Request(url, headers=_UA)
-        with urllib.request.urlopen(req, timeout=4) as r:
-            items = _json.loads(r.read().decode("utf-8", "replace")).get("results", [])
+        items = _json.loads(_read_url(url, timeout=3)).get("results", [])
     except Exception:
         return []
     out = []
@@ -53,30 +101,71 @@ def _searxng(q, limit=10):
 
 
 def _bing(q, limit=8):
-    """Bing 中文站 HTML 兜底：免 key；中文长尾词/游戏角色名比 Wikipedia 稳。"""
-    url = "https://cn.bing.com/search?q=%s&setlang=zh-CN" % urllib.parse.quote(q)
+    """Bing HTML 抓取：免 key；中文长尾词/游戏角色名比 Wikipedia 稳。
+
+    cn.bing.com 对机房 IP 常返回**首页壳**（HTTP 200 但没有 b_algo 结果块）→
+    优先 www.bing.com，cn 版留作兜底。
+    """
+    out = []
+    for tmpl in ("https://www.bing.com/search?q=%s&setmkt=zh-CN&setlang=zh-CN",
+                 "https://cn.bing.com/search?q=%s&setlang=zh-CN"):
+        url = tmpl % urllib.parse.quote(q)
+        try:
+            page = _read_url(url, timeout=6, headers={**_UA, "Accept-Language": "zh-CN,zh;q=0.9"})
+        except Exception:
+            continue
+        for block in re.findall(r'<li class="b_algo".*?</li>', page, re.S):
+            m = re.search(r'<h2[^>]*><a[^>]*href="([^"]+)"[^>]*>(.*?)</a>', block, re.S)
+            if not m:
+                continue
+            link = _html.unescape(m.group(1)).strip()
+            if not link.startswith("http"):
+                continue
+            title = _html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip()
+            snip = ""
+            p = re.search(r"<p[^>]*>(.*?)</p>", block, re.S)
+            if p:
+                snip = _html.unescape(re.sub(r"<[^>]+>", "", p.group(1))).strip()
+            out.append({"title": title or link, "url": link, "snippet": snip[:300], "source": "bing-web"})
+            if len(out) >= limit:
+                break
+        if out:
+            break
+    return out
+
+
+def _ddg_html(q, limit=8):
+    """DDG HTML 端：免 key，独立于 Bing/SearXNG 的一条路。
+
+    结果链接是 //duckduckgo.com/l/?uddg=<encoded> 跳转壳，要解出真 URL。
+    """
+    url = "https://html.duckduckgo.com/html/?q=%s" % urllib.parse.quote(q)
     try:
-        req = urllib.request.Request(url, headers={**_UA, "Accept-Language": "zh-CN,zh;q=0.9"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            page = r.read().decode("utf-8", "replace")
+        page = _read_url(url, timeout=6, headers={**_UA, "Accept-Language": "zh-CN,zh;q=0.9"})
     except Exception:
         return []
     out = []
-    for block in re.findall(r'<li class="b_algo".*?</li>', page, re.S):
-        m = re.search(r'<h2[^>]*><a[^>]*href="([^"]+)"[^>]*>(.*?)</a>', block, re.S)
-        if not m:
+    for m in re.finditer(r'<a([^>]*)class="result__a"([^>]*)>(.*?)</a>', page, re.S):
+        attrs = m.group(1) + m.group(2)
+        hm = re.search(r'href="([^"]+)"', attrs)
+        if not hm:
             continue
-        link = _html.unescape(m.group(1)).strip()
-        if not link.startswith("http"):
-            continue
-        title = _html.unescape(re.sub(r"<[^>]+>", "", m.group(2))).strip()
-        snip = ""
-        p = re.search(r"<p[^>]*>(.*?)</p>", block, re.S)
-        if p:
-            snip = _html.unescape(re.sub(r"<[^>]+>", "", p.group(1))).strip()
-        out.append({"title": title or link, "url": link, "snippet": snip[:300], "source": "bing-cn"})
+        link = _html.unescape(hm.group(1))
+        if link.startswith("//"):
+            link = "https:" + link
+        if "duckduckgo.com/l/" in link:
+            real = urllib.parse.parse_qs(urllib.parse.urlsplit(link).query).get("uddg", [""])[0]
+            if real:
+                link = real
+        title = _html.unescape(re.sub(r"<[^>]+>", "", m.group(3))).strip()
+        out.append({"title": title or link, "url": link, "snippet": "", "source": "ddg-html"})
         if len(out) >= limit:
             break
+    snips = [_html.unescape(re.sub(r"<[^>]+>", "", s)).strip()
+             for s in re.findall(r'class="result__snippet"[^>]*>(.*?)</(?:a|div)>', page, re.S)]
+    for i, o in enumerate(out):
+        if i < len(snips):
+            o["snippet"] = snips[i][:300]
     return out
 
 
@@ -134,6 +223,72 @@ def _ddg_instant(q):
     return out
 
 
+# ── 相关性闸门 ──────────────────────────────────────────────────────────────
+# SearXNG 的 bing/google_cse 引擎经 clash 出口会给泛结果（「星」的百度百科、
+# 无关站点、GBK 乱码），8 条垃圾先把配额占满，真货（直连 cn.bing / Wikipedia）
+# 反而挤不进来 → agent 拿到一堆看似有结果实则无关的东西，反复改措辞重搜，
+# 一轮跑 7 分钟还交不出答案。这里按「查询词是否真出现在结果里」过一道闸：
+# 不过闸的丢掉，并在 note 里明说「本地检索没有相关结果」，让 agent 止损换源。
+_GENERIC_TERMS = frozenset({
+    "the", "and", "for", "with", "what", "how", "does", "are", "you", "your",
+    "this", "that", "from", "into", "guide", "info", "wiki", "com", "org", "net",
+    "html", "www", "http", "https", "star", "rail", "design", "news", "image",
+    "video", "photo", "pic", "game", "games", "official", "page", "site",
+    "the", "关于", "怎么", "如何", "什么", "哪些", "一个", "一种", "一些",
+})
+
+
+def _query_terms(q):
+    """查询词 → 可判定的关键项：中文取整段+二元组，英文取词（滤掉泛词）。"""
+    q = (q or "").lower()
+    terms = []
+    for w in re.findall(r"[a-z0-9][a-z0-9\-']{2,}", q):
+        if w not in _GENERIC_TERMS:
+            terms.append(w)
+    for run in re.findall(r"[一-鿿]{2,}", q):
+        if len(run) <= 4:
+            terms.append(run)
+        for i in range(len(run) - 1):
+            terms.append(run[i:i + 2])
+    seen, out = set(), []
+    for t in terms:
+        if t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
+
+
+def _row_score(row, terms):
+    """结果与查询的相关分：命中的关键项数（标题命中权重更高）。"""
+    title = (row.get("title") or "").lower()
+    hay = " ".join([row.get("title") or "", row.get("snippet") or "", row.get("url") or ""]).lower()
+    if not hay.strip():
+        return 0, []
+    hits = []
+    for t in terms:
+        if t in hay:
+            hits.append(t)
+        elif t.isascii() and len(t) >= 5 and re.search(r"\b%s" % re.escape(t[:5]), hay):
+            hits.append(t)
+    if not hits:
+        return 0, []
+    title_hits = sum(1 for t in hits if t in title)
+    return len(hits) + title_hits, hits
+
+
+def _short_query(q):
+    """长查询降维：Wikipedia/Bing 都不吃长串（'Honkai Star Rail Aha Elation Aeon appearance mask jester design' 直接 0 结果）。
+
+    保留前 2 段中文 + 前 3 个英文词——最具体的那些通常在前半。
+    """
+    q = (q or "").strip()
+    cjk = re.findall(r"[一-鿿]{2,}", q)[:2]
+    lat = [w for w in re.findall(r"[A-Za-z0-9][A-Za-z0-9\-']{2,}", q)
+           if w.lower() not in _GENERIC_TERMS][:3]
+    short = " ".join(cjk + lat).strip()
+    return short or q
+
+
 @bp.route("/websearch", methods=["GET", "POST"])
 def websearch():
     body = request.get_json(silent=True) or {}
@@ -144,23 +299,49 @@ def websearch():
         n = max(1, min(int(request.args.get("n") or request.form.get("n") or body.get("n") or 8), 20))
     except ValueError:
         n = 8
-    # SearXNG 与 Bing 并发：中文长尾词 Bing 常 0.5s 回；SearXNG 慢也不拖住整体
-    with _ThreadPoolExecutor(max_workers=2) as ex:
+    # 六路并发：DDG HTML（中文游戏长尾最稳）+ 直连 Bing + Wikipedia 全文（中英）+ DDG 即时 + SearXNG。
+    # SearXNG 放最后：它的 bing/google_cse 经 clash 出口会给泛结果/乱码，先跑完再按相关性补位。
+    # wiki/bing/ddg 用短查询（长查询它们直接 0 结果），SearXNG 吃原查询。
+    ck = (q, n)
+    hit = _CACHE.get(ck)
+    if hit and (time.time() - hit[0]) < _CACHE_TTL:
+        return ok(hit[1])
+    sq = _short_query(q)
+    with _ThreadPoolExecutor(max_workers=7) as ex:
         f_searx = ex.submit(_searxng, q, n)
-        f_bing = ex.submit(_bing, q, n)
-        rows = f_searx.result() + f_bing.result()
-    if not rows:
-        rows = (_wiki_search(q, "zh") + _wiki_search(q, "en") + _ddg_instant(q)
-                + _wiki_fulltext(q, "zh") + _wiki_fulltext(q, "en"))
-    seen, uniq = set(), []
+        f_bing = ex.submit(_bing, sq, n)
+        f_ddghtml = ex.submit(_ddg_html, sq, n)
+        f_wz = ex.submit(_wiki_fulltext, sq, "zh", 6)
+        f_we = ex.submit(_wiki_fulltext, sq, "en", 6)
+        f_wsz = ex.submit(_wiki_search, sq, "zh", 4)
+        f_wse = ex.submit(_wiki_search, sq, "en", 4)
+        f_ddg = ex.submit(_ddg_instant, sq)
+        rows = (f_ddghtml.result() + f_bing.result() + f_wz.result() + f_we.result()
+                + f_ddg.result() + f_wsz.result() + f_wse.result() + f_searx.result())
+    # 相关性闸门：查询词没真出现在结果里的丢掉（泛结果/乱码/无关站点）
+    terms = _query_terms(q)
+    scored, seen = [], set()
     for r in rows:
-        if not r["url"] or r["url"] in seen:
+        u = r.get("url") or ""
+        if not u or u in seen:
             continue
-        seen.add(r["url"])
-        uniq.append(r)
-        if len(uniq) >= n:
-            break
-    return ok({"q": q, "results": uniq})
+        seen.add(u)
+        sc, hits = _row_score(r, terms)
+        if sc > 0:
+            r = dict(r)
+            r["match"] = hits[:4]
+            scored.append((sc, r))
+    scored.sort(key=lambda x: -x[0])
+    uniq = [r for _, r in scored][:n]
+    data = {"q": q, "results": uniq}
+    if not uniq:
+        data["note"] = ("本地检索没有与查询词相关的结果（SearXNG 泛结果已过滤）。"
+                        "换一个更具体的关键词（角色全名+作品名+设定词）再搜一次；"
+                        "仍无结果就改查百科/官方 wiki 的具体条目页，或直接问用户，不要反复换措辞空搜。")
+    if len(_CACHE) > 200:
+        _CACHE.clear()
+    _CACHE[ck] = (time.time(), data)
+    return ok(data)
 
 
 _TAG_RE = re.compile(r"<(script|style)[^>]*>.*?</\1>", re.S | re.I)
@@ -178,11 +359,11 @@ def webfetch():
                                        urllib.parse.quote(urllib.parse.unquote(p.path)),
                                        urllib.parse.quote(urllib.parse.unquote(p.query), safe="=&"),
                                        p.fragment))
-        req = urllib.request.Request(url, headers=_UA)
-        with urllib.request.urlopen(req, timeout=15) as r:
-            raw = r.read()[:600000].decode("utf-8", "replace")
+        raw = _read_url(url, timeout=7)
     except Exception as e:
-        return jsonify({"code": 5001, "msg": "抓取失败: %s" % str(e)[:200]}), 502
+        return jsonify({"code": 5001,
+                        "msg": "抓取失败: %s（该域名在本机不可达：DNS 被污染或站点拦了机房 IP；"
+                               "别反复重试同一 URL，换一个来源或用搜索结果里的其它链接）" % str(e)[:160]}), 502
     title = ""
     m = re.search(r"<title[^>]*>(.*?)</title>", raw, re.S | re.I)
     if m:
