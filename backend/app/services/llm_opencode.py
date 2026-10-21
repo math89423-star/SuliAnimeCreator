@@ -6,6 +6,7 @@ import os
 import re
 import json
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 from . import dsh_profile
@@ -108,6 +109,39 @@ def _parse_chat(data):
     return ((data.get("choices") or [{}])[0].get("message") or {}).get("content", "")
 
 
+def _gateway_error(e, where):
+    """把网关的拒绝理由翻成人话：HTTPError 的 body 里才有真话（Invalid credential /
+    api_key_expired / MissingSessionID），默认的 "HTTP Error 401" 什么也看不出来。"""
+    body = ""
+    try:
+        body = e.read().decode("utf-8", "replace")
+    except Exception:
+        pass
+    msg = ""
+    if body:
+        try:
+            d = json.loads(body)
+            err_obj = d.get("error") if isinstance(d, dict) else None
+            if isinstance(err_obj, dict):
+                msg = str(err_obj.get("message") or err_obj.get("code") or "")
+            elif isinstance(err_obj, str):
+                msg = err_obj
+            if not msg and isinstance(d, dict):
+                msg = str(d.get("msg") or d.get("message") or "")
+        except Exception:
+            msg = body[:200]
+    code = getattr(e, "code", "") or ""
+    hint = ""
+    low = (msg or "").lower()
+    if "api_key_expired" in low or "expired" in low:
+        hint = "（key 已过期：去 OpenCode Console 新建一把推理 key，替换设置页的 api_key）"
+    elif "invalid credential" in low or "requires a credential" in low:
+        hint = "（网关不认这把 key：key 无效、已被吊销，或不是这把账号的推理 key）"
+    elif "missingsessionid" in low:
+        hint = "（请求缺 x-opencode-session 头）"
+    return ValueError("%s HTTP %s：%s%s" % (where, code, (msg or "无返回内容")[:300], hint))
+
+
 def _post_openai(base, key, model, messages, timeout=60):
     """OpenAI 兼容 chat 接口（本地 llama.cpp --chat-completion 即此协议）。"""
     body = {"model": model, "messages": messages}
@@ -116,8 +150,11 @@ def _post_openai(base, key, model, messages, timeout=60):
         headers["Authorization"] = "Bearer " + key
     req = urllib.request.Request(base.rstrip("/") + "/v1/chat/completions",
                                  data=json.dumps(body).encode(), headers=headers)
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        data = json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        raise _gateway_error(e, "网关拒绝")
     return _parse_chat(data)
 
 
@@ -143,8 +180,11 @@ def _post(base, key, model_id, prompt, timeout=60, effort=""):
         headers={"Authorization": "Bearer " + key, "Content-Type": "application/json",
                  "User-Agent": "Mozilla/5.0 SuliAnimeCreator/0.1",
                  "x-opencode-session": "sulianimecreator-" + _uuid.uuid4().hex[:12]})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        data = json.loads(r.read().decode())
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            data = json.loads(r.read().decode())
+    except urllib.error.HTTPError as e:
+        raise _gateway_error(e, "网关拒绝")
     if path == "/responses":
         parts = []
         for item in data.get("output") or []:
