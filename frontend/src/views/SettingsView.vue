@@ -96,6 +96,16 @@
               <el-form-item label="API Key">
                 <el-input v-model="keys.vlm" type="password" show-password :placeholder="models.vlm.api_key_set ? '已设置' : 'API Key'" />
               </el-form-item>
+              <el-form-item label="Effort">
+                <el-select v-model="models.vlm.effort" filterable allow-create clearable placeholder="默认" style="max-width:220px">
+                  <el-option label="关 none" value="none" />
+                  <el-option label="极简 minimal" value="minimal" />
+                  <el-option label="低 low" value="low" />
+                  <el-option label="中 medium" value="medium" />
+                  <el-option label="高 high" value="high" />
+                  <el-option label="超高 xhigh" value="xhigh" />
+                </el-select>
+              </el-form-item>
             </template>
             <template v-else>
               <el-form-item label="服务器地址">

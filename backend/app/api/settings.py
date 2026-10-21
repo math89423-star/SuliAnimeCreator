@@ -37,6 +37,7 @@ DEFAULTS = {
         "api_key": "",
         "local_url": "http://127.0.0.1:8080",
         "local_model": "",
+        "effort": "",
     },
     "image": {
         "provider": "sd-webui",
@@ -110,15 +111,14 @@ def put_models():
                 v = _str(incoming.get(k))
                 if v:
                     row[k] = v
-            # effort 仅 llm：允许设值，显式传空字符串时清掉（默认不发送）
-            if section == "llm":
-                ev = _str(incoming.get("effort"), 20)
-                if ev:
-                    if ev not in ("none", "minimal", "low", "medium", "high", "xhigh"):
-                        return err("llm.effort 非法，仅支持 none / minimal / low / medium / high / xhigh")
-                    row["effort"] = ev
-                elif "effort" in incoming and isinstance(incoming.get("effort"), str):
-                    row["effort"] = ""
+            # effort：llm / vlm 都有（都走网关，思考深度按模型能力给）；显式传空串时清掉
+            ev = _str(incoming.get("effort"), 20)
+            if ev:
+                if ev not in ("none", "minimal", "low", "medium", "high", "xhigh"):
+                    return err(f"{section}.effort 非法，仅支持 none / minimal / low / medium / high / xhigh")
+                row["effort"] = ev
+            elif "effort" in incoming and isinstance(incoming.get("effort"), str):
+                row["effort"] = ""
             key = incoming.get("api_key")
             if isinstance(key, str) and key.strip():
                 row["api_key"] = key.strip()[:500]

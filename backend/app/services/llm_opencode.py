@@ -82,6 +82,7 @@ def vlm_cfg():
         "model": (s.get("model") or "").strip(),
         "key": (s.get("api_key") or "").strip() or key,
         "key_src": "settings" if (s.get("api_key") or "").strip() else key_src,
+        "effort": (s.get("effort") or "").strip(),
     }
 
 
@@ -234,4 +235,4 @@ def vlm_chat(prompt, images=None):
         raise ValueError("VLM未启用：缺 API Key")
     if _endpoint_for(model_id) != "/chat/completions":
         raise ValueError(f"VLM模型 {model_id} 不走 chat 协议，请换 chat 兼容模型")
-    return _post(cfg["base"], cfg["key"], model_id, parts)
+    return _post(cfg["base"], cfg["key"], model_id, parts, effort=cfg.get("effort", ""))
