@@ -104,6 +104,10 @@ dsh agent 保持规划定位：出方案、定方向，禁 `/generate`、`/jobs`
   HTTPS remote 要 PAT/token，机器上没配，别用。
 - **推已有历史的仓库**：只 `git remote add` + `git push -u origin main`；
   **别跑 `git init` / 首个 `first commit`**——那是给空仓库准备的，会插无意义提交、往 README 塞垃圾行、重置 reflog。
+- **别用 `git checkout -- backend/data/` 复位数据**：`backend/data/*.json`（projects / scriptboard / art / traffic / receipts）
+  是运行时真库且被 git 跟踪，复位等于把线上数据抹回上次提交。
+  清测试数据走接口（`DELETE /api/v1/art/plans/<id>`、`DELETE /api/v1/projects/<id>?mode=cascade`），
+  别动 git 索引里的数据文件。
 
 ## 检索与查证纪律
 

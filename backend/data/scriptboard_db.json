@@ -1,4 +1,13 @@
 {
-  "eps": {},
+  "eps": {
+    "EP-VERIFY": {
+      "id": "EP-VERIFY",
+      "screenplay_md": "",
+      "segs": [],
+      "verdict": "draft",
+      "project_id": "PRJ-041A84",
+      "title": "雨夜便利店"
+    }
+  },
   "shots": {}
 }

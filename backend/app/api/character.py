@@ -99,9 +99,22 @@ def update_one(cid):
 
 @bp.delete("/<cid>")
 def delete_one(cid):
+    """删角色：连带清掉它在各子表里的行（docs / versions / slot_prompts / slot_svgs / assets）。
+
+    只 pop 主表的话，删完角色库里还挂着它的槽位提示词与版本记录，属于残渣。
+    """
+    existed = cid in _CHARS
     _CHARS.pop(cid, None)
+    _DOCS.pop(cid, None)
+    _VERSIONS.pop(cid, None)
+    for k in [k for k in _SLOT_PROMPTS if k and k[0] == cid]:
+        _SLOT_PROMPTS.pop(k, None)
+    for k in [k for k in _SLOT_SVGS if k and k[0] == cid]:
+        _SLOT_SVGS.pop(k, None)
+    for aid in [aid for aid, a in _ASSETS.items() if (a or {}).get("character_id") == cid]:
+        _ASSETS.pop(aid, None)
     _persist()
-    return ok({"deleted": cid})
+    return ok({"deleted": cid, "existed": existed})
 
 def _kind(section, attire):
     return f"{section}_{attire}"

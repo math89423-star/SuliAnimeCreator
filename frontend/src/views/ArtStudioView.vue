@@ -2,19 +2,52 @@
   <div class="suli-card kun-page art-studio">
     <!-- 顶栏：方案选择 / 保存 / 状态 -->
     <div class="studio-head">
-      <h3 style="margin:0">单图创作</h3>
+      <h3 style="margin:0">{{ mode === 'comic' ? '漫画创作' : '单图创作' }}</h3>
+      <el-radio-group v-model="mode" size="small" @change="onModeChange">
+        <el-radio-button label="single">单图</el-radio-button>
+        <el-radio-button label="comic">漫画</el-radio-button>
+      </el-radio-group>
       <el-select
+        v-if="mode === 'single'"
         v-model="curPlanId" size="small" placeholder="选择方案" clearable class="w-plan"
         @change="(v: string) => loadPlan(v)"
       >
-        <el-option v-for="p in plans" :key="p.id" :label="p.title || p.id" :value="p.id" />
+        <el-option v-for="p in singlePlans" :key="p.id" :label="p.title || p.id" :value="p.id" />
       </el-select>
-      <el-button size="small" @click="newPlan">新建方案</el-button>
+      <el-button v-if="mode === 'single'" size="small" @click="newPlan">新建方案</el-button>
       <el-button size="small" type="primary" :loading="saving" @click="savePlan">保存</el-button>
       <el-button size="small" type="danger" plain :disabled="!curPlanId" @click="delPlan">删除</el-button>
       <span style="flex:1" />
       <el-tag size="small" :type="statusTagType">{{ statusLabel }}</el-tag>
     </div>
+
+    <!-- 漫画：集号 + 大纲 + 剧本 + 页条 + 格条 -->
+    <ComicStrip
+      v-if="mode === 'comic'"
+      :pages="pages"
+      :panels="panels"
+      :current-page-index="currentPageIndex"
+      :current-plan-id="curPlanId"
+      :episode-id="episodeId"
+      :outline="outlineMd"
+      :outline-loading="outlineLoading"
+      @select="loadPlan"
+      @select-page="selectComicPage"
+      @new-page="newComicPage"
+      @new-panel="newComicPanel"
+      @read-outline="readOutline(false)"
+      @apply-outline="applyOutline"
+    >
+      <template #script>
+        <ComicScript
+          v-model:panels="scriptPanels"
+          :busy="scriptBusy"
+          @from-outline="scriptFromOutline"
+          @save="saveScript"
+          @split="splitScript"
+        />
+      </template>
+    </ComicStrip>
 
     <div class="studio-grid">
       <!-- 左：方案（与 agent 讨论产出） -->
@@ -52,6 +85,23 @@
               </el-button>
               <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
             </div>
+
+            <!-- 漫画格：本格成图（下一格自动带进参考图） -->
+            <template v-if="mode === 'comic'">
+              <div class="block-title">本格成图</div>
+              <div class="page-shot">
+                <el-image
+                  v-if="pageImage" class="page-shot-img" :src="pageImage.url" fit="cover"
+                  :preview-src-list="[pageImage.url]" preview-teleported hide-on-click-modal
+                />
+                <div v-else class="page-shot-ph"><el-icon><Picture /></el-icon></div>
+                <div class="page-shot-act">
+                  <el-button size="small" :loading="shotUploading" @click="shotInput?.click()">上传成图</el-button>
+                  <el-button size="small" text :disabled="!pageImage" @click="removePageImage">移除</el-button>
+                </div>
+                <input ref="shotInput" type="file" accept="image/*" style="display:none" @change="onShotFile" />
+              </div>
+            </template>
 
             <div class="block-title">约束 / 改图指令</div>
             <div class="note-grow">
@@ -140,7 +190,10 @@ import { ElMessage } from 'element-plus'
 import { Picture } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useStudioStore } from '../stores/studio'
+import { useAppStore } from '../stores/app'
 import PlanChangeCard from '../components/PlanChangeCard.vue'
+import ComicStrip, { type ComicPage, type ComicPanel } from '../components/studio/ComicStrip.vue'
+import ComicScript, { type ScriptPanel } from '../components/studio/ComicScript.vue'
 import { planChangeRows, refNames } from '../utils/planDiff'
 
 defineOptions({ name: 'ArtStudioView' })
@@ -166,6 +219,15 @@ type PlanForm = {
   ref_images: RefImg[]
   note: string
 }
+/** 漫画页上下文（落在方案的 page 字段） */
+type PageMeta = {
+  episode_id: string
+  index: number
+  panel_index: number
+  prev_plan_id: string
+  outline_text: string
+  image: RefImg | null
+}
 
 const DEFAULT_ENGINES = ['novelai', 'tsubaki3', 'seedream']
 
@@ -174,6 +236,9 @@ const curPlanId = ref('')
 const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '' })
 const form = ref<PlanForm>(blankForm())
 const studio = useStudioStore()
+const store = useAppStore()
+// 单图模式下拉只列非漫画页的方案（漫画页归页条管）
+const singlePlans = computed(() => plans.value.filter(p => !p.page))
 // 右侧 Agent 的页面感知：把当前方案原样同步给 store（切方案/打字都跟着变）
 watch([form, curPlanId], () => {
   studio.setPlan({
@@ -194,6 +259,49 @@ const pushing = ref(false)
 const pushHint = ref('')
 const refInput = ref<HTMLInputElement | null>(null)
 const refUploading = ref(false)
+
+// ── 漫画模式（页序列）───────────────────────────────────────────────────────
+// 漫画一页由若干格组成，**一格 = 一个方案**（一次直投 = 一格出图）：
+//   page.index = 页序；page.panel_index = 页内格序；page.prev_plan_id = 上一格。
+// 衔接靠两样：本页成图（下一格自动进参考图）、大纲快照（整页共享）。
+const mode = ref<'single' | 'comic'>('single')
+const episodeId = computed(() => store.episodeId || '')
+const allPanels = ref<ComicPanel[]>([])   // 全部格（按页序+格序）
+const pages = ref<ComicPage[]>([])         // 页（按页序聚合）
+const panels = ref<ComicPanel[]>([])       // 当前页的格
+const currentPageIndex = ref(0)
+const outlineMd = ref('')
+const outlineLoading = ref(false)
+const outlineCache = ref<Record<string, string>>({})
+// 漫画剧本：一本剧本 = 页/格分条；拆格后每格变成一个方案
+const scriptPanels = ref<ScriptPanel[]>([])
+const scriptBusy = ref('')
+const blankPage = (): PageMeta => ({ episode_id: '', index: 0, panel_index: 0, prev_plan_id: '', outline_text: '', image: null })
+const pageMeta = ref<PageMeta>(blankPage())
+const pageImage = computed(() => pageMeta.value.image)
+const shotInput = ref<HTMLInputElement | null>(null)
+const shotUploading = ref(false)
+/** 上一格的成图文件名（给右栏 agent 看：这一格接着哪张图画） */
+const prevImageName = computed(() => {
+  const prev = allPanels.value.find(p => p.planId === pageMeta.value.prev_plan_id)
+  return prev?.image?.name || ''
+})
+// 页/格上下文也同步给右栏：agent 才知道这是第几页第几格、大纲是什么、上一格长什么样
+watch([pageMeta, allPanels], () => {
+  studio.setPageCtx({
+    episode_id: pageMeta.value.episode_id,
+    index: pageMeta.value.index,
+    panel_index: pageMeta.value.panel_index,
+    outline_text: pageMeta.value.outline_text,
+    prev_image: prevImageName.value,
+  })
+}, { deep: true })
+// 剧本也同步给右栏：agent 照着它改格
+watch(scriptPanels, () => {
+  studio.setScript(scriptPanels.value.map(p => ({
+    page: p.page, panel: p.panel, text: p.text, dialogue: p.dialogue, camera: p.camera,
+  })))
+}, { deep: true })
 
 // 直投进度：保存 → 打包参考图/写收件箱（不确定阶段走 indeterminate）→ 完成/失败
 const pushPct = ref(0)
@@ -341,10 +449,331 @@ function newPlan() {
   curPlanId.value = ''
   planRaw.value = null
   form.value = blankForm()
+  pageMeta.value = blankPage()
   prompts.value = {}
   status.value = 'draft'
   pushHint.value = ''
 }
+
+// ── 漫画：页 / 格序列 / 大纲 / 成图 ───────────────────────────────────────
+
+function toComicPanel(p: any): ComicPanel {
+  const pg = p.page || {}
+  return {
+    planId: p.id,
+    pageIndex: Number(pg.index) || 0,
+    panelIndex: Number(pg.panel_index) || 1,
+    title: p.title || '',
+    status: p.status || 'draft',
+    promptCount: Number(p.prompt_count) || 0,
+    image: pg.image || null,
+  }
+}
+
+/** 把扁平的格列表聚成页，并挑出当前页的格。 */
+function rebuildPages() {
+  const byPage = new Map<number, ComicPanel[]>()
+  for (const p of allPanels.value) {
+    const arr = byPage.get(p.pageIndex) || []
+    arr.push(p)
+    byPage.set(p.pageIndex, arr)
+  }
+  const list: ComicPage[] = [...byPage.entries()]
+    .sort((a, b) => a[0] - b[0])
+    .map(([idx, ps]) => {
+      ps.sort((a, b) => a.panelIndex - b.panelIndex)
+      const last = ps[ps.length - 1]
+      return {
+        index: idx,
+        panels: ps,
+        panelCount: ps.length,
+        promptCount: ps.reduce((n, x) => n + x.promptCount, 0),
+        image: last?.image || ps.find(x => x.image)?.image || null,
+      }
+    })
+  pages.value = list
+  panels.value = list.find(p => p.index === currentPageIndex.value)?.panels || []
+}
+
+async function loadComics() {
+  try {
+    const r: any = await api.listComics(episodeId.value)
+    allPanels.value = ((r?.data || []) as any[]).map(toComicPanel)
+  } catch {
+    allPanels.value = []
+  }
+  rebuildPages()
+}
+
+/** 读本集漫画剧本。 */
+async function loadScript() {
+  const eid = episodeId.value
+  if (!eid) { scriptPanels.value = []; return }
+  try {
+    const r: any = await api.getComicScript(eid)
+    scriptPanels.value = ((r?.data?.panels || []) as any[]).map(p => ({
+      page: Number(p.page) || 1,
+      panel: Number(p.panel) || 1,
+      text: p.text || '',
+      dialogue: p.dialogue || '',
+      camera: p.camera || '',
+      note: p.note || '',
+    }))
+  } catch {
+    scriptPanels.value = []
+  }
+}
+
+/** 从本集大纲转成剧本（冷启动：先有大纲，再转格）。 */
+async function scriptFromOutline() {
+  const eid = episodeId.value
+  if (!eid) return ElMessage.warning('先选集号')
+  scriptBusy.value = 'outline'
+  try {
+    await api.comicScriptFromOutline({ episode_id: eid })
+    await loadScript()
+    ElMessage.success(`已转出 ${scriptPanels.value.length} 格`)
+  } catch (e: any) {
+    ElMessage.error('从大纲转失败：' + (e?.response?.data?.msg || e?.message || e))
+  } finally {
+    scriptBusy.value = ''
+  }
+}
+
+/** 存剧本（页面改完落库）。 */
+async function saveScript() {
+  const eid = episodeId.value
+  if (!eid) return ElMessage.warning('先选集号')
+  scriptBusy.value = 'save'
+  try {
+    const r: any = await api.saveComicScript({ episode_id: eid, panels: scriptPanels.value })
+    ElMessage.success(`剧本已存：${r?.data?.panel_count ?? scriptPanels.value.length} 格`)
+  } catch (e: any) {
+    ElMessage.error('存剧本失败：' + (e?.response?.data?.msg || e?.message || e))
+  } finally {
+    scriptBusy.value = ''
+  }
+}
+
+/** 拆格：一条剧本 = 一个方案（页序/格序/上一格链自动排好），之后逐格直投。 */
+async function splitScript() {
+  const eid = episodeId.value
+  if (!eid) return ElMessage.warning('先选集号')
+  if (!scriptPanels.value.length) return ElMessage.warning('剧本还没有格')
+  scriptBusy.value = 'split'
+  try {
+    const r: any = await api.splitComicScript({ episode_id: eid, engines: form.value.engines })
+    const d = r?.data || {}
+    await loadComics()
+    const first = allPanels.value.find(p => p.planId === (d.plan_ids || [])[0])
+    if (first) { currentPageIndex.value = first.pageIndex; rebuildPages(); await loadPlan(first.planId) }
+    ElMessage.success(`已拆 ${d.created || 0} 格（跳过 ${d.skipped || 0}）`)
+  } catch (e: any) {
+    ElMessage.error('拆格失败：' + (e?.response?.data?.msg || e?.message || e))
+  } finally {
+    scriptBusy.value = ''
+  }
+}
+
+/** 读本集大纲（缓存：换集再切回来不用重读）。silent=true 时没集号也不打扰。 */
+async function readOutline(silent = false) {
+  const eid = episodeId.value
+  if (!eid) {
+    if (!silent) ElMessage.warning('先选集号')
+    return
+  }
+  if (outlineCache.value[eid] !== undefined) {
+    outlineMd.value = outlineCache.value[eid]
+    return
+  }
+  outlineLoading.value = true
+  try {
+    const r: any = await api.getOutline(eid)
+    const md = String(r?.data?.outline_md || '')
+    outlineCache.value[eid] = md
+    outlineMd.value = md
+    if (!silent) ElMessage.success(md ? `已读大纲 ${md.length} 字` : '该集没有大纲')
+  } catch {
+    if (!silent) ElMessage.error('读大纲失败，后端未起？')
+  } finally {
+    outlineLoading.value = false
+  }
+}
+
+/** 把大纲写进本页（存进方案的 page.outline_text，直投时随页上下文带给 L-Port）。 */
+async function applyOutline() {
+  if (!outlineMd.value) return ElMessage.warning('先读大纲')
+  if (!curPlanId.value) {
+    await newComicPage()
+    if (!curPlanId.value) return
+  }
+  pageMeta.value = { ...pageMeta.value, outline_text: outlineMd.value }
+  await savePlan()
+  ElMessage.success('大纲已写入本页')
+}
+
+/** 链上的上一格：同页上一格；本页第一格则接上一页的末格。 */
+function prevPanelOf(pageIndex: number, panelIndex: number): ComicPanel | null {
+  const same = allPanels.value.filter(p => p.pageIndex === pageIndex && p.panelIndex < panelIndex)
+  if (same.length) return same.sort((a, b) => a.panelIndex - b.panelIndex)[same.length - 1]
+  const before = allPanels.value.filter(p => p.pageIndex < pageIndex)
+  if (!before.length) return null
+  const lastPage = Math.max(...before.map(p => p.pageIndex))
+  const inLast = before.filter(p => p.pageIndex === lastPage).sort((a, b) => a.panelIndex - b.panelIndex)
+  return inLast[inLast.length - 1] || null
+}
+
+/** 新建一页（页内第 1 格）：页序接在最后一条后面，参考图自动带上链上上一格的成图。 */
+async function newComicPage() {
+  const eid = episodeId.value
+  if (!eid) return ElMessage.warning('先选集号')
+  stopWait('')
+  waitNote.value = ''
+  const idx = pages.value.length ? Math.max(...pages.value.map(p => p.index)) + 1 : 1
+  const prev = prevPanelOf(idx, 1)
+  const prevImg = prev?.image || null
+  form.value = {
+    ...blankForm(),
+    title: `${eid} 第${idx}页 第1格`,
+    ref_images: prevImg ? [{ name: prevImg.name, path: prevImg.path, url: prevImg.url }] : [],
+  }
+  pageMeta.value = {
+    episode_id: eid,
+    index: idx,
+    panel_index: 1,
+    prev_plan_id: prev?.planId || '',
+    outline_text: outlineMd.value || '',
+    image: null,
+  }
+  curPlanId.value = ''
+  planRaw.value = null
+  prompts.value = {}
+  status.value = 'draft'
+  pushHint.value = ''
+  currentPageIndex.value = idx
+  const id = await savePlan()   // 立刻落库：页条上就多这一页
+  if (id) await loadComics()
+}
+
+/** 当前页追加一格：格序接在最后一条后面，参考图自动带上一格的成图。 */
+async function newComicPanel() {
+  const eid = episodeId.value
+  if (!eid) return ElMessage.warning('先选集号')
+  const pageIdx = currentPageIndex.value
+  if (!pageIdx) return ElMessage.warning('先选页')
+  stopWait('')
+  waitNote.value = ''
+  const panelIdx = panels.value.length + 1
+  const prev = prevPanelOf(pageIdx, panelIdx)
+  const prevImg = prev?.image || null
+  form.value = {
+    ...blankForm(),
+    title: `${eid} 第${pageIdx}页 第${panelIdx}格`,
+    ref_images: prevImg ? [{ name: prevImg.name, path: prevImg.path, url: prevImg.url }] : [],
+  }
+  pageMeta.value = {
+    episode_id: eid,
+    index: pageIdx,
+    panel_index: panelIdx,
+    prev_plan_id: prev?.planId || '',
+    outline_text: outlineMd.value || '',
+    image: null,
+  }
+  curPlanId.value = ''
+  planRaw.value = null
+  prompts.value = {}
+  status.value = 'draft'
+  pushHint.value = ''
+  const id = await savePlan()
+  if (id) await loadComics()
+}
+
+/** 点页条：切到该页，落点取该页最后一格（续写的 frontier）。 */
+async function selectComicPage(idx: number) {
+  currentPageIndex.value = idx
+  rebuildPages()
+  const ps = panels.value
+  if (!ps.length) return
+  await loadPlan(ps[ps.length - 1].planId)
+}
+
+/** 上传本格成图（出好图后传回来）：后端落 uploads 并写进方案的 page.image。 */
+async function onShotFile(e: any) {
+  const f = e.target.files?.[0]
+  e.target.value = ''
+  if (!f) return
+  if (!f.type.startsWith('image/')) return ElMessage.warning('只要图片')
+  if (!curPlanId.value) {
+    const id = await savePlan()
+    if (!id) return
+  }
+  shotUploading.value = true
+  try {
+    const r: any = await api.uploadPlanImage(curPlanId.value, f)
+    const img = r?.data?.image
+    if (img) pageMeta.value = { ...pageMeta.value, image: img }
+    await loadComics()
+    ElMessage.success('本格成图已挂上')
+  } catch {
+    ElMessage.error('上传失败，后端未起？')
+  } finally {
+    shotUploading.value = false
+  }
+}
+
+async function removePageImage() {
+  if (!curPlanId.value) return
+  try {
+    await api.deletePlanImage(curPlanId.value)
+    pageMeta.value = { ...pageMeta.value, image: null }
+    await loadComics()
+  } catch {
+    ElMessage.error('撤图失败，后端未起？')
+  }
+}
+
+/** 切模式：漫画模式先拉格序列与大纲，再落到最后一页的最后一格。 */
+async function onModeChange(v: any) {
+  const m = v === 'comic' ? 'comic' : 'single'
+  mode.value = m
+  try { localStorage.setItem('suli.studio.mode', m) } catch {}
+  if (m !== 'comic') {
+    // 单图模式的下拉里没有漫画格：当前选中的是漫画格就清掉，别让下拉与内容对不上
+    if (curPlanId.value && !singlePlans.value.some(p => p.id === curPlanId.value)) newPlan()
+    return
+  }
+  await loadComics()
+  await loadScript()
+  await readOutline(true)
+  const cur = allPanels.value.find(p => p.planId === curPlanId.value)
+  if (cur) { currentPageIndex.value = cur.pageIndex; rebuildPages(); await loadPlan(cur.planId); return }
+  if (pages.value.length) {
+    const last = pages.value[pages.value.length - 1]
+    currentPageIndex.value = last.index
+    rebuildPages()
+    const ps = last.panels
+    if (ps.length) await loadPlan(ps[ps.length - 1].planId)
+  }
+}
+
+/** 换集号：页条与大纲跟着换（大纲重新读，页缓存留着切回来用）。 */
+watch(() => store.episodeId, async (nv, ov) => {
+  if (mode.value !== 'comic' || nv === ov) return
+  outlineMd.value = ''
+  currentPageIndex.value = 0
+  await loadComics()
+  await loadScript()
+  await readOutline(true)
+  if (pages.value.length) {
+    const last = pages.value[pages.value.length - 1]
+    currentPageIndex.value = last.index
+    rebuildPages()
+    const ps = last.panels
+    if (ps.length) await loadPlan(ps[ps.length - 1].planId)
+  } else {
+    newPlan()
+  }
+})
 
 /** 方案变更卡：后端留的改前快照 vs 现在这份（没有改前快照 = 没有待审变更） */
 const changeRows = computed(() => planChangeRows(planRaw.value?.prev, planRaw.value))
@@ -392,6 +821,31 @@ async function loadPlan(id: string) {
       ref_images: Array.isArray(d.ref_images) ? d.ref_images : [],
       note: d.note || '',
     }
+    const pg = d.page || null
+    pageMeta.value = pg
+      ? {
+          episode_id: pg.episode_id || '',
+          index: Number(pg.index) || 0,
+          panel_index: Number(pg.panel_index) || 1,
+          prev_plan_id: pg.prev_plan_id || '',
+          outline_text: pg.outline_text || '',
+          image: pg.image || null,
+        }
+      : blankPage()
+    // 漫画格自带参考图为空时，接上链上上一格的成图（拆格时上一格还没出图，出图是后来的事）
+    if (pageMeta.value.index && !form.value.ref_images.length) {
+      const prev = prevPanelOf(pageMeta.value.index, pageMeta.value.panel_index)
+      if (prev?.image) {
+        const inherited = { name: prev.image.name, path: prev.image.path, url: prev.image.url }
+        form.value = { ...form.value, ref_images: [inherited] }
+        // 继承来的参考图不是手改：同步进 planRaw，别让「未保存」指示器亮起来
+        planRaw.value = { ...planRaw.value, ref_images: [inherited] }
+      }
+    }
+    if (pageMeta.value.index) {
+      currentPageIndex.value = pageMeta.value.index
+      rebuildPages()
+    }
     prompts.value = d.prompts || {}
     status.value = d.status || 'draft'
     pushHint.value = d.push?.package_id ? '已投 ' + d.push.package_id : ''
@@ -422,6 +876,10 @@ async function savePlan(): Promise<string> {
       note: form.value.note,
       source: 'ui',   // 页面自己改的：不算待审变更，后端不留改前快照
     }
+    // 漫画页上下文：漫画模式必带；单图模式下只在原本就是漫画页时带（别把页信息抹掉）
+    if (mode.value === 'comic' || pageMeta.value.episode_id || pageMeta.value.index) {
+      body.page = pageMeta.value
+    }
     if (curPlanId.value) body.id = curPlanId.value
     const r: any = await api.savePlan(body)
     const d = r?.data || {}
@@ -446,6 +904,7 @@ async function delPlan() {
     ElMessage.success('已删除')
     newPlan()
     await loadPlans()
+    if (mode.value === 'comic') await loadComics()
   } catch (e: any) {
     ElMessage.error('删除失败：' + (e?.response?.data?.msg || e?.message || e))
   }
@@ -547,7 +1006,24 @@ onUnmounted(() => {
 
 onMounted(async () => {
   await loadPlans()
-  if (plans.value.length) await loadPlan(plans.value[0].id)
+  // 模式记住：上次在漫画页就回漫画页
+  let m = 'single'
+  try { m = localStorage.getItem('suli.studio.mode') || 'single' } catch {}
+  mode.value = m === 'comic' ? 'comic' : 'single'
+  if (mode.value === 'comic') {
+    await loadComics()
+    await loadScript()
+    await readOutline(true)
+    if (pages.value.length) {
+      const last = pages.value[pages.value.length - 1]
+      currentPageIndex.value = last.index
+      rebuildPages()
+      const ps = last.panels
+      if (ps.length) await loadPlan(ps[ps.length - 1].planId)
+    }
+  } else if (singlePlans.value.length) {
+    await loadPlan(singlePlans.value[0].id)
+  }
 })
 </script>
 
@@ -599,6 +1075,11 @@ onMounted(async () => {
 .ref-meta { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
 .ref-name { font-size:12px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .ref-add { align-self:center; }
+/* 漫画页：本页成图槽（缩略图 + 上传/移除） */
+.page-shot { display:flex; align-items:center; gap:10px; }
+.page-shot-img { width:72px; height:96px; border-radius:8px; overflow:hidden; background:var(--el-fill-color-light); flex:0 0 auto; }
+.page-shot-ph { width:72px; height:96px; border-radius:8px; background:var(--el-fill-color-light); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--suli-text-3); flex:0 0 auto; }
+.page-shot-act { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
 .prompt-card { border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:10px; margin-bottom:10px; }
 .prompt-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .prompt-row { display:flex; gap:8px; margin-top:6px; }

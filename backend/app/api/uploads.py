@@ -28,11 +28,13 @@ def _kind_of(filename, mimetype):
         return "image"
     return "file"
 
-@bp.post("/uploads")
-def upload():
-    f = request.files.get("file")
-    if not f:
-        return jsonify({"code": 4001, "msg": "no file"}), 400
+
+def save_upload(f):
+    """落盘一个上传文件，返回 {path, url, kind, bytes}。
+
+    path 是 uploads 目录里的文件名（basename）；url 是前端可直接取的 /api/images/<name>。
+    别的蓝图要存图（如 art 蓝图挂漫画页成图）直接调这个，别各写一份。
+    """
     ext = Path(f.filename or "").suffix[:10] or ".bin"
     name = uuid.uuid4().hex + ext
     p = ROOT / name
@@ -54,9 +56,20 @@ def upload():
             p.unlink()
         except Exception:
             pass
-        return jsonify({"code": 4001, "msg": str(e)[:200]}), 400
-    kind = _kind_of(f.filename, f.mimetype)
-    return ok({"path": name, "url": f"/api/images/{name}", "kind": kind, "bytes": size})
+        raise ValueError(str(e)[:200])
+    return {"path": name, "url": f"/api/images/{name}", "kind": _kind_of(f.filename, f.mimetype), "bytes": size}
+
+
+@bp.post("/uploads")
+def upload():
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"code": 4001, "msg": "no file"}), 400
+    try:
+        row = save_upload(f)
+    except ValueError as e:
+        return jsonify({"code": 4001, "msg": str(e)}), 400
+    return ok(row)
 
 @bp.get("/images/<name>")
 def serve(name):

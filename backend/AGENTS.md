@@ -121,6 +121,75 @@
 没有对象的页面（美术工具、设置、展览）按页面各自分桶，不塞剧集上下文；
 拉片会话独立成域（scope=video，键=素材名），不跟剧集的集号会话混。
 
+## 漫画页与格（art 域的页/格序列：/studio 的「漫画」模式）
+
+**一页由若干格组成，一格 = 一个方案**（一次直投 = 一格出图）。页上下文落在方案的 `page` 字段：
+`{episode_id, index, panel_index, prev_plan_id, outline_text, image}`
+（集号 / 页序 / 页内格序 / 上一格方案 / 大纲快照 / 本格成图）。
+
+### 正确顺序（别跳步）
+
+```
+漫画剧本 → 拆格（每格一个方案）→ 每格直投 L-Port → L-Port 发散/翻译/精修 → 提示词回传
+```
+
+**先有剧本，再有方案。** 不要拿着零散意图直接直投：剧本定死了每一格画什么（页/格序、画面、台词、景别），
+拆格后每格方案自动带页序与上一格链，直投出去的一致性才对。
+
+### 剧本（art 域 comics 段，按集号一份）
+
+- 读：`GET /api/v1/art/comic-script?episode_id=<集号>` → `{episode_id, title, panels[], updated_at, exists}`
+- 存：`POST /api/v1/art/comic-script` body `{episode_id*, title?, panels*: [{page, panel, text, dialogue, camera, note}]}`（整本覆盖）
+- 从大纲转：`POST /api/v1/art/comic-script/from-outline` body `{episode_id*, per_page?}`（大纲分镜表一行 = 一格）
+- 拆格：`POST /api/v1/art/comic-script/split` body `{episode_id*, engines?}` → 一条剧本 = 一个方案，
+  页序/格序/上一格链自动排好；**幂等**（同一页格已有方案就跳过）。
+
+剧本一格一条：`{page, panel, text(画面), dialogue(台词), camera(景别/运镜), note(备注)}`。
+
+### 格与方案
+
+- 落盘：`POST /api/v1/art/plans` 带 `page`（其余字段与单图方案一样）。
+- 格序列：`GET /api/v1/art/comics?episode_id=<集号>` → 该集全部格，按 (index, panel_index) 升序；
+  前端按 index 聚成页条，页内按 panel_index 聚成格条。
+- 成图：`POST /api/v1/art/plans/<plan_id>/image`（multipart，字段名 `file`）→ 落 uploads 并写进 `page.image`；
+  撤图 `DELETE /api/v1/art/plans/<plan_id>/image`。
+- 直投：`POST /api/v1/art/push-lport` 会把页上下文拼进包里的 `intent_text`
+  （【漫画页上下文】段：集号 / 页 / 格 / 大纲快照），并另存 `comic_context`；参考图由方案的 `ref_images` 决定。
+- **格间衔接的两个载体**：本格成图（下一格建页时前端自动带进参考图）+ 大纲快照（整页共享，写一次全页可用）。
+  跨页时链自动接上：页内第一格的 `prev_plan_id` 指向上一页的末格。
+- **衔接兜底在直投那一刻**：拆格时上一格还没出图，格是空的；等上一格出了图、这一格才直投时，
+  直投接口会把链上上一格的成图自动放进包（返回 `ref_from: "prev_panel"`）。
+  方案自带参考图时以自带的为准（`ref_from: "plan"`）。前端载入漫画格时也自动把这张继承图显示在参考图区。
+- 右栏 agent 在漫画页看到的上下文：集号 / 页序 / 格序 / 上一格成图名 / 大纲摘要（走 studio store 的 `pageCtx`）。
+- 漫画页同样**不写 APPLY 行**：它是 art 域方案，落盘走 `POST /api/v1/art/plans`（带 `id` 覆盖写 + `page`）。
+
+### 直投包字段（与 L-Port 的契约，已端到端跑通）
+
+包落在 L-Port 收件箱 `suli_packages/<pkg_id>/`，坏文件只有三个 + 参考图目录：
+
+| 文件 / 字段 | 内容 | L-Port 侧怎么用 |
+| --- | --- | --- |
+| `art_plan.json` → `plan_id` | 本仓方案 id | 回传时用它定位方案 |
+| `title` | 方案标题 | 收件箱列表展示 |
+| `intent_text` | 方案意图（漫画格额外带【漫画页上下文】段） | 发散节点输入 `user_intent_text` |
+| `engines` | 目标引擎名（`novelai` / `manga3` / `seedream` …） | 决定跑哪几个 `blueprint_to_<engine>` |
+| `reference_images` + `ref_images/<文件名>` | 参考图 | 解到 `outputs/suli_art_refs/<plan_id>/`，路径作 `reference_images` 喂 VLM 分析 |
+| `user_image_instruction` | 画面指令（取方案的 `note`） | 发散节点的画面约束 |
+| `comic_context` | 页上下文副本（集号/页/格/大纲） | L-Port 不读，留档排查用 |
+| `manifest.json` | 包元信息 + hint | 收件箱列表 |
+| `refs.json` | 参考图清单 | 解图用 |
+
+参考图必须**物理进 zip**（只给文件名不算到位）；漫画格的「接着上一格画」全靠这一条。
+
+回传：L-Port 跑完 `POST /api/pipeline/push-art-prompts-to-suli`
+`{plan_id, package_id, engines:{<eng>:{positive, negative, params:{base_prompt, character_prompts}, note}}, blueprint, source}`
+→ 本仓写进方案的 `prompts.<engine>` 与 `blueprint`，`status` 置 `returned`。
+
+**L-Port 侧没有自动扫包的 worker**：包进收件箱后要在 L-Port 的「单图方案」页点「跑链」，
+链条是 发散 → 结构化 → 翻译·<引擎> → 回传。所以直投完要等那边点，不是投完自动回。
+L-Port 的发散/结构化/翻译用它在设置页选的 LLM；那条模型路由挂掉会直接报
+`BAD_RESPONSE / HTTP 402 Endpoint is unavailable`，与本仓字段无关——先查 L-Port 的模型配置。
+
 ## 前端状态自查（导演页不展示状态标签）
 
 前端只留页签名（剧本/大纲/草案），"大纲有无、草案几镜、第①步产物"这类状态标签一律不进 UI；

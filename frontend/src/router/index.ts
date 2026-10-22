@@ -24,8 +24,9 @@ export const routes = [
   { path: '/video', component: withChunkRecovery(() => import('../views/VideoLabView.vue')), meta: { title: '拉片室', icon: 'VideoPlay' } },
   { path: '/traffic', component: withChunkRecovery(() => import('../views/TrafficView.vue')), meta: { title: '投流批量', icon: 'Present' } },
   { path: '/art', component: withChunkRecovery(() => import('../views/ArtView.vue')), meta: { title: '美术工具', icon: 'Picture' } },
-  { path: '/studio', component: withChunkRecovery(() => import('../views/ArtStudioView.vue')), meta: { title: '单图创作', icon: 'MagicStick' } },
-  { path: '/settings', component: withChunkRecovery(() => import('../views/SettingsView.vue')), meta: { title: '设置', icon: 'Setting' } },
+  { path: '/studio', component: withChunkRecovery(() => import('../views/ArtStudioView.vue')), meta: { title: '创作', icon: 'MagicStick' } },
+  // noRightChat：这一页不挂右侧 Agent 栏（设置页是配置页，不带对话上下文）
+  { path: '/settings', component: withChunkRecovery(() => import('../views/SettingsView.vue')), meta: { title: '设置', icon: 'Setting', noRightChat: true } },
 ]
 
 export default createRouter({ history: createWebHistory(), routes })

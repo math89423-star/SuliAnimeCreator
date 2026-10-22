@@ -100,6 +100,8 @@ _ART_DB = _load_store("art_db.json", {"plans": []})
 _ENGINE_CAP = 20000  # 单引擎提示词字段上限（防超长灌库）
 _ENGINES = ("novelai", "tsubaki3", "seedream", "mango3", "anima", "gpt_image", "flux", "sdxl", "pony", "cloud")
 _UPLOADS = _Path(__file__).resolve().parents[2] / "data" / "uploads"
+_SCRIPT_PANEL_CAP = 2000   # 单格剧本正文上限
+_SCRIPT_MAX_PANELS = 200   # 单本剧本格数上限
 
 
 def _apersist():
@@ -180,6 +182,54 @@ def _migrate_refs():
         _apersist()
 
 
+_PAGE_OUTLINE_CAP = 12000  # 大纲快照上限（单页带整份大纲会撑爆提示词）
+
+
+def _norm_page(raw):
+    """漫画页上下文归一：集号 / 页序 / 页内格序 / 上一格方案 / 大纲快照 / 本格成图。
+
+    存在 plan.page 里。漫画一页由若干格组成，**一格 = 一个方案**（一次直投 = 一格出图）：
+    - index：页序（第几页）
+    - panel_index：页内格序（第几格）
+    - prev_plan_id：上一格的方案（页内上一格；页内第一格则指上一页的末格）
+    - outline_text：大纲快照（整页共享）
+    - image：本格成图
+    下一格建页时把上一格的 image 自动带进参考图，格与格的连续性就靠它。
+    """
+    if not isinstance(raw, dict):
+        return None
+    eid = str(raw.get("episode_id") or "").strip()[:64]
+    prev = str(raw.get("prev_plan_id") or "").strip()[:64]
+    outline = str(raw.get("outline_text") or "")[:_PAGE_OUTLINE_CAP]
+    try:
+        idx = int(raw.get("index") or 0)
+    except (TypeError, ValueError):
+        idx = 0
+    try:
+        pidx = int(raw.get("panel_index") or 0)
+    except (TypeError, ValueError):
+        pidx = 0
+    img = None
+    r = raw.get("image")
+    if isinstance(r, dict):
+        name = str(r.get("name") or "").strip()[:200]
+        path = str(r.get("path") or "").strip()[:500]
+        url = str(r.get("url") or "").strip()[:500]
+        if name or path:
+            base = (path or name).replace("\\", "/").split("/")[-1]
+            if not name:
+                name = base
+            if not path or "/" not in path:
+                path = "data/uploads/%s" % base
+            if not url:
+                url = "/api/images/%s" % _urlparse.quote(base)
+            img = {"name": name, "path": path, "url": url}
+    if not (eid or idx or pidx or prev or outline or img):
+        return None
+    return {"episode_id": eid, "index": idx if idx > 0 else 0, "panel_index": pidx if pidx > 0 else 0,
+            "prev_plan_id": prev, "outline_text": outline, "image": img}
+
+
 _migrate_refs()
 
 
@@ -213,6 +263,7 @@ def _plan_projection(p):
         "note": p.get("note") or "",
         "status": p.get("status") or "draft",
         "push": p.get("push") or None,
+        "page": p.get("page") or None,
         "prompt_engines": sorted(pr.keys()),
         "prompt_count": len(pr),
         "created_at": p.get("created_at"), "updated_at": p.get("updated_at"),
@@ -284,6 +335,8 @@ def upsert_plan():
         p["ref_images"] = _norm_refs(b.get("ref_images"))
     if "note" in b:
         p["note"] = _trim(b.get("note"))
+    if "page" in b:
+        p["page"] = _norm_page(b.get("page"))
     # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
     # source=ui 是主人在页面上自己改的——人已经看过了，清掉待审快照。
     if str(b.get("source") or "").strip().lower() == "ui":
@@ -307,6 +360,301 @@ def delete_plan(plan_id):
     _ART_DB["plans"] = keep
     _apersist()
     return ok({"deleted": plan_id})
+
+
+@bp.get("/comics")
+def list_comics():
+    """漫画格序列（页条/格条用）：带 page 上下文的方案，按页序+格序升序。
+
+    query: episode_id（给了就只给这一集的格；不给则给全部漫画格）
+    """
+    eid = str(request.args.get("episode_id") or "").strip()
+    rows = []
+    for p in (_ART_DB.get("plans") or []):
+        pg = p.get("page") or {}
+        if not pg:
+            continue
+        if eid and pg.get("episode_id") != eid:
+            continue
+        rows.append(_plan_projection(p))
+    rows.sort(key=lambda r: (
+        ((r.get("page") or {}).get("index") or 0),
+        ((r.get("page") or {}).get("panel_index") or 0),
+        r.get("updated_at") or "",
+    ))
+    return ok(rows)
+
+
+@bp.post("/plans/<plan_id>/image")
+def upload_plan_image(plan_id):
+    """挂本页成图（漫画页）：传图 → 落 uploads → 写进方案的 page.image。
+
+    下一建页时前端把上一页这张图自动带进参考图，页与页之间人物/服装/画风才接得上。
+    """
+    p = _plan(plan_id)
+    if p is None:
+        return jsonify({"code": 4003, "msg": "方案不存在：%s" % plan_id}), 404
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"code": 4001, "msg": "缺文件: file"}), 400
+    from .uploads import save_upload
+    try:
+        row = save_upload(f)
+    except ValueError as e:
+        return jsonify({"code": 4001, "msg": str(e)}), 400
+    pg = _norm_page(p.get("page") or {}) or {"episode_id": "", "index": 0, "prev_plan_id": "",
+                                           "outline_text": "", "image": None}
+    pg["image"] = {"name": row["path"], "path": "data/uploads/%s" % row["path"], "url": row["url"]}
+    p["page"] = pg
+    p["updated_at"] = _anow()
+    _apersist()
+    return ok({"plan_id": plan_id, "image": pg["image"], "bytes": row.get("bytes")})
+
+
+@bp.delete("/plans/<plan_id>/image")
+def delete_plan_image(plan_id):
+    """撤掉本页成图（漫画页）：只清 page.image，文件仍留在 uploads。"""
+    p = _plan(plan_id)
+    if p is None:
+        return jsonify({"code": 4003, "msg": "方案不存在：%s" % plan_id}), 404
+    pg = p.get("page") or {}
+    pg["image"] = None
+    p["page"] = pg
+    p["updated_at"] = _anow()
+    _apersist()
+    return ok({"plan_id": plan_id, "image": None})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 漫画剧本：一本剧本 → 拆格 → 每格一个方案 → 直投 L-Port → 回传提示词
+#
+# 流程是这个顺序，不是"直接写方案意图"：
+#   剧本（页/格分条） → 拆格（一格 = 一个方案，带页序/格序/上一格链）
+#   → 每格直投 L-Port → L-Port 发散/翻译/精修 → 提示词回传进方案。
+# 剧本存 art_db.json 的 comics 段（按集号一份）：{episode_id, title, panels[], updated_at}
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _norm_script_panel(raw):
+    """一格剧本条目归一：{page, panel, text, dialogue, camera, note}。"""
+    if not isinstance(raw, dict):
+        return None
+    try:
+        page = int(raw.get("page") or 0)
+    except (TypeError, ValueError):
+        page = 0
+    try:
+        panel = int(raw.get("panel") or 0)
+    except (TypeError, ValueError):
+        panel = 0
+    text = str(raw.get("text") or "").strip()[:_SCRIPT_PANEL_CAP]
+    dialogue = str(raw.get("dialogue") or "").strip()[:_SCRIPT_PANEL_CAP]
+    camera = str(raw.get("camera") or "").strip()[:200]
+    note = str(raw.get("note") or "").strip()[:2000]
+    if page <= 0:
+        page = 1
+    if panel <= 0:
+        panel = 1
+    if not (text or dialogue or camera or note):
+        return None
+    return {"page": page, "panel": panel, "text": text, "dialogue": dialogue,
+            "camera": camera, "note": note}
+
+
+def _script_of(eid):
+    return (_ART_DB.get("comics") or {}).get(eid)
+
+
+def _save_script(eid, title, panels):
+    comics = _ART_DB.setdefault("comics", {})
+    comics[eid] = {
+        "episode_id": eid,
+        "title": (title or "").strip()[:200] or ("%s 漫画剧本" % eid),
+        "panels": panels,
+        "updated_at": _anow(),
+    }
+    _apersist()
+    return comics[eid]
+
+
+def _panel_intent(p):
+    """一格剧本 → 方案意图文本（画面/台词/景别，页序由直投时统一补）。"""
+    bits = []
+    if p.get("text"):
+        bits.append("画面：%s" % p["text"])
+    if p.get("dialogue"):
+        bits.append("台词：%s" % p["dialogue"])
+    if p.get("camera"):
+        bits.append("景别/运镜：%s" % p["camera"])
+    if p.get("note"):
+        bits.append("备注：%s" % p["note"])
+    return "\n".join(bits)[:_ENGINE_CAP]
+
+
+def _outline_of(eid):
+    """读本集大纲（从 scriptboard 的落盘里取，不跨蓝图直接读文件）。"""
+    try:
+        from .scriptboard import _EPS
+        return (_EPS.get(eid) or {}).get("outline_md") or ""
+    except Exception:
+        return ""
+
+
+def _outline_to_panels(md, per_page=4):
+    """从大纲拆成漫画格：优先取大纲里的分镜表（一行 = 一格），取不到就整篇兜成一格。
+
+    分镜表列：镜号 | 内容 | 时长 | 运镜 | 备注 → 格：内容 / 运镜 / 备注。
+    """
+    rows = []
+    for ln in (md or "").splitlines():
+        s = ln.strip()
+        if not s.startswith("|"):
+            continue
+        cells = [c.strip() for c in s.strip("|").split("|")]
+        if len(cells) < 2:
+            continue
+        if any("镜号" in c or set(c) <= set("-: ") for c in cells):
+            continue
+        content = cells[1] if len(cells) > 1 else ""
+        if not content:
+            continue
+        camera = cells[3] if len(cells) > 3 else ""
+        note = cells[4] if len(cells) > 4 else ""
+        rows.append({"text": content, "camera": camera, "note": note})
+    if not rows:
+        body = (md or "").strip()
+        if not body:
+            return []
+        rows = [{"text": body[:_SCRIPT_PANEL_CAP], "camera": "", "note": ""}]
+    per_page = max(1, min(8, int(per_page or 4)))
+    out = []
+    for i, r in enumerate(rows):
+        out.append({
+            "page": i // per_page + 1,
+            "panel": i % per_page + 1,
+            "text": r["text"],
+            "dialogue": "",
+            "camera": r["camera"],
+            "note": r["note"],
+        })
+    return out[:_SCRIPT_MAX_PANELS]
+
+
+@bp.get("/comic-script")
+def get_comic_script():
+    """读本集的漫画剧本（页/格分条）。"""
+    eid = str(request.args.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    sc = _script_of(eid)
+    if sc is None:
+        return ok({"episode_id": eid, "title": "", "panels": [], "updated_at": "", "exists": False})
+    d = dict(sc)
+    d["exists"] = True
+    return ok(d)
+
+
+@bp.post("/comic-script")
+def save_comic_script():
+    """存本集的漫画剧本（整体覆盖）。
+
+    body: {episode_id*, title?, panels*: [{page, panel, text, dialogue, camera, note}]}
+    """
+    b = request.get_json(force=True, silent=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    raw = b.get("panels")
+    if not isinstance(raw, list):
+        return jsonify({"code": 4001, "msg": "panels 须为数组"}), 400
+    panels = []
+    for it in raw[:_SCRIPT_MAX_PANELS]:
+        p = _norm_script_panel(it)
+        if p:
+            panels.append(p)
+    panels.sort(key=lambda x: (x["page"], x["panel"]))
+    d = _save_script(eid, b.get("title"), panels)
+    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels), "updated_at": d["updated_at"]})
+
+
+@bp.post("/comic-script/from-outline")
+def comic_script_from_outline():
+    """从本集大纲转成漫画剧本（冷启动用；转完再手工改）。
+
+    body: {episode_id*, per_page?} → {panel_count, panels}
+    """
+    b = request.get_json(force=True, silent=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    md = _outline_of(eid)
+    if not md.strip():
+        return jsonify({"code": 4004, "msg": "本集没有大纲：先在剧本分镜页出大纲"}), 400
+    panels = _outline_to_panels(md, b.get("per_page") or 4)
+    if not panels:
+        return jsonify({"code": 4004, "msg": "大纲里没解析出分镜"}), 400
+    d = _save_script(eid, b.get("title"), panels)
+    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels), "updated_at": d["updated_at"]})
+
+
+@bp.post("/comic-script/split")
+def comic_script_split():
+    """拆格：按剧本一条 = 一个方案（页序/格序/上一格链自动排好）。
+
+    幂等：同一 (页,格) 已有方案就跳过（只补上下文，不重建）。
+    body: {episode_id*, engines?} → {created, skipped, plan_ids, panels}
+    """
+    b = request.get_json(force=True, silent=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    sc = _script_of(eid)
+    if not sc or not sc.get("panels"):
+        return jsonify({"code": 4004, "msg": "本集没有漫画剧本：先写剧本或从大纲转"}), 400
+    engines = _norm_engines(b.get("engines")) or ["novelai", "tsubaki3", "seedream"]
+    panels = sorted(sc.get("panels") or [], key=lambda x: (x.get("page") or 0, x.get("panel") or 0))
+    outline = _outline_of(eid)
+
+    existing = {}
+    for p in (_ART_DB.get("plans") or []):
+        pg = p.get("page") or {}
+        if pg.get("episode_id") == eid:
+            existing[(int(pg.get("index") or 0), int(pg.get("panel_index") or 0))] = p
+
+    now = _anow()
+    created, skipped, plan_ids = [], [], []
+    prev_plan_id = ""
+    for it in panels:
+        key = (int(it.get("page") or 1), int(it.get("panel") or 1))
+        old = existing.get(key)
+        if old is not None:
+            skipped.append(old.get("id"))
+            plan_ids.append(old.get("id"))
+            prev_plan_id = old.get("id") or prev_plan_id
+            continue
+        pid = "AP-%s-%04d" % (_time.strftime("%Y%m%d%H%M%S"), _random.randint(0, 9999))
+        p = {
+            "id": pid, "created_at": now, "updated_at": now,
+            "title": "%s 第%d页 第%d格" % (eid, key[0], key[1]),
+            "intent_text": _panel_intent(it),
+            "engines": list(engines),
+            "ref_images": [],
+            "note": "",
+            "status": "draft",
+            "prompts": {},
+            "page": {
+                "episode_id": eid, "index": key[0], "panel_index": key[1],
+                "prev_plan_id": prev_plan_id, "outline_text": outline[:_PAGE_OUTLINE_CAP],
+                "image": None,
+            },
+        }
+        _ART_DB.setdefault("plans", []).append(p)
+        created.append(pid)
+        plan_ids.append(pid)
+        prev_plan_id = pid
+    _apersist()
+    return ok({"episode_id": eid, "created": len(created), "skipped": len(skipped),
+               "created_ids": created, "plan_ids": plan_ids, "panel_count": len(panels)})
 
 
 def _inbox_root():
@@ -344,14 +692,41 @@ def push_lport():
 
     t0 = _time.perf_counter()
     pkg_id = "PKG-ART-%s-%04d" % (_time.strftime("%Y%m%d%H%M%S"), _random.randint(0, 9999))
+    # 漫画页：把页上下文（集号/页序/大纲）拼进 intent_text —— L-Port 只认 intent_text，
+    # 页面上下文不进它眼里就等于没给。原始意图仍留在方案的 intent_text 里。
+    pg = p.get("page") or {}
+    intent = (p.get("intent_text") or "").strip()
+    ctx_bits = []
+    if pg.get("episode_id"):
+        ctx_bits.append("本集集号：%s" % pg["episode_id"])
+    if pg.get("index"):
+        pos = "第 %s 页" % pg["index"]
+        if pg.get("panel_index"):
+            pos += " 第 %s 格" % pg["panel_index"]
+        ctx_bits.append("本格是漫画%s：只画这一格画面，人物/服装/场景/画风与前一格保持一致" % pos)
+    if pg.get("outline_text"):
+        ctx_bits.append("本集大纲（作画面依据，不要把文字画进画面）：\n%s" % pg["outline_text"][:6000])
+    if ctx_bits:
+        intent = (intent + "\n\n【漫画页上下文】\n" + "\n".join(ctx_bits)).strip()[:40000]
+    # 参考图：优先用方案自带的；漫画格自带为空时，接上链上上一格的成图。
+    # 拆格时上一格还没出图，成图是后来挂的 —— 衔接只能发生在直投这一刻。
+    refs = list(p.get("ref_images") or [])
+    ref_from = "plan"
+    if not refs and pg.get("prev_plan_id"):
+        prev = _plan(pg["prev_plan_id"]) or {}
+        pimg = (prev.get("page") or {}).get("image")
+        if isinstance(pimg, dict) and pimg.get("name"):
+            refs = [pimg]
+            ref_from = "prev_panel"
     art_plan = {
         "package_id": pkg_id, "kind": "art_plan",
         "plan_id": pid, "title": p.get("title") or "",
-        "intent_text": p.get("intent_text") or "",
+        "intent_text": intent,
         "engines": engines,
-        "reference_images": [r.get("name") for r in (p.get("ref_images") or [])],
+        "reference_images": [r.get("name") for r in refs],
         "user_image_instruction": p.get("note") or "",
         "note": p.get("note") or "",
+        "comic_context": pg or None,
         "created_at": _anow(),
     }
     manifest = {
@@ -363,7 +738,6 @@ def push_lport():
         "hint": "L-Port 侧载入 art_plan.json 跑 intent_divergence → intent_blueprint → blueprint_to_<engine>，"
                 "完成后 POST /api/pipeline/push-art-prompts-to-suli 回传（plan_id=%s）" % pid,
     }
-    refs = p.get("ref_images") or []
     buf = _BytesIO()
     with _zipfile.ZipFile(buf, "w", _zipfile.ZIP_DEFLATED) as z:
         z.writestr("art_plan.json", _json.dumps(art_plan, ensure_ascii=False, indent=2))
@@ -395,7 +769,7 @@ def push_lport():
     _apersist()
     return ok({
         "package_id": pkg_id, "plan_id": pid, "pkg_dir": str(pkgdir),
-        "engines": engines, "ref_count": len(refs),
+        "engines": engines, "ref_count": len(refs), "ref_from": ref_from,
         "zip_bytes": len(buf.getvalue()), "elapsed_ms": int((_time.perf_counter() - t0) * 1000),
         "hint": "已落 L-Port 收件箱 suli_packages/%s（art_plan.json）：L-Port 侧跑发散翻译精修后调 "
                 "push-art-prompts-to-suli 回传（plan_id=%s），本页刷新即见各引擎提示词。" % (pkg_id, pid),

@@ -61,6 +61,1096 @@
         },
         "key_concepts": []
       }
+    },
+    {
+      "id": "AP-20261022092726-3067",
+      "created_at": "2026-10-22T09:27:26+00:00",
+      "prompts": {
+        "novelai": {
+          "positive": "masterpiece, best quality, very aesthetic, absurdres, 1girl, light blue hair, pale blue long hair, waist-length hair, wet hair, double buns, ahoge, black curved horns, blue eyes, water droplets on hair, hair stuck to cheek, dark clothes, wet clothes, wet shoulder, dark stain on shoulder, blue-green tail, scaled tail, looking back over shoulder, side profile, hand on doorknob, standing, body turned away, looking into store, solo, low angle, from below, convenience store, half-open glass door, metal doorknob, aluminum door frame, water droplets on frame, rainy night, rain streaks, wet asphalt, puddle reflections, signboard reflections, shelves receding into depth, trapezoid warm light on floor, glowing interior, teal ambient cold light, warm golden light from behind, rim light along hair, half-lit face, cool shadows on back, cold-warm contrast, large light-dark contrast",
+          "negative": "",
+          "params": {},
+          "note": "",
+          "source": "lport:intent_chain",
+          "package_id": "PKG-ART-20261022092726-8596",
+          "at": "2026-10-22T09:55:27+00:00"
+        }
+      },
+      "title": "EP-VERIFY 第1页 第1格",
+      "intent_text": "雨夜便利店门口，白发少女推开玻璃门，暖黄灯光从店内泼在她侧脸上；雨水在她的发梢与肩头留下深色水痕；一手扶着门把，视线越过画面看向店内货架。景别：中景偏全身，低机位略仰。冷暖对撞：店外青蓝雨夜 vs 店内暖金。",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [
+        {
+          "name": "19264666f3dd4e59a70c46934c718127.png",
+          "path": "data/uploads/19264666f3dd4e59a70c46934c718127.png",
+          "url": "/api/images/19264666f3dd4e59a70c46934c718127.png"
+        }
+      ],
+      "note": "画面只表达这一刻：推门、回望、冷暖交界。人物长相与服装跟参考图一致；不要让画面里出现文字、对话框、分格线。构图重心偏左，右侧留给店内纵深。",
+      "page": {
+        "episode_id": "EP-VERIFY",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "雨夜便利店，白发少女推门进店。",
+        "image": null
+      },
+      "updated_at": "2026-10-22T09:55:27+00:00",
+      "status": "returned",
+      "push": {
+        "package_id": "PKG-ART-20261022092726-8596",
+        "at": "2026-10-22T09:27:26+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261022092726-8596",
+        "engines": [
+          "novelai"
+        ]
+      },
+      "blueprint": {
+        "dimension_narratives": {
+          "artist": {
+            "cn": "",
+            "en": ""
+          },
+          "body": {
+            "cn": "浅蓝近白的及腰长发，被雨水打湿，几缕发丝贴在脸颊上，发梢与肩头洇出深色水痕；双丸子头，头顶一撮呆毛，发上挂着细小的水珠；额侧伸出一对黑色弯角，在暖光里泛着一点微光；蓝瞳；身后垂落一段蓝绿色鳞片质感的长尾，在冷光里微微反光。",
+            "en": ""
+          },
+          "character": {
+            "cn": "单个少女角色，站在便利店被推开半扇的玻璃门门缝处，处于店外青蓝冷光与店内暖金灯光的分界线上，身体半侧，回头望向店内。",
+            "en": ""
+          },
+          "clothing": {
+            "cn": "深色上衣，肩部被雨水浸成更深的一片湿痕，湿透的衣料颜色明显深于其余部分，贴附在肩背上",
+            "en": ""
+          },
+          "composition": {
+            "cn": "低机位略仰视角，中景偏全身景别；人物与门框一起挤在画面左侧，右侧留出店内由近及远、层层收束的货架纵深，地面右侧落着一块梯形暖光区域，形成左右轻重对比与纵深引导。",
+            "en": ""
+          },
+          "director_notes": {
+            "cn": "情绪命题：雨夜便利店门口的冷暖交界与半侧回望的悬停感。视觉主题：青蓝冷雨夜对照暖金店内光，湿发水痕与鳞片反光强化雨夜质感。张力对比：冷/暖、外/内、湿冷街道/温暖货架纵深，人物被门缝分界线切成两半。",
+            "en": ""
+          },
+          "entity_count": {
+            "cn": "",
+            "en": ""
+          },
+          "expression": {
+            "cn": "回头越过画面前方，视线落向店内深处成排收束的货架，面部呈回头侧脸，浅蓝近白的湿发贴在颊边。",
+            "en": ""
+          },
+          "franchise": {
+            "cn": "",
+            "en": ""
+          },
+          "lighting": {
+            "cn": "双光源冷暖对峙结构：店内暖金色灯光从右后方低角度泼出，作为主光铺在少女的侧脸、鼻梁与下颌线上，并把发丝边缘勾成一圈金色轮廓光；店外雨夜街道被青蓝冷光笼罩，从背后包裹住她的肩背与湿发，形成背侧冷光包裹效果。人物正站在玻璃门缝处冷光与暖光的分界线上，左侧（店外）偏青蓝冷调、右侧（店内）偏暖金，画面因此形成明确的冷暖对比。明暗结构：受暖光一侧的侧脸、鼻梁、下颌线为亮面，肩背与湿发边缘被冷光提亮，面部其余部分与身体内侧落入暗部。次级光效：对面招牌的光斑在柏油路面积水上晕开成模糊的散光斑点，额侧黑色弯角在暖光里泛着一点微光，身后蓝绿色鳞片质感长尾在冷光里微微反光，画面右侧地面落着一块由近及远呈梯形的暖光。整体为低照度雨夜、光比较大、湿面高光细碎的照明。",
+            "en": ""
+          },
+          "object": {
+            "cn": "便利店被推开半扇的玻璃门，铝框边缘挂着一线水珠，门上是金属门把；对面招牌的光斑晕开映在柏油路面的积水里；店内是一排排由近及远收束的货架。",
+            "en": ""
+          },
+          "other": {
+            "cn": "",
+            "en": ""
+          },
+          "pose": {
+            "cn": "站在便利店玻璃门缝处的冷光与暖光分界线上，重心偏左，右手搭在金属门把上，身体半侧朝向门内，头部回头越过画面前方，视线越过画面前方落向店内深处成排的货架",
+            "en": ""
+          },
+          "quality": {
+            "cn": "",
+            "en": ""
+          },
+          "relationship": {
+            "cn": "暖金低角度光从右后方铺过侧脸、鼻梁与下颌并勾亮发丝边缘；青蓝冷光从背后包裹肩背与湿发，冷暖分界落在门缝处的少女身上；雨丝、积水光斑与店内货架纵深共同围绕她半侧回望的悬停关系。",
+            "en": ""
+          },
+          "scene": {
+            "cn": "雨夜街道，细密雨丝斜落，柏油路面积水映出招牌光斑；便利店玻璃门推开半扇，铝框边缘挂水珠；店内成排货架由近及远形成纵深。",
+            "en": ""
+          },
+          "style": {
+            "cn": "写实电影感材质表现：湿发贴脸、发梢与肩头深色水痕、蓝绿色鳞片长尾在冷光中微反光、柏油积水映招牌光斑；整体以冷暖光分界塑造体积，发丝边缘被暖光勾出一圈金色轮廓。",
+            "en": ""
+          }
+        },
+        "key_concepts": [
+          {
+            "concept_id": "kc_001",
+            "concept_layer": "hard_visual",
+            "dimension": "character",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "少女",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_002",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "浅蓝近白的及腰长发",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_003",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "被雨打湿的长发，几缕发丝贴在脸颊上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_004",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发梢与肩头洇出深色水痕",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_005",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "双丸子头",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_006",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "头顶一撮呆毛",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_007",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发上挂着细小的水珠",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_008",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "额侧伸出的一对黑色弯角，在暖光里泛着一点微光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_009",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "蓝瞳",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_010",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "身后垂落的蓝绿色鳞片质感长尾，在冷光里微微反光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_011",
+            "concept_layer": "hard_visual",
+            "dimension": "expression",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "回头越过画面前方，视线落向店内深处的货架",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_012",
+            "concept_layer": "assembly_guidance",
+            "dimension": "expression",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "回头侧脸视角",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_013",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深色上衣",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_014",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "上衣肩头被雨水浸成更深的一片湿痕",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_015",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "站在便利店玻璃门缝处冷暖光分界线上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_016",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "重心偏左的站姿",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_017",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "右手搭在金属门把上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_018",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "身体半侧向门内",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_019",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "回头越过画面前方望向店内深处",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_020",
+            "concept_layer": "hard_visual",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "低机位略仰视角",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_021",
+            "concept_layer": "hard_visual",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "中景偏全身景别",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_022",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "人物与门框一起挤在画面左侧",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_023",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "画面右侧留出店内货架纵深空间",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_024",
+            "concept_layer": "hard_visual",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "由近及远层层收束的货架纵深透视",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_025",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "画面右侧地面上一块梯形暖光区域",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_026",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "便利店被推开半扇的玻璃门",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_027",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "玻璃门铝框边缘挂着一线水珠",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_028",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "门上的金属门把（右手搭握处）",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_029",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "马路对面的招牌",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_030",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "柏油路面上的积水",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_031",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "店内成排收束的货架",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_032",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "雨夜的街道",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_033",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "细密雨丝斜着织下来",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_034",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "柏油路面",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_035",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "路面积水映着对面招牌晕开的光斑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_036",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "便利店的玻璃门被推开半扇",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_037",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "铝框边缘挂着一线水珠",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_038",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "店内深处成排收束的货架",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_039",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "右侧由近及远的货架纵深",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_040",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "雨夜街道被青蓝冷光笼罩，整体呈低照度冷调环境",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_041",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "店外青蓝冷光从背后包裹住少女的肩背与湿发",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_042",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "店内暖金色灯光从右后方低角度泼出，作为主光源",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_043",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "人物站在冷光与暖光的分界线上，左右两侧照度色调分明",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_044",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖光铺在侧脸、鼻梁与下颌线上形成亮面",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_045",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发丝边缘被暖光勾成一圈金色轮廓光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_046",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "柏油路面积水映着对面招牌，晕开成模糊散光光斑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_047",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "额侧黑色弯角在暖光里泛着一点微弱光泽",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_048",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "身后蓝绿色鳞片质感长尾在冷光里微微反光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_049",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "画面右侧地面落有一块由近及远的梯形暖光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_050",
+            "concept_layer": "assembly_guidance",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "inferred",
+            "text_cn": "冷暖双光源对峙的照明结构，光比较大、暗部集中在人物内侧",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_051",
+            "concept_layer": "hard_visual",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "inferred",
+            "text_cn": "写实电影感材质表现：湿发贴脸、发梢与肩头深色水痕、蓝绿色鳞片长尾在冷光中微反光、柏油积水映招牌光斑",
+            "text_en": ""
+          }
+        ],
+        "meta": {
+          "created_at": "2026-10-22T09:36:21Z",
+          "language": "zh",
+          "producer_node": "intent_blueprint_node",
+          "source_type": "intent",
+          "task_mode": "general",
+          "version": "1.1.0"
+        }
+      }
     }
-  ]
+  ],
+  "comics": {
+    "EP-SCR01": {
+      "episode_id": "EP-SCR01",
+      "title": "EP-SCR01 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门进店，暖光打在侧脸",
+          "dialogue": "",
+          "camera": "推",
+          "note": "冷暖对撞"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她拿起汽水，瓶身水珠特写",
+          "dialogue": "",
+          "camera": "固定",
+          "note": "道具锚点"
+        },
+        {
+          "page": 1,
+          "panel": 3,
+          "text": "窗外霓虹倒映在积水里",
+          "dialogue": "",
+          "camera": "拉",
+          "note": "收尾"
+        }
+      ],
+      "updated_at": "2026-10-22T08:42:28+00:00"
+    },
+    "EP-SCRIPT-0A7EF0": {
+      "episode_id": "EP-SCRIPT-0A7EF0",
+      "title": "EP-SCRIPT-0A7EF0 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T08:37:50+00:00"
+    },
+    "EP-SCRIPT-0464B5": {
+      "episode_id": "EP-SCRIPT-0464B5",
+      "title": "EP-SCRIPT-0464B5 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T08:43:34+00:00"
+    },
+    "EP-SCRIPT-9B80ED": {
+      "episode_id": "EP-SCRIPT-9B80ED",
+      "title": "EP-SCRIPT-9B80ED 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:38:14+00:00"
+    },
+    "EP-CHAIN-CHAIN": {
+      "episode_id": "EP-CHAIN-CHAIN",
+      "title": "EP-CHAIN-CHAIN 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "第一格：少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "第二格：她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:44:49+00:00"
+    },
+    "EP-CHAIN-CHAIN2": {
+      "episode_id": "EP-CHAIN-CHAIN2",
+      "title": "EP-CHAIN-CHAIN2 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "第一格：少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "第二格：她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:45:18+00:00"
+    },
+    "EP-LINK-15D945": {
+      "episode_id": "EP-LINK-15D945",
+      "title": "EP-LINK-15D945 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:46:04+00:00"
+    },
+    "EP-SCRIPT-E7D2A5": {
+      "episode_id": "EP-SCRIPT-E7D2A5",
+      "title": "EP-SCRIPT-E7D2A5 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:46:04+00:00"
+    },
+    "EP-UI-LINK": {
+      "episode_id": "EP-UI-LINK",
+      "title": "EP-UI-LINK 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "第一格：少女推门进店",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "第二格：她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:48:11+00:00"
+    },
+    "EP-LINK-C853F3": {
+      "episode_id": "EP-LINK-C853F3",
+      "title": "EP-LINK-C853F3 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:52:22+00:00"
+    },
+    "EP-SCRIPT-5ED429": {
+      "episode_id": "EP-SCRIPT-5ED429",
+      "title": "EP-SCRIPT-5ED429 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:52:22+00:00"
+    },
+    "EP-LINK-BCA684": {
+      "episode_id": "EP-LINK-BCA684",
+      "title": "EP-LINK-BCA684 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:56:03+00:00"
+    },
+    "EP-SCRIPT-B9B7CA": {
+      "episode_id": "EP-SCRIPT-B9B7CA",
+      "title": "EP-SCRIPT-B9B7CA 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:56:03+00:00"
+    },
+    "EP-LINK-EBB662": {
+      "episode_id": "EP-LINK-EBB662",
+      "title": "EP-LINK-EBB662 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:58:21+00:00"
+    },
+    "EP-SCRIPT-1E5C3D": {
+      "episode_id": "EP-SCRIPT-1E5C3D",
+      "title": "EP-SCRIPT-1E5C3D 漫画剧本",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": ""
+        }
+      ],
+      "updated_at": "2026-10-22T09:58:22+00:00"
+    }
+  }
 }

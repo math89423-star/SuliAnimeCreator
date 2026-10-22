@@ -15,7 +15,7 @@
       <el-menu-item index="/video"><el-icon><VideoPlay /></el-icon>拉片室</el-menu-item>
       <el-menu-item index="/traffic"><el-icon><Present /></el-icon>投流批量</el-menu-item>
       <el-menu-item index="/art"><el-icon><Picture /></el-icon>美术工具</el-menu-item>
-      <el-menu-item index="/studio"><el-icon><MagicStick /></el-icon>单图创作</el-menu-item>
+      <el-menu-item index="/studio"><el-icon><MagicStick /></el-icon>创作</el-menu-item>
     </el-menu>
     <div class="bottom">
       <el-menu :default-active="route.path" router>

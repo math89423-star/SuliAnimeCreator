@@ -53,8 +53,8 @@
       </div>
       <div class="center"><router-view :key="route.path + '|' + store.projectId + '|' + store.episodeId" /><el-backtop target=".center" :bottom="70" title="回顶部" /></div>
     </div>
-    <RightChat v-if="!store.rightCollapsed" />
-    <div v-else class="rail">
+    <RightChat v-if="showRight" />
+    <div v-else-if="!hideRight" class="rail">
       <el-button circle @click="store.toggleRight()">‹</el-button>
     </div>
     <QuickRef />
@@ -99,7 +99,7 @@
     <el-button
       v-if="!store.quickRef.open" class="qr-fab" circle size="large"
       :title="store.quickRef.minimized ? ('速查：' + store.quickRef.tool) : '速查本'"
-      :style="{ right: store.rightCollapsed ? '60px' : '456px' }"
+      :style="{ right: fabRight }"
       @click="store.openQuickRef()"><el-icon><Notebook /></el-icon></el-button>
   </div>
   </el-config-provider>
@@ -119,6 +119,11 @@ import { api } from './api/client'
 const store = useAppStore()
 const settings = useSettingsStore()
 const route = useRoute()
+// 这一页要不要右侧 Agent 栏：路由 meta 说了算（设置页不挂），再叠上用户的折叠偏好
+const hideRight = computed(() => route.meta.noRightChat === true)
+const showRight = computed(() => !hideRight.value && !store.rightCollapsed)
+// 速查球的位置：右侧 Agent 栏在时贴它的左边；本页没有 Agent 栏时贴窗口右边（内容让出这条道）
+const fabRight = computed(() => (showRight.value ? '456px' : hideRight.value ? '16px' : '60px'))
 const projectEpisodes = ref<any[]>([])
 const episodeLoading = ref(false)
 const episodePick = ref('')

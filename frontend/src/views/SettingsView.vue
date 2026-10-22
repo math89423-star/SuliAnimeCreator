@@ -1,5 +1,5 @@
 <template>
-  <div class="kun-page settings-page" style="padding:14px">
+  <div class="kun-page settings-page" style="padding:14px 72px 14px 14px">
     <h2 class="page-title">设置</h2>
 
     <!-- 模型 -->

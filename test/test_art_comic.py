@@ -1,0 +1,309 @@
+"""漫画页序列（art 域）：建页 → 页条 → 挂成图 → 前页续接 → 直投带页上下文。
+
+约定（见 conftest）：写操作只造带随机后缀的临时集/临时方案，结束即清理，不碰现成集。
+"""
+import json
+import pathlib
+import shutil
+import subprocess
+import urllib.request
+import uuid
+
+from conftest import req
+
+BASE = "http://127.0.0.1:5001"
+
+INBOX = pathlib.Path("/home/administrator/L-Port-Comfy/app/backend/data/libraries/投流素材库/suli_packages")
+UPLOADS = pathlib.Path("/home/administrator/SuliAnimeCreator/backend/data/uploads")
+
+
+def _data(method, path, body=None, query=None, timeout=120):
+    st, d = req(method, path, body=body, query=query, timeout=timeout)
+    assert st == 200, f"{method} {path} http={st} {str(d)[:300]}"
+    assert d.get("code") == 0, f"{method} {path} code={d.get('code')} msg={d.get('msg')}"
+    return d["data"]
+
+
+def _suffix():
+    return uuid.uuid4().hex[:6].upper()
+
+
+def _rm_push_dir(pkg):
+    """收件箱是后端容器（root）写的，宿主直接删会权限不足：优先走容器内删。"""
+    try:
+        r = subprocess.run(["docker", "exec", "sulianimecreator-backend-1",
+                            "rm", "-rf", f"/lport-lib/suli_packages/{pkg}"],
+                           capture_output=True, timeout=30)
+        if r.returncode == 0:
+            return
+    except Exception:
+        pass
+    shutil.rmtree(INBOX / pkg, ignore_errors=True)
+
+
+def test_comic_pages_flow():
+    suffix = _suffix()
+    eid = f"EP-COMIC-{suffix}"
+    outline = "# 方案大纲\n\n## 方向一句话\n雨夜便利店，白发少女推门进店。\n"
+    pid = None
+    plan_ids = []
+    pushed_pkg = None
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"漫画自检-{suffix}"})
+        pid = proj["id"]
+        _data("POST", f"/api/v1/projects/{pid}/episodes", {"episode_id": eid, "title": "漫画自检集"})
+        _data("PUT", f"/api/v1/scriptboard/outline/{eid}", {"outline_md": outline})
+
+        # ① 建第 1 页（带页上下文：大纲快照）
+        p1 = _data("POST", "/api/v1/art/plans", {
+            "title": f"{eid} 第1页 第1格", "intent_text": "少女推门进店", "engines": ["novelai"],
+            "ref_images": [], "note": "", "source": "ui",
+            "page": {"episode_id": eid, "index": 1, "panel_index": 1, "prev_plan_id": "",
+                     "outline_text": outline, "image": None},
+        })
+        plan_ids.append(p1["id"])
+        assert p1["page"]["episode_id"] == eid
+        assert p1["page"]["index"] == 1
+        assert p1["page"]["panel_index"] == 1
+        assert p1["page"]["outline_text"] == outline
+
+        # ② 格序列按页序+格序返回这一集的全部格
+        rows = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
+        assert [r["id"] for r in rows] == [p1["id"]], rows
+        assert rows[0]["page"]["index"] == 1 and rows[0]["page"]["panel_index"] == 1
+
+        # ③ 挂本页成图 → 写进 page.image（multipart，conftest 的 req 只发 JSON，这里直接打 urllib）
+        img = UPLOADS / "c59dfe6a3b75426a9f0131d1e445b91a.png"
+        assert img.is_file(), "缺基准图 %s" % img
+        with open(img, "rb") as fh:
+            body = (b"--BOUND\r\nContent-Disposition: form-data; name=\"file\"; filename=\"p1.png\"\r\n"
+                    b"Content-Type: image/png\r\n\r\n" + fh.read() + b"\r\n--BOUND--\r\n")
+            r = urllib.request.Request(
+                f"{BASE}/api/v1/art/plans/{p1['id']}/image",
+                data=body, headers={"Content-Type": "multipart/form-data; boundary=BOUND"}, method="POST")
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        assert payload.get("code") == 0, payload
+        got = _data("GET", f"/api/v1/art/plans/{p1['id']}")
+        assert got["page"]["image"], "成图没挂上"
+        assert got["page"]["image"]["name"].endswith(".png")
+
+        # ④ 第 2 页第 1 格：prev 指上一页的末格，参考图带上一页末格成图
+        p2 = _data("POST", "/api/v1/art/plans", {
+            "title": f"{eid} 第2页 第1格", "intent_text": "她拿起汽水", "engines": ["novelai"],
+            "ref_images": [got["page"]["image"]], "note": "", "source": "ui",
+            "page": {"episode_id": eid, "index": 2, "panel_index": 1, "prev_plan_id": p1["id"],
+                     "outline_text": outline, "image": None},
+        })
+        plan_ids.append(p2["id"])
+        assert p2["page"]["prev_plan_id"] == p1["id"]
+        assert p2["page"]["panel_index"] == 1
+        assert p2["ref_images"] and p2["ref_images"][0]["name"] == got["page"]["image"]["name"]
+
+        # ④b 页内第 2 格：prev 指同页第 1 格
+        p3 = _data("POST", "/api/v1/art/plans", {
+            "title": f"{eid} 第2页 第2格", "intent_text": "瓶身水珠特写", "engines": ["novelai"],
+            "ref_images": [], "note": "", "source": "ui",
+            "page": {"episode_id": eid, "index": 2, "panel_index": 2, "prev_plan_id": p2["id"],
+                     "outline_text": outline, "image": None},
+        })
+        plan_ids.append(p3["id"])
+        assert p3["page"]["panel_index"] == 2
+        assert p3["page"]["prev_plan_id"] == p2["id"]
+
+        rows = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
+        assert [(r["page"]["index"], r["page"]["panel_index"]) for r in rows] == [(1, 1), (2, 1), (2, 2)], rows
+
+        # ⑤ 直投：包里的 intent_text 必带页上下文（集号/页/格/大纲），参考图随包走
+        pushed = _data("POST", "/api/v1/art/push-lport", {"plan_id": p2["id"]})
+        pushed_pkg = pushed["package_id"]
+        pkg_dir = INBOX / pushed_pkg
+        assert pkg_dir.is_dir(), f"收件箱缺目录 {pkg_dir}"
+        art_plan = json.loads((pkg_dir / "art_plan.json").read_text(encoding="utf-8"))
+        assert eid in art_plan["intent_text"], art_plan["intent_text"]
+        assert "第 2 页" in art_plan["intent_text"] and "第 1 格" in art_plan["intent_text"], art_plan["intent_text"]
+        assert "雨夜便利店" in art_plan["intent_text"], art_plan["intent_text"]
+        assert art_plan["reference_images"], art_plan
+        assert art_plan["comic_context"]["episode_id"] == eid
+        assert art_plan["comic_context"]["index"] == 2
+        assert art_plan["comic_context"]["panel_index"] == 1
+
+        # ⑤b 页内第 2 格的上下文：页序/格序/上一格
+        got3 = _data("GET", f"/api/v1/art/plans/{p3['id']}")
+        assert got3["page"]["index"] == 2 and got3["page"]["panel_index"] == 2
+        assert got3["page"]["prev_plan_id"] == p2["id"]
+
+        # ⑥ 撤成图
+        _data("DELETE", f"/api/v1/art/plans/{p1['id']}/image")
+        got2 = _data("GET", f"/api/v1/art/plans/{p1['id']}")
+        assert not got2["page"]["image"]
+    finally:
+        if pushed_pkg:
+            _rm_push_dir(pushed_pkg)
+        for x in plan_ids:
+            try:
+                req("DELETE", f"/api/v1/art/plans/{x}", timeout=30)
+            except Exception:
+                pass
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
+
+
+def test_comic_push_inherits_prev_panel_image():
+    """拆格建出来的格不带上一格成图（拆格时还没出图）—— 直投那一刻必须接上。
+
+    衔接只能发生在直投：拆格 → 第1格出图 → 第2格直投，包里必须有第1格成图。
+    """
+    suffix = _suffix()
+    eid = f"EP-LINK-{suffix}"
+    pid = None
+    plan_ids = []
+    pkgs = []
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"衔接自检-{suffix}"})
+        pid = proj["id"]
+        _data("POST", f"/api/v1/projects/{pid}/episodes", {"episode_id": eid, "title": "衔接自检集"})
+
+        _data("POST", "/api/v1/art/comic-script", {
+            "episode_id": eid,
+            "panels": [
+                {"page": 1, "panel": 1, "text": "少女推门", "dialogue": "", "camera": "中景"},
+                {"page": 1, "panel": 2, "text": "她回头看货架", "dialogue": "", "camera": "近景"},
+            ],
+        })
+        sp = _data("POST", "/api/v1/art/comic-script/split", {"episode_id": eid, "engines": ["novelai"]})
+        assert sp["created"] == 2, sp
+        plan_ids.extend(sp["plan_ids"])
+        p1, p2 = sp["plan_ids"]
+
+        # 第 1 格挂成图
+        img = UPLOADS / "c59dfe6a3b75426a9f0131d1e445b91a.png"
+        assert img.is_file(), "缺基准图 %s" % img
+        with open(img, "rb") as fh:
+            body = (b"--BOUND\r\nContent-Disposition: form-data; name=\"file\"; filename=\"p1.png\"\r\n"
+                    b"Content-Type: image/png\r\n\r\n" + fh.read() + b"\r\n--BOUND--\r\n")
+            r = urllib.request.Request(
+                f"{BASE}/api/v1/art/plans/{p1}/image",
+                data=body, headers={"Content-Type": "multipart/form-data; boundary=BOUND"}, method="POST")
+            with urllib.request.urlopen(r, timeout=60) as resp:
+                payload = json.loads(resp.read().decode("utf-8"))
+        assert payload.get("code") == 0, payload
+        up_name = payload["data"]["image"]["name"]
+
+        # 第 2 格自带参考图是空的（拆格时第 1 格还没出图）
+        d2 = _data("GET", f"/api/v1/art/plans/{p2}")
+        assert not d2.get("ref_images"), d2.get("ref_images")
+
+        # 直投第 2 格：自动接上第 1 格成图，且物理进 zip
+        pushed = _data("POST", "/api/v1/art/push-lport", {"plan_id": p2})
+        pkgs.append(pushed["package_id"])
+        assert pushed["ref_from"] == "prev_panel", pushed
+        assert pushed["ref_count"] == 1, pushed
+        pkg_dir = INBOX / pushed["package_id"]
+        art_plan = json.loads((pkg_dir / "art_plan.json").read_text(encoding="utf-8"))
+        assert art_plan["reference_images"] == [up_name], art_plan["reference_images"]
+        import zipfile
+        zf = zipfile.ZipFile(pkg_dir / (pushed["package_id"] + ".zip"))
+        assert "ref_images/%s" % up_name in zf.namelist(), zf.namelist()
+
+        # 第 1 格没有上一格：不该硬塞参考图
+        pushed1 = _data("POST", "/api/v1/art/push-lport", {"plan_id": p1})
+        pkgs.append(pushed1["package_id"])
+        assert pushed1["ref_count"] == 0, pushed1
+        assert pushed1["ref_from"] == "plan", pushed1
+    finally:
+        for pkg in pkgs:
+            _rm_push_dir(pkg)
+        for x in plan_ids:
+            try:
+                req("DELETE", f"/api/v1/art/plans/{x}", timeout=30)
+            except Exception:
+                pass
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
+
+
+def test_comics_endpoint_validation():
+    # 不存在的集号：返回空列表，不报错
+    rows = _data("GET", "/api/v1/art/comics", query={"episode_id": "EP-NOPE-XYZ"})
+    assert rows == [], rows
+
+
+def test_comic_script_split_flow():
+    """正确顺序：大纲 → 剧本 → 拆格 → 方案（每格一个，带页/格/上一格链）。"""
+    suffix = _suffix()
+    eid = f"EP-SCRIPT-{suffix}"
+    outline = (
+        "# 方案大纲\n\n## 方向一句话\n雨夜便利店。\n\n"
+        "## 分镜大纲\n"
+        "| 镜号 | 内容 | 时长 | 运镜 | 备注 |\n"
+        "| --- | --- | --- | --- | --- |\n"
+        "| 1 | 少女推门进店 | 4s | 推 | 冷暖对撞 |\n"
+        "| 2 | 她拿起汽水 | 3s | 固定 | 道具锚点 |\n"
+    )
+    pid = None
+    plan_ids = []
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"剧本自检-{suffix}"})
+        pid = proj["id"]
+        _data("POST", f"/api/v1/projects/{pid}/episodes", {"episode_id": eid, "title": "剧本自检集"})
+        _data("PUT", f"/api/v1/scriptboard/outline/{eid}", {"outline_md": outline})
+
+        # ① 还没有剧本时读：空
+        sc = _data("GET", "/api/v1/art/comic-script", query={"episode_id": eid})
+        assert sc["panels"] == [], sc
+
+        # ② 从大纲转：分镜表一行 = 一格
+        r = _data("POST", "/api/v1/art/comic-script/from-outline", {"episode_id": eid, "per_page": 4})
+        assert r["panel_count"] == 2, r
+        sc = _data("GET", "/api/v1/art/comic-script", query={"episode_id": eid})
+        assert len(sc["panels"]) == 2
+        assert sc["panels"][0]["page"] == 1 and sc["panels"][0]["panel"] == 1
+        assert "推门进店" in sc["panels"][0]["text"]
+        assert sc["panels"][0]["camera"] == "推"
+
+        # ③ 拆格：一条 = 一个方案，页/格/上一格链排好
+        sp = _data("POST", "/api/v1/art/comic-script/split", {"episode_id": eid, "engines": ["novelai"]})
+        assert sp["created"] == 2 and sp["skipped"] == 0, sp
+        plan_ids.extend(sp["plan_ids"])
+        rows = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
+        assert len(rows) == 2, rows
+        assert [(x["page"]["index"], x["page"]["panel_index"]) for x in rows] == [(1, 1), (1, 2)], rows
+        # 第一格没有上一格；第二格接第一格
+        assert rows[0]["page"]["prev_plan_id"] == ""
+        assert rows[1]["page"]["prev_plan_id"] == rows[0]["id"]
+        # 方案意图来自剧本条目
+        assert "画面：" in rows[0]["intent_text"], rows[0]["intent_text"]
+        assert "推门进店" in rows[0]["intent_text"], rows[0]["intent_text"]
+        assert rows[0]["engines"] == ["novelai"]
+
+        # ④ 幂等：再拆一次不重复建
+        sp2 = _data("POST", "/api/v1/art/comic-script/split", {"episode_id": eid})
+        assert sp2["created"] == 0 and sp2["skipped"] == 2, sp2
+
+        # ⑤ 剧本可以改完再存（整本覆盖）
+        _data("POST", "/api/v1/art/comic-script", {
+            "episode_id": eid,
+            "panels": [{"page": 1, "panel": 1, "text": "改过的第一格", "dialogue": "台词一", "camera": "中景"}],
+        })
+        sc2 = _data("GET", "/api/v1/art/comic-script", query={"episode_id": eid})
+        assert len(sc2["panels"]) == 1, sc2
+        assert sc2["panels"][0]["text"] == "改过的第一格"
+        assert sc2["panels"][0]["dialogue"] == "台词一"
+    finally:
+        for x in plan_ids:
+            try:
+                req("DELETE", f"/api/v1/art/plans/{x}", timeout=30)
+            except Exception:
+                pass
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
