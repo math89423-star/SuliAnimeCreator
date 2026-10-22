@@ -212,7 +212,7 @@ def _clear_episode_owner_content(eid, pid):
 
 
 def _delete_episode_content(eids, project_id=""):
-    """删除项目下属集号的内容骨架、镜头、回执和 Agent 会话映射；上传文件按既有 clear 语义留盘。"""
+    """删除项目下属集号的内容骨架、镜头、回执、漫画剧本和 Agent 会话映射；上传文件按既有 clear 语义留盘。"""
     from .scriptboard import _EPS, _SHOTS
     from .scriptboard import _persist as _persist_sb
     from .receipts import delete_scoped as _delete_scoped_receipts
@@ -226,6 +226,18 @@ def _delete_episode_content(eids, project_id=""):
     removed_episodes = [eid for eid in targets if _EPS.pop(eid, None) is not None]
     _persist_sb()
     removed_receipts = _delete_scoped_receipts(project_id=project_id, episode_ids=targets)
+    # 漫画剧本（art 域 comics 段）：集号没了，剧本也不该留着
+    removed_scripts = 0
+    try:
+        from .art import _ART_DB, _apersist
+        comics = _ART_DB.get("comics") or {}
+        for eid in targets:
+            if comics.pop(eid, None) is not None:
+                removed_scripts += 1
+        if removed_scripts:
+            _apersist()
+    except Exception:
+        pass
     sessions = _DSTORE.get("sessions", [])
     kept = [s for s in sessions if not (
         isinstance(s, dict) and s.get("scope") == "episode" and s.get("key") in targets)]
@@ -235,6 +247,7 @@ def _delete_episode_content(eids, project_id=""):
     return {
         "episodes": removed_episodes, "shots": len(removed_shots),
         "receipts": removed_receipts, "sessions": removed_sessions,
+        "comic_scripts": removed_scripts,
         "uploads_retained": True,
     }
 

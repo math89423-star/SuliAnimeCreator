@@ -140,6 +140,7 @@
 
 - 读：`GET /api/v1/art/comic-script?episode_id=<集号>` → `{episode_id, title, premise, characters, style_hint, tier, panels[], updated_at, exists}`
 - 存：`POST /api/v1/art/comic-script` body `{episode_id*, title?, premise?, characters?, style_hint?, tier?, panels*: [...]}`（整本覆盖）
+- 删：`DELETE /api/v1/art/comic-script?episode_id=<集号>`（删掉本集剧本；删项目时会连带清）
 - 从大纲转：`POST /api/v1/art/comic-script/from-outline` body `{episode_id*, per_page?}`（大纲分镜表一行 = 一格；前提自动取大纲的「方向一句话」）
 - 拆格：`POST /api/v1/art/comic-script/split` body `{episode_id*, engines?}` → 一条剧本 = 一个方案，
   页序/格序/上一格链/水位自动排好；**幂等**（同一页格已有方案就跳过，未投递的按新剧本刷新，已投递的不动）。
@@ -268,6 +269,12 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
 角色槽位提示词生成（`POST /api/v1/characters/<id>/slot-prompts/generate`）吃 `engine` 参数：
 `novelai`（tag 轨）/ `tsubaki3`（中文五槽）/ `seedream`（自然语言）；不传则走旧的兼容输出。
 角色页已加「槽位提示词出稿引擎」下拉（中文按钮走所选引擎，英文按钮固定 NovelAI tag 轨）。
+
+**角色库接口**：
+- 删一个角色：`DELETE /api/v1/characters/<id>` —— 连带清它的设定图、槽位提示词、文档、版本记录
+  （只 pop 主表的话，子表里会留孤儿行）。
+- 清空整个角色库：`DELETE /api/v1/characters` —— 角色/设定图/槽位提示词/文档/版本全清，
+  连带历史上删角色留下的孤儿行（docs / versions / slot_prompts）也抹掉。
 
 ## 成人向导演（NSFW，用户给了分级档或图面是成人向时）
 

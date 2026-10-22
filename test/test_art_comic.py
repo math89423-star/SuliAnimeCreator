@@ -6,6 +6,7 @@ import json
 import pathlib
 import shutil
 import subprocess
+import tempfile
 import urllib.request
 import uuid
 
@@ -28,6 +29,40 @@ def _suffix():
     return uuid.uuid4().hex[:6].upper()
 
 
+def _make_png(path):
+    """造一张 8x8 灰度 PNG 当基准图（纯 stdlib，不依赖仓库里存着的图）。"""
+    import struct
+    import zlib
+    w = h = 8
+    raw = b"".join(b"\x00" + bytes([(x * 8) % 256 for x in range(w)]) for _ in range(h))
+
+    def chunk(tag, data):
+        return (struct.pack(">I", len(data)) + tag + data
+                + struct.pack(">I", zlib.crc32(tag + data) & 0xffffffff))
+
+    path.write_bytes(
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 0, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(raw))
+        + chunk(b"IEND", b"")
+    )
+    return path
+
+
+def _upload_image(plan_id, src):
+    """把图挂成格成图，返回落盘后的文件名。"""
+    with open(src, "rb") as fh:
+        body = (b"--BOUND\r\nContent-Disposition: form-data; name=\"file\"; filename=\"p1.png\"\r\n"
+                b"Content-Type: image/png\r\n\r\n" + fh.read() + b"\r\n--BOUND--\r\n")
+        r = urllib.request.Request(
+            f"{BASE}/api/v1/art/plans/{plan_id}/image",
+            data=body, headers={"Content-Type": "multipart/form-data; boundary=BOUND"}, method="POST")
+        with urllib.request.urlopen(r, timeout=60) as resp:
+            payload = json.loads(resp.read().decode("utf-8"))
+    assert payload.get("code") == 0, payload
+    return payload["data"]["image"]["name"]
+
+
 def _rm_push_dir(pkg):
     """收件箱是后端容器（root）写的，宿主直接删会权限不足：优先走容器内删。"""
     try:
@@ -48,6 +83,7 @@ def test_comic_pages_flow():
     pid = None
     plan_ids = []
     pushed_pkg = None
+    uploaded = []
     try:
         proj = _data("POST", "/api/v1/projects", {"name": f"漫画自检-{suffix}"})
         pid = proj["id"]
@@ -73,17 +109,9 @@ def test_comic_pages_flow():
         assert rows[0]["page"]["index"] == 1 and rows[0]["page"]["panel_index"] == 1
 
         # ③ 挂本页成图 → 写进 page.image（multipart，conftest 的 req 只发 JSON，这里直接打 urllib）
-        img = UPLOADS / "c59dfe6a3b75426a9f0131d1e445b91a.png"
-        assert img.is_file(), "缺基准图 %s" % img
-        with open(img, "rb") as fh:
-            body = (b"--BOUND\r\nContent-Disposition: form-data; name=\"file\"; filename=\"p1.png\"\r\n"
-                    b"Content-Type: image/png\r\n\r\n" + fh.read() + b"\r\n--BOUND--\r\n")
-            r = urllib.request.Request(
-                f"{BASE}/api/v1/art/plans/{p1['id']}/image",
-                data=body, headers={"Content-Type": "multipart/form-data; boundary=BOUND"}, method="POST")
-            with urllib.request.urlopen(r, timeout=60) as resp:
-                payload = json.loads(resp.read().decode("utf-8"))
-        assert payload.get("code") == 0, payload
+        base = _make_png(pathlib.Path(tempfile.gettempdir()) / f"suli-test-base-{suffix}.png")
+        up_name = _upload_image(p1["id"], base)
+        uploaded.append(up_name)
         got = _data("GET", f"/api/v1/art/plans/{p1['id']}")
         assert got["page"]["image"], "成图没挂上"
         assert got["page"]["image"]["name"].endswith(".png")
@@ -138,6 +166,11 @@ def test_comic_pages_flow():
         got2 = _data("GET", f"/api/v1/art/plans/{p1['id']}")
         assert not got2["page"]["image"]
     finally:
+        for u in uploaded:
+            try:
+                (UPLOADS / u).unlink()
+            except Exception:
+                pass
         if pushed_pkg:
             _rm_push_dir(pushed_pkg)
         for x in plan_ids:
@@ -210,6 +243,7 @@ def test_comic_tier_and_plan_import():
     pid = None
     plan_ids = []
     pkgs = []
+    uploaded = []
     try:
         proj = _data("POST", "/api/v1/projects", {"name": f"档位自检-{suffix}"})
         pid = proj["id"]
@@ -293,6 +327,11 @@ def test_comic_tier_and_plan_import():
         rows2 = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
         assert [r["tier"] for r in rows2] == ["tease", "explicit"], rows2
     finally:
+        for u in uploaded:
+            try:
+                (UPLOADS / u).unlink()
+            except Exception:
+                pass
         for pkg in pkgs:
             _rm_push_dir(pkg)
         for x in plan_ids:
@@ -317,6 +356,7 @@ def test_comic_push_inherits_prev_panel_image():
     pid = None
     plan_ids = []
     pkgs = []
+    uploaded = []
     try:
         proj = _data("POST", "/api/v1/projects", {"name": f"衔接自检-{suffix}"})
         pid = proj["id"]
@@ -335,18 +375,9 @@ def test_comic_push_inherits_prev_panel_image():
         p1, p2 = sp["plan_ids"]
 
         # 第 1 格挂成图
-        img = UPLOADS / "c59dfe6a3b75426a9f0131d1e445b91a.png"
-        assert img.is_file(), "缺基准图 %s" % img
-        with open(img, "rb") as fh:
-            body = (b"--BOUND\r\nContent-Disposition: form-data; name=\"file\"; filename=\"p1.png\"\r\n"
-                    b"Content-Type: image/png\r\n\r\n" + fh.read() + b"\r\n--BOUND--\r\n")
-            r = urllib.request.Request(
-                f"{BASE}/api/v1/art/plans/{p1}/image",
-                data=body, headers={"Content-Type": "multipart/form-data; boundary=BOUND"}, method="POST")
-            with urllib.request.urlopen(r, timeout=60) as resp:
-                payload = json.loads(resp.read().decode("utf-8"))
-        assert payload.get("code") == 0, payload
-        up_name = payload["data"]["image"]["name"]
+        base = _make_png(pathlib.Path(tempfile.gettempdir()) / f"suli-test-base-{suffix}.png")
+        up_name = _upload_image(p1, base)
+        uploaded.append(up_name)
 
         # 第 2 格自带参考图是空的（拆格时第 1 格还没出图）
         d2 = _data("GET", f"/api/v1/art/plans/{p2}")
@@ -370,6 +401,11 @@ def test_comic_push_inherits_prev_panel_image():
         assert pushed1["ref_count"] == 0, pushed1
         assert pushed1["ref_from"] == "plan", pushed1
     finally:
+        for u in uploaded:
+            try:
+                (UPLOADS / u).unlink()
+            except Exception:
+                pass
         for pkg in pkgs:
             _rm_push_dir(pkg)
         for x in plan_ids:

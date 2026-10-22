@@ -116,6 +116,35 @@ def delete_one(cid):
     _persist()
     return ok({"deleted": cid, "existed": existed})
 
+@bp.delete("")
+def delete_all():
+    """清空角色库：角色、设定图、槽位提示词、文档、版本记录一起抹掉。
+
+    单独删角色只清它自己的行；历史上删掉的角色会在子表里留下孤儿行
+    （docs / versions / slot_prompts），要彻底干净就走这个口。
+    """
+    counts = {
+        "chars": len(_CHARS),
+        "assets": len(_ASSETS),
+        "slot_prompts": len(_SLOT_PROMPTS),
+        "slot_svgs": len(_SLOT_SVGS),
+        "outfits": len(_OUTFITS),
+        "outfit_cats": len(_OUTFIT_CATS_MAP),
+        "docs": len(_DOCS),
+        "versions": len(_VERSIONS),
+    }
+    _CHARS.clear()
+    _ASSETS.clear()
+    _SLOT_PROMPTS.clear()
+    _SLOT_SVGS.clear()
+    _OUTFITS.clear()
+    _OUTFIT_CATS_MAP.clear()
+    _DOCS.clear()
+    _VERSIONS.clear()
+    _persist()
+    return ok({"cleared": counts})
+
+
 def _kind(section, attire):
     return f"{section}_{attire}"
 

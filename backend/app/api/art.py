@@ -632,6 +632,19 @@ def get_comic_script():
     return ok(d)
 
 
+@bp.delete("/comic-script")
+def delete_comic_script():
+    """删掉本集的漫画剧本（含元信息与格条目）。"""
+    eid = str(request.args.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    comics = _ART_DB.get("comics") or {}
+    existed = comics.pop(eid, None) is not None
+    if existed:
+        _apersist()
+    return ok({"episode_id": eid, "deleted": existed})
+
+
 @bp.post("/comic-script")
 def save_comic_script():
     """存本集的漫画剧本（整体覆盖）。
