@@ -93,6 +93,7 @@ import datetime as _dt
 import random as _random
 import zipfile as _zipfile
 import urllib.parse as _urlparse
+import re as _re
 
 from ..services.disk_store import load as _load_store, save as _save_store
 
@@ -874,6 +875,18 @@ def _inbox_root():
         return None
 
 
+_TOK_REF_RE = _re.compile(r"@参考([1-6])")
+
+
+def _tokens_to_refs(text):
+    """约束里的内联 @参考N → L-Port 发散节点的「参考图N」编号形式。
+
+    L-Port 发散节点把参考图逐张编号成【参考图 N 的视觉描述】段；约束文本里
+    写 @参考N，打包时替换成 参考图N，模型才能把指代对到对应那张图。
+    """
+    return _TOK_REF_RE.sub(r"参考图\1", text or "")
+
+
 @bp.post("/push-lport")
 def push_lport():
     """单图方案直投 L-Port：写收件箱 suli_packages/<pkg_id>/（包型 art_plan）。
@@ -941,6 +954,10 @@ def push_lport():
         if isinstance(pimg, dict) and pimg.get("name"):
             refs = [pimg]
             ref_from = "prev_panel"
+    # 约束里的内联引用（@参考N）：打包时换成 L-Port 发散节点的「参考图N」编号，
+    # 方案库里仍存用户的 @参考N 原文。
+    intent = _tokens_to_refs(intent)
+    note_out = _tokens_to_refs(p.get("note") or "")
     # 漫画段：L-Port 侧可用 comic_page_diverge 走「整页分格」链路时吃这段
     comic = None
     if pg.get("episode_id"):
@@ -962,8 +979,8 @@ def push_lport():
         "intent_text": intent,
         "engines": engines,
         "reference_images": [r.get("name") for r in refs],
-        "user_image_instruction": p.get("note") or "",
-        "note": p.get("note") or "",
+        "user_image_instruction": note_out,
+        "note": note_out,
         "tier": tier,
         "clothing_level": clothing,
         "comic_context": pg or None,

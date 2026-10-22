@@ -100,6 +100,7 @@
                     >
                       <template #error><div class="ref-thumb-ph"><el-icon><Picture /></el-icon></div></template>
                     </el-image>
+                    <button class="ref-tag" :title="'插入 @参考' + (i + 1)" @click.stop="insertRefToken(i)">@参考{{ i + 1 }}</button>
                     <div class="ref-meta">
                       <span class="ref-name" :title="r.name">{{ r.name }}</span>
                       <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
@@ -131,11 +132,35 @@
             </div>
           </div>
 
-          <!-- 约束：固定高度常驻（不跟上面的内容一起被滚走） -->
+          <!-- 约束：固定高度常驻（不跟上面的内容一起被滚走）；@ 唤起参考图内联引用 -->
           <div class="note-block">
-            <div class="block-title">约束 / 改图指令</div>
+            <div class="block-title">约束</div>
             <div class="note-grow">
-              <el-input v-model="form.note" type="textarea" :rows="2" />
+              <div class="textarea-wrap">
+                <div
+                  ref="noteEditor"
+                  class="note-editor"
+                  contenteditable="true"
+                  data-ph="约束"
+                  @input="onNoteInput"
+                  @keydown="onNoteKeydown"
+                  @click="updateNoteMention"
+                  @blur="noteMentionOpen = false"
+                />
+                <div v-if="noteMentionOpen && noteCandidates.length" class="mention-popup">
+                  <div class="mention-popup-title">参考图</div>
+                  <button
+                    v-for="(c, i) in noteCandidates"
+                    :key="c.token"
+                    :class="['mention-item', { active: i === noteMentionIndex }]"
+                    @mousedown.prevent="applyNoteMention(c.token)"
+                  >
+                    <img v-if="c.url" :src="c.url" class="mention-thumb" alt="" />
+                    <span class="mention-name">{{ c.token }}</span>
+                    <span class="mention-sub">{{ c.sub }}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -462,6 +487,226 @@ function refUrl(r: RefImg): string {
   return base ? `/api/images/${encodeURIComponent(base)}` : ''
 }
 const refPreview = computed(() => form.value.ref_images.map(refUrl))
+
+// ── 约束内联编辑器：@ 唤起参考图引用，插入的 token 是带缩略图的原子丸子（学 L-Port /prompt）──
+const noteEditor = ref<HTMLDivElement | null>(null)
+
+const PILL_STYLE =
+  'display:inline-flex;align-items:center;gap:3px;height:1.3em;max-height:1.3em;' +
+  'padding:0 7px 0 3px;border-radius:5px;vertical-align:-0.25em;font-size:.92em;' +
+  'white-space:nowrap;font-weight:600;background:rgba(99,102,241,.12);color:#6366f1;'
+const PILL_IMG_STYLE =
+  'width:1.15em;height:1.15em;max-width:1.15em;max-height:1.15em;flex:none;' +
+  'object-fit:cover;border-radius:3px;'
+
+const RE_REF_TOKEN = /(@参考[1-6])/g
+const RE_REF_ONE = /@参考([1-6])/
+
+function pillNode(token: string): HTMLSpanElement {
+  const span = document.createElement('span')
+  span.className = 'pill'
+  span.contentEditable = 'false'
+  span.dataset.name = token
+  span.setAttribute('style', PILL_STYLE)
+  const m = token.match(RE_REF_ONE)
+  const r = m ? form.value.ref_images[Number(m[1]) - 1] : null
+  if (r) {
+    const img = document.createElement('img')
+    img.src = refUrl(r)
+    img.alt = ''
+    img.className = 'pill-thumb'
+    img.setAttribute('style', PILL_IMG_STYLE)
+    img.contentEditable = 'false'
+    img.draggable = false
+    span.appendChild(img)
+  }
+  span.appendChild(document.createTextNode(token))
+  return span
+}
+
+/** 编辑器 DOM → 纯文本：丸子还原成 token，BR 还原成换行。 */
+function serializeNoteNode(node: Node): string {
+  if (node.nodeType === Node.TEXT_NODE) return node.textContent || ''
+  if (node.nodeName === 'BR') return '\n'
+  if (node instanceof HTMLElement) {
+    if (node.classList.contains('pill')) return node.dataset.name || ''
+    let s = ''
+    node.childNodes.forEach((c) => { s += serializeNoteNode(c) })
+    if (node.nodeName === 'DIV' || node.nodeName === 'P') return s + '\n'
+    return s
+  }
+  return ''
+}
+
+function readNote(): string {
+  const el = noteEditor.value
+  if (!el) return form.value.note
+  let s = ''
+  el.childNodes.forEach((c) => { s += serializeNoteNode(c) })
+  return s.replace(/\n+$/, '')
+}
+
+/** 纯文本 → 编辑器 DOM：token 段落还原成丸子。 */
+function renderNote(text: string) {
+  const el = noteEditor.value
+  if (!el) return
+  el.innerHTML = ''
+  const frag = document.createDocumentFragment()
+  text.split('\n').forEach((line, li) => {
+    if (li > 0) frag.appendChild(document.createElement('br'))
+    line.split(RE_REF_TOKEN).forEach((p) => {
+      if (!p) return
+      if (RE_REF_ONE.test(p)) frag.appendChild(pillNode(p))
+      else frag.appendChild(document.createTextNode(p))
+    })
+  })
+  if (!frag.hasChildNodes()) frag.appendChild(document.createElement('br'))
+  el.appendChild(frag)
+}
+
+// 编辑器里的内容已经和 form.note 一致时（自己刚回写的）不重建，保光标
+watch(() => form.value.note, (v) => {
+  const el = noteEditor.value
+  if (!el) return
+  if (readNote() === v) return
+  renderNote(v)
+})
+
+function insertNodesAtCaret(nodes: Node[]) {
+  const el = noteEditor.value
+  if (!el) return
+  el.focus()
+  const sel = window.getSelection()
+  let range: Range
+  if (sel && sel.rangeCount && el.contains(sel.getRangeAt(0).startContainer)) {
+    range = sel.getRangeAt(0)
+  } else {
+    range = document.createRange()
+    range.selectNodeContents(el)
+    range.collapse(false)
+  }
+  const pre = range.cloneRange()
+  pre.selectNodeContents(el)
+  pre.setEnd(range.startContainer, range.startOffset)
+  const needLeadingSpace = !!pre.toString() && !/\s$/.test(pre.toString())
+  range.deleteContents()
+  const frag = document.createDocumentFragment()
+  if (needLeadingSpace) frag.appendChild(document.createTextNode(' '))
+  nodes.forEach((n) => frag.appendChild(n))
+  const lastNode = frag.lastChild as Node | null
+  range.insertNode(frag)
+  const after = document.createRange()
+  if (lastNode && lastNode.parentNode) after.setStartAfter(lastNode)
+  else after.selectNodeContents(el)
+  after.collapse(false)
+  sel?.removeAllRanges()
+  sel?.addRange(after)
+  form.value.note = readNote()
+}
+
+/** 参考图缩略图上的 @参考N 角标：点了把丸子插进约束光标处。 */
+function insertRefToken(i: number) {
+  if (i < 0 || i >= form.value.ref_images.length) return
+  insertNodesAtCaret([pillNode('@参考' + (i + 1)), document.createTextNode(' ')])
+}
+
+// ── @ 联想：光标前有 @xxx 待补全时弹出候选，↑↓选择、Enter/Tab 确认 ──
+const noteMentionOpen = ref(false)
+const noteMentionFilter = ref('')
+const noteMentionIndex = ref(0)
+
+const noteCandidates = computed(() => {
+  const list = form.value.ref_images.map((r, i) => ({
+    token: '@参考' + (i + 1), sub: r.name, url: refUrl(r),
+  }))
+  const q = noteMentionFilter.value
+  if (!q) return list
+  return list.filter((c) => c.token.startsWith('@' + q))
+})
+
+/** 光标前的 @xxx 待补全：返回过滤词 + 待删选区。 */
+function getNoteAtQuery(): { filter: string; del: Range } | null {
+  const sel = window.getSelection()
+  const el = noteEditor.value
+  if (!sel || !sel.rangeCount || !el) return null
+  const r = sel.getRangeAt(0)
+  if (!r.collapsed || !el.contains(r.startContainer)) return null
+  let node: Node | null = r.startContainer
+  let offset = r.startOffset
+  if (node.nodeType !== Node.TEXT_NODE) {
+    const prev = offset > 0 ? node.childNodes[offset - 1] : null
+    if (!prev || prev.nodeType !== Node.TEXT_NODE) return null
+    node = prev
+    offset = (prev.textContent || '').length
+  }
+  const m = ((node.textContent || '').slice(0, offset)).match(/@([\w\u4e00-\u9fa5]*)$/)
+  if (!m) return null
+  const del = document.createRange()
+  del.setStart(node, offset - m[0].length)
+  del.setEnd(node, offset)
+  return { filter: m[1], del }
+}
+
+function updateNoteMention() {
+  const q = getNoteAtQuery()
+  if (!q || !form.value.ref_images.length) {
+    noteMentionOpen.value = false
+    return
+  }
+  noteMentionFilter.value = q.filter
+  noteMentionIndex.value = 0
+  noteMentionOpen.value = true
+}
+
+function onNoteInput() {
+  form.value.note = readNote()
+  updateNoteMention()
+}
+
+function applyNoteMention(token: string) {
+  const el = noteEditor.value
+  const q = getNoteAtQuery()
+  if (!el || !q) {
+    noteMentionOpen.value = false
+    return
+  }
+  el.focus()
+  const sel = window.getSelection()
+  sel?.removeAllRanges()
+  sel?.addRange(q.del)
+  const frag = document.createDocumentFragment()
+  frag.appendChild(pillNode(token))
+  frag.appendChild(document.createTextNode(' '))
+  const lastNode = frag.lastChild as Node | null
+  q.del.deleteContents()
+  q.del.insertNode(frag)
+  const after = document.createRange()
+  if (lastNode && lastNode.parentNode) after.setStartAfter(lastNode)
+  else after.selectNodeContents(el)
+  after.collapse(false)
+  sel?.removeAllRanges()
+  sel?.addRange(after)
+  form.value.note = readNote()
+  noteMentionOpen.value = false
+}
+
+function onNoteKeydown(e: KeyboardEvent) {
+  if (!noteMentionOpen.value || !noteCandidates.value.length) return
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    noteMentionIndex.value = (noteMentionIndex.value + 1) % noteCandidates.value.length
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    noteMentionIndex.value = (noteMentionIndex.value - 1 + noteCandidates.value.length) % noteCandidates.value.length
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    e.preventDefault()
+    const c = noteCandidates.value[noteMentionIndex.value]
+    if (c) applyNoteMention(c.token)
+  } else if (e.key === 'Escape') {
+    e.preventDefault()
+    noteMentionOpen.value = false
+  }
+}
 const statusLabel = computed(() =>
   ({ draft: '草案', pushed: '已投 L-Port', returned: '已回传' } as Record<string, string>)[status.value] || status.value)
 const statusTagType = computed<'success' | 'warning' | 'info'>(() =>
@@ -1126,6 +1371,18 @@ onMounted(async () => {
 .note-grow { flex:1 1 auto; min-height:44px; display:flex }
 .note-grow :deep(.el-textarea) { flex:1; display:flex }
 .note-grow :deep(.el-textarea__inner) { height:100%; resize:none }
+.textarea-wrap { position:relative; flex:1; display:flex; min-width:0 }
+.note-editor { flex:1; min-height:44px; padding:5px 11px; border:1px solid var(--el-border-color); border-radius:var(--el-border-radius-base); font-size:14px; line-height:1.5; overflow-y:auto; outline:none; transition:border-color .2s; background:var(--el-fill-color-blank); }
+.note-editor:hover { border-color:var(--el-border-color-hover) }
+.note-editor:focus { border-color:var(--el-color-primary) }
+.note-editor:empty::before { content:attr(data-ph); color:var(--el-text-color-placeholder); pointer-events:none }
+.mention-popup { position:absolute; left:0; bottom:100%; z-index:30; min-width:220px; max-width:340px; margin-bottom:6px; background:var(--el-bg-color-overlay); border:1px solid var(--el-border-color-light); border-radius:10px; box-shadow:var(--el-box-shadow-light); padding:6px 0; }
+.mention-popup-title { font-size:12px; color:var(--el-text-color-secondary); padding:2px 10px 6px }
+.mention-item { display:flex; align-items:center; gap:8px; width:100%; padding:6px 10px; border:none; background:none; cursor:pointer; text-align:left; color:inherit }
+.mention-item:hover, .mention-item.active { background:var(--el-fill-color-light) }
+.mention-thumb { width:40px; height:40px; object-fit:cover; border-radius:6px; flex:0 0 auto }
+.mention-name { font-size:13px; font-weight:600; color:var(--el-color-primary); flex:0 0 auto }
+.mention-sub { font-size:12px; color:var(--el-text-color-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
 /* 约束块：固定高度常驻底部，不被上面的滚动区带走 */
 .note-block { flex:0 0 auto }
 .note-block .block-title { margin:8px 0 4px }
@@ -1146,8 +1403,10 @@ onMounted(async () => {
 .wait-note { font-size:12px; color:var(--el-text-color-secondary); margin:0 0 8px; line-height:1.4 }
 .engines { display:flex; flex-wrap:wrap; gap:4px 12px; }
 .refs { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
-.ref-item { display:flex; align-items:center; gap:8px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:4px 10px 4px 4px; }
+.ref-item { display:flex; align-items:center; gap:8px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:4px 10px 4px 4px; position:relative }
 .ref-thumb { width:64px; height:64px; border-radius:8px; overflow:hidden; display:block; flex:0 0 auto; background:var(--el-fill-color-light); cursor:zoom-in; }
+.ref-tag { position:absolute; left:8px; bottom:14px; z-index:2; font-size:10px; line-height:1; padding:3px 6px; border-radius:4px; border:none; background:rgba(0,0,0,.6); color:#fff; cursor:pointer }
+.ref-tag:hover { background:var(--el-color-primary) }
 .ref-thumb-ph { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--el-text-color-placeholder); }
 .ref-meta { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
 .ref-name { font-size:12px; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }

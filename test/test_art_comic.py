@@ -119,7 +119,7 @@ def test_comic_pages_flow():
         # ④ 第 2 页第 1 格：prev 指上一页的末格，参考图带上一页末格成图
         p2 = _data("POST", "/api/v1/art/plans", {
             "title": f"{eid} 第2页 第1格", "intent_text": "她拿起汽水", "engines": ["novelai"],
-            "ref_images": [got["page"]["image"]], "note": "", "source": "ui",
+            "ref_images": [got["page"]["image"]], "note": "脸型服装跟@参考1一致", "source": "ui",
             "page": {"episode_id": eid, "index": 2, "panel_index": 1, "prev_plan_id": p1["id"],
                      "outline_text": outline, "image": None},
         })
@@ -155,6 +155,11 @@ def test_comic_pages_flow():
         assert art_plan["comic_context"]["episode_id"] == eid
         assert art_plan["comic_context"]["index"] == 2
         assert art_plan["comic_context"]["panel_index"] == 1
+        # ⑤c 内联引用：约束里的 @参考1 打包时换成「参考图1」（对齐 L-Port 发散节点的编号段）
+        assert art_plan["user_image_instruction"] == "脸型服装跟参考图1一致", art_plan["user_image_instruction"]
+        assert art_plan["note"] == art_plan["user_image_instruction"]
+        gotp2 = _data("GET", f"/api/v1/art/plans/{p2['id']}")
+        assert gotp2["note"] == "脸型服装跟@参考1一致", gotp2["note"]
 
         # ⑤b 页内第 2 格的上下文：页序/格序/上一格
         got3 = _data("GET", f"/api/v1/art/plans/{p3['id']}")

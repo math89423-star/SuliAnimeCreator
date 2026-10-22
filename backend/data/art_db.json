@@ -21,7 +21,7 @@
       ],
       "ref_images": [],
       "note": "",
-      "updated_at": "2026-10-21T12:11:23+00:00",
+      "updated_at": "2026-10-22T16:08:23+00:00",
       "status": "returned",
       "push": {
         "package_id": "PKG-ART-20261021112540-3685",
@@ -60,7 +60,9 @@
           }
         },
         "key_concepts": []
-      }
+      },
+      "tier": "",
+      "clothing_level": ""
     },
     {
       "id": "AP-20261022092726-3067",
@@ -97,7 +99,7 @@
         "outline_text": "雨夜便利店，白发少女推门进店。",
         "image": null
       },
-      "updated_at": "2026-10-22T09:55:27+00:00",
+      "updated_at": "2026-10-22T16:14:27+00:00",
       "status": "returned",
       "push": {
         "package_id": "PKG-ART-20261022092726-8596",

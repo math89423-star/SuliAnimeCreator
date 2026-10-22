@@ -11,6 +11,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ComicScript: typeof import('./src/components/studio/ComicScript.vue')['default']
+    ComicStrip: typeof import('./src/components/studio/ComicStrip.vue')['default']
     CompositionCamera: typeof import('./src/components/tools/CompositionCamera.vue')['default']
     CostumeTool: typeof import('./src/components/tools/CostumeTool.vue')['default']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -19,6 +21,7 @@ declare module 'vue' {
     ElBreadcrumbItem: typeof import('element-plus/es')['ElBreadcrumbItem']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCheckbox: typeof import('element-plus/es')['ElCheckbox']
+    ElCheckboxGroup: typeof import('element-plus/es')['ElCheckboxGroup']
     ElCollapse: typeof import('element-plus/es')['ElCollapse']
     ElCollapseItem: typeof import('element-plus/es')['ElCollapseItem']
     ElColorPicker: typeof import('element-plus/es')['ElColorPicker']
@@ -41,6 +44,7 @@ declare module 'vue' {
     ElOption: typeof import('element-plus/es')['ElOption']
     ElPagination: typeof import('element-plus/es')['ElPagination']
     ElPopconfirm: typeof import('element-plus/es')['ElPopconfirm']
+    ElProgress: typeof import('element-plus/es')['ElProgress']
     ElRadioButton: typeof import('element-plus/es')['ElRadioButton']
     ElRadioGroup: typeof import('element-plus/es')['ElRadioGroup']
     ElSegmented: typeof import('element-plus/es')['ElSegmented']
@@ -60,6 +64,7 @@ declare module 'vue' {
     NamingTool: typeof import('./src/components/tools/NamingTool.vue')['default']
     NsfwGuide: typeof import('./src/components/tools/NsfwGuide.vue')['default']
     PaletteTool: typeof import('./src/components/tools/PaletteTool.vue')['default']
+    PlanChangeCard: typeof import('./src/components/PlanChangeCard.vue')['default']
     QuickRef: typeof import('./src/components/QuickRef.vue')['default']
     ReceiptPanel: typeof import('./src/components/director/ReceiptPanel.vue')['default']
     RightChat: typeof import('./src/components/RightChat.vue')['default']
