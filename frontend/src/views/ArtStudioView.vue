@@ -67,7 +67,32 @@
 
         <div class="block-title">方案意图</div>
         <div class="grow">
-          <el-input v-model="form.intent_text" type="textarea" :rows="8" />
+          <div class="textarea-wrap">
+            <div
+              ref="intentEditor"
+              class="note-editor intent-editor"
+              contenteditable="true"
+              data-ph=""
+              @input="onIntentInput"
+              @keydown="onIntentKeydown"
+              @click="updateIntentMention"
+              @blur="intentMentionOpen = false"
+              @paste="onIntentPaste"
+            />
+            <div v-if="intentMentionOpen && intentCandidates.length" class="mention-popup">
+              <div class="mention-popup-title">参考图</div>
+              <button
+                v-for="(c, i) in intentCandidates"
+                :key="c.token"
+                :class="['mention-item', { active: i === intentMentionIndex }]"
+                @mousedown.prevent="applyIntentMention(c.token)"
+              >
+                <img v-if="c.url" :src="c.url" class="mention-thumb" alt="" />
+                <span class="mention-name">{{ c.token }}</span>
+                <span class="mention-sub">{{ c.sub }}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="lower">
@@ -127,38 +152,6 @@
                     <el-button size="small" text :disabled="!pageImage" @click="removePageImage">移除</el-button>
                     <input ref="shotInput" type="file" accept="image/*" style="display:none" @change="onShotFile" />
                   </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 约束：固定高度常驻（不跟上面的内容一起被滚走）；@ 唤起参考图内联引用 -->
-          <div class="note-block">
-            <div class="block-title">约束</div>
-            <div class="note-grow">
-              <div class="textarea-wrap">
-                <div
-                  ref="noteEditor"
-                  class="note-editor"
-                  contenteditable="true"
-                  data-ph="约束"
-                  @input="onNoteInput"
-                  @keydown="onNoteKeydown"
-                  @click="updateNoteMention"
-                  @blur="noteMentionOpen = false"
-                />
-                <div v-if="noteMentionOpen && noteCandidates.length" class="mention-popup">
-                  <div class="mention-popup-title">参考图</div>
-                  <button
-                    v-for="(c, i) in noteCandidates"
-                    :key="c.token"
-                    :class="['mention-item', { active: i === noteMentionIndex }]"
-                    @mousedown.prevent="applyNoteMention(c.token)"
-                  >
-                    <img v-if="c.url" :src="c.url" class="mention-thumb" alt="" />
-                    <span class="mention-name">{{ c.token }}</span>
-                    <span class="mention-sub">{{ c.sub }}</span>
-                  </button>
                 </div>
               </div>
             </div>
@@ -488,8 +481,8 @@ function refUrl(r: RefImg): string {
 }
 const refPreview = computed(() => form.value.ref_images.map(refUrl))
 
-// ── 约束内联编辑器：@ 唤起参考图引用，插入的 token 是带缩略图的原子丸子（学 L-Port /prompt）──
-const noteEditor = ref<HTMLDivElement | null>(null)
+// ── 方案意图内联编辑器：@ 唤起参考图引用，插入的 token 是带缩略图的原子丸子（学 L-Port /prompt）──
+const intentEditor = ref<HTMLDivElement | null>(null)
 
 const PILL_STYLE =
   'display:inline-flex;align-items:center;gap:3px;height:1.3em;max-height:1.3em;' +
@@ -525,30 +518,30 @@ function pillNode(token: string): HTMLSpanElement {
 }
 
 /** 编辑器 DOM → 纯文本：丸子还原成 token，BR 还原成换行。 */
-function serializeNoteNode(node: Node): string {
+function serializeIntentNode(node: Node): string {
   if (node.nodeType === Node.TEXT_NODE) return node.textContent || ''
   if (node.nodeName === 'BR') return '\n'
   if (node instanceof HTMLElement) {
     if (node.classList.contains('pill')) return node.dataset.name || ''
     let s = ''
-    node.childNodes.forEach((c) => { s += serializeNoteNode(c) })
+    node.childNodes.forEach((c) => { s += serializeIntentNode(c) })
     if (node.nodeName === 'DIV' || node.nodeName === 'P') return s + '\n'
     return s
   }
   return ''
 }
 
-function readNote(): string {
-  const el = noteEditor.value
-  if (!el) return form.value.note
+function readIntent(): string {
+  const el = intentEditor.value
+  if (!el) return form.value.intent_text
   let s = ''
-  el.childNodes.forEach((c) => { s += serializeNoteNode(c) })
+  el.childNodes.forEach((c) => { s += serializeIntentNode(c) })
   return s.replace(/\n+$/, '')
 }
 
 /** 纯文本 → 编辑器 DOM：token 段落还原成丸子。 */
-function renderNote(text: string) {
-  const el = noteEditor.value
+function renderIntent(text: string) {
+  const el = intentEditor.value
   if (!el) return
   el.innerHTML = ''
   const frag = document.createDocumentFragment()
@@ -564,16 +557,23 @@ function renderNote(text: string) {
   el.appendChild(frag)
 }
 
-// 编辑器里的内容已经和 form.note 一致时（自己刚回写的）不重建，保光标
-watch(() => form.value.note, (v) => {
-  const el = noteEditor.value
+// 编辑器里的内容已经和 form.intent_text 一致时（自己刚回写的）不重建，保光标
+watch(() => form.value.intent_text, (v) => {
+  const el = intentEditor.value
   if (!el) return
-  if (readNote() === v) return
-  renderNote(v)
+  if (readIntent() === v) return
+  renderIntent(v)
 })
 
+/** 粘贴只收纯文本（contenteditable 默认会吃富文本，丸子结构会被冲掉） */
+function onIntentPaste(e: ClipboardEvent) {
+  e.preventDefault()
+  const text = e.clipboardData?.getData('text/plain') || ''
+  if (text) insertNodesAtCaret([document.createTextNode(text)])
+}
+
 function insertNodesAtCaret(nodes: Node[]) {
-  const el = noteEditor.value
+  const el = intentEditor.value
   if (!el) return
   el.focus()
   const sel = window.getSelection()
@@ -601,7 +601,7 @@ function insertNodesAtCaret(nodes: Node[]) {
   after.collapse(false)
   sel?.removeAllRanges()
   sel?.addRange(after)
-  form.value.note = readNote()
+  form.value.intent_text = readIntent()
 }
 
 /** 参考图缩略图上的 @参考N 角标：点了把丸子插进约束光标处。 */
@@ -611,23 +611,23 @@ function insertRefToken(i: number) {
 }
 
 // ── @ 联想：光标前有 @xxx 待补全时弹出候选，↑↓选择、Enter/Tab 确认 ──
-const noteMentionOpen = ref(false)
-const noteMentionFilter = ref('')
-const noteMentionIndex = ref(0)
+const intentMentionOpen = ref(false)
+const intentMentionFilter = ref('')
+const intentMentionIndex = ref(0)
 
-const noteCandidates = computed(() => {
+const intentCandidates = computed(() => {
   const list = form.value.ref_images.map((r, i) => ({
     token: '@参考' + (i + 1), sub: r.name, url: refUrl(r),
   }))
-  const q = noteMentionFilter.value
+  const q = intentMentionFilter.value
   if (!q) return list
   return list.filter((c) => c.token.startsWith('@' + q))
 })
 
 /** 光标前的 @xxx 待补全：返回过滤词 + 待删选区。 */
-function getNoteAtQuery(): { filter: string; del: Range } | null {
+function getIntentAtQuery(): { filter: string; del: Range } | null {
   const sel = window.getSelection()
-  const el = noteEditor.value
+  const el = intentEditor.value
   if (!sel || !sel.rangeCount || !el) return null
   const r = sel.getRangeAt(0)
   if (!r.collapsed || !el.contains(r.startContainer)) return null
@@ -647,27 +647,27 @@ function getNoteAtQuery(): { filter: string; del: Range } | null {
   return { filter: m[1], del }
 }
 
-function updateNoteMention() {
-  const q = getNoteAtQuery()
+function updateIntentMention() {
+  const q = getIntentAtQuery()
   if (!q || !form.value.ref_images.length) {
-    noteMentionOpen.value = false
+    intentMentionOpen.value = false
     return
   }
-  noteMentionFilter.value = q.filter
-  noteMentionIndex.value = 0
-  noteMentionOpen.value = true
+  intentMentionFilter.value = q.filter
+  intentMentionIndex.value = 0
+  intentMentionOpen.value = true
 }
 
-function onNoteInput() {
-  form.value.note = readNote()
-  updateNoteMention()
+function onIntentInput() {
+  form.value.intent_text = readIntent()
+  updateIntentMention()
 }
 
-function applyNoteMention(token: string) {
-  const el = noteEditor.value
-  const q = getNoteAtQuery()
+function applyIntentMention(token: string) {
+  const el = intentEditor.value
+  const q = getIntentAtQuery()
   if (!el || !q) {
-    noteMentionOpen.value = false
+    intentMentionOpen.value = false
     return
   }
   el.focus()
@@ -686,25 +686,25 @@ function applyNoteMention(token: string) {
   after.collapse(false)
   sel?.removeAllRanges()
   sel?.addRange(after)
-  form.value.note = readNote()
-  noteMentionOpen.value = false
+  form.value.intent_text = readIntent()
+  intentMentionOpen.value = false
 }
 
-function onNoteKeydown(e: KeyboardEvent) {
-  if (!noteMentionOpen.value || !noteCandidates.value.length) return
+function onIntentKeydown(e: KeyboardEvent) {
+  if (!intentMentionOpen.value || !intentCandidates.value.length) return
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    noteMentionIndex.value = (noteMentionIndex.value + 1) % noteCandidates.value.length
+    intentMentionIndex.value = (intentMentionIndex.value + 1) % intentCandidates.value.length
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
-    noteMentionIndex.value = (noteMentionIndex.value - 1 + noteCandidates.value.length) % noteCandidates.value.length
+    intentMentionIndex.value = (intentMentionIndex.value - 1 + intentCandidates.value.length) % intentCandidates.value.length
   } else if (e.key === 'Enter' || e.key === 'Tab') {
     e.preventDefault()
-    const c = noteCandidates.value[noteMentionIndex.value]
-    if (c) applyNoteMention(c.token)
+    const c = intentCandidates.value[intentMentionIndex.value]
+    if (c) applyIntentMention(c.token)
   } else if (e.key === 'Escape') {
     e.preventDefault()
-    noteMentionOpen.value = false
+    intentMentionOpen.value = false
   }
 }
 const statusLabel = computed(() =>
@@ -1348,8 +1348,6 @@ onMounted(async () => {
 .studio-col { min-width:0; display:flex; flex-direction:column; min-height:0 }
 /* 意图框吃掉富余高度；中段（引擎/素材）按内容占位，不够时才自己滚 */
 .grow { flex:1 1 0; min-height:100px; display:flex }
-.grow :deep(.el-textarea) { flex:1; display:flex }
-.grow :deep(.el-textarea__inner) { height:100%; resize:none }
 .lower { flex:0 1 auto; min-height:0; display:flex; flex-direction:column }
 .lower-body { flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px; display:flex; flex-direction:column }
 .lower .block-title { margin:8px 0 4px }
@@ -1368,9 +1366,6 @@ onMounted(async () => {
 .script-bar { display:flex; align-items:center; gap:6px; font-size:13px }
 /* 剧本编辑弹层：整表全宽 */
 :deep(.script-dialog .el-dialog__body) { padding-top:8px }
-.note-grow { flex:1 1 auto; min-height:44px; display:flex }
-.note-grow :deep(.el-textarea) { flex:1; display:flex }
-.note-grow :deep(.el-textarea__inner) { height:100%; resize:none }
 .textarea-wrap { position:relative; flex:1; display:flex; min-width:0 }
 .note-editor { flex:1; min-height:44px; padding:5px 11px; border:1px solid var(--el-border-color); border-radius:var(--el-border-radius-base); font-size:14px; line-height:1.5; overflow-y:auto; outline:none; transition:border-color .2s; background:var(--el-fill-color-blank); }
 .note-editor:hover { border-color:var(--el-border-color-hover) }
@@ -1383,9 +1378,8 @@ onMounted(async () => {
 .mention-thumb { width:40px; height:40px; object-fit:cover; border-radius:6px; flex:0 0 auto }
 .mention-name { font-size:13px; font-weight:600; color:var(--el-color-primary); flex:0 0 auto }
 .mention-sub { font-size:12px; color:var(--el-text-color-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-/* 约束块：固定高度常驻底部，不被上面的滚动区带走 */
-.note-block { flex:0 0 auto }
-.note-block .block-title { margin:8px 0 4px }
+/* 方案意图编辑器：在 .grow 里撑满 */
+.grow .note-editor { min-height:96px }
 /* 方案变更卡：夹在内容区和操作行之间，自身不参与伸缩 */
 .chg-card { flex:0 0 auto }
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }

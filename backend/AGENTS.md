@@ -185,14 +185,14 @@
 | `intent_text` | 方案意图（漫画格额外带【漫画页上下文】段） | 发散节点输入 `user_intent_text` |
 | `engines` | 目标引擎名（`novelai` / `manga3` / `seedream` …） | 决定跑哪几个 `blueprint_to_<engine>` |
 | `reference_images` + `ref_images/<文件名>` | 参考图 | 解到 `outputs/suli_art_refs/<plan_id>/`，路径作 `reference_images` 喂 VLM 分析 |
-| `user_image_instruction` | 画面约束（取方案的 `note`；内联 `@参考N` 打包时替换成 `参考图N`） | 发散节点的画面约束 |
+| `user_image_instruction` | 画面约束（取方案的 `note`；创作页已不单独编辑 note，画面约束直接写进意图；内联 `@参考N` 打包时替换成 `参考图N`） | 发散节点的画面约束 |
 | `tier` / `clothing_level` | 水位档 / 衣物档 | L-Port 走 `comic_page_diverge` 时的 `tier` 入参 |
 | `comic` | 漫画段：`premise` / `characters` / `style_hint` / `tier` / 页格定位 | L-Port 走「整页分格」链路时的入参 |
 | `comic_context` | 页上下文副本（集号/页/格/大纲） | L-Port 不读，留档排查用 |
 | `manifest.json` | 包元信息 + hint | 收件箱列表 |
 | `refs.json` | 参考图清单 | 解图用 |
 
-**约束里的内联引用**：创作页约束框里可写 `@参考N`（自带缩略图丸子，`@` 键入唤起候选），
+**意图里的内联引用**：创作页「方案意图」编辑器可写 `@参考N`（自带缩略图丸子，`@` 键入唤起候选），
 `N` 对应方案参考图的序号 1-6；库里存 `@参考N` 原文，直投打包时替换成 `参考图N`——
 L-Port 发散节点把参考图逐张编号成【参考图 N 的视觉描述】，替换后文本指代才指得到图。
 
