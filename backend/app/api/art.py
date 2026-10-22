@@ -879,7 +879,7 @@ _TOK_REF_RE = _re.compile(r"@参考([1-6])")
 
 
 def _tokens_to_refs(text):
-    """约束里的内联 @参考N → L-Port 发散节点的「参考图N」编号形式。
+    """意图里的内联 @参考N → L-Port 发散节点的「参考图N」编号形式。
 
     L-Port 发散节点把参考图逐张编号成【参考图 N 的视觉描述】段；约束文本里
     写 @参考N，打包时替换成 参考图N，模型才能把指代对到对应那张图。
@@ -954,8 +954,8 @@ def push_lport():
         if isinstance(pimg, dict) and pimg.get("name"):
             refs = [pimg]
             ref_from = "prev_panel"
-    # 约束里的内联引用（@参考N）：打包时换成 L-Port 发散节点的「参考图N」编号，
-    # 方案库里仍存用户的 @参考N 原文。
+    # 意图里的内联引用（@参考N）：打包时换成 L-Port 发散节点的「参考图N」编号，
+    # 方案库里仍存用户的 @参考N 原文。note（备注）同样处理：右栏 agent 还会照旧写它。
     intent = _tokens_to_refs(intent)
     note_out = _tokens_to_refs(p.get("note") or "")
     # 漫画段：L-Port 侧可用 comic_page_diverge 走「整页分格」链路时吃这段

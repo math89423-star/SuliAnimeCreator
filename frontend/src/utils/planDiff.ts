@@ -15,7 +15,8 @@ export interface PlanDiffRow {
 const TEXT_FIELDS: { key: string; label: string }[] = [
   { key: 'title', label: '标题' },
   { key: 'intent_text', label: '意图' },
-  { key: 'note', label: '约束' },
+  // note（备注）：创作页没有编辑口，右栏 agent 仍可写入——变更卡是它唯一的可见渠道
+  { key: 'note', label: '备注' },
 ]
 
 function text(v: any): string {

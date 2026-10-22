@@ -67,32 +67,7 @@
 
         <div class="block-title">方案意图</div>
         <div class="grow">
-          <div class="textarea-wrap">
-            <div
-              ref="intentEditor"
-              class="note-editor intent-editor"
-              contenteditable="true"
-              data-ph=""
-              @input="onIntentInput"
-              @keydown="onIntentKeydown"
-              @click="updateIntentMention"
-              @blur="intentMentionOpen = false"
-              @paste="onIntentPaste"
-            />
-            <div v-if="intentMentionOpen && intentCandidates.length" class="mention-popup">
-              <div class="mention-popup-title">参考图</div>
-              <button
-                v-for="(c, i) in intentCandidates"
-                :key="c.token"
-                :class="['mention-item', { active: i === intentMentionIndex }]"
-                @mousedown.prevent="applyIntentMention(c.token)"
-              >
-                <img v-if="c.url" :src="c.url" class="mention-thumb" alt="" />
-                <span class="mention-name">{{ c.token }}</span>
-                <span class="mention-sub">{{ c.sub }}</span>
-              </button>
-            </div>
-          </div>
+          <IntentEditor ref="intentEd" v-model="form.intent_text" :refs="form.ref_images" />
         </div>
 
         <div class="lower">
@@ -125,7 +100,7 @@
                     >
                       <template #error><div class="ref-thumb-ph"><el-icon><Picture /></el-icon></div></template>
                     </el-image>
-                    <button class="ref-tag" :title="'插入 @参考' + (i + 1)" @click.stop="insertRefToken(i)">@参考{{ i + 1 }}</button>
+                    <button class="ref-tag" :title="'插入 @参考' + (i + 1)" @click.stop="intentEd?.insertToken(i)">@参考{{ i + 1 }}</button>
                     <div class="ref-meta">
                       <span class="ref-name" :title="r.name">{{ r.name }}</span>
                       <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
@@ -240,6 +215,8 @@ import { api } from '../api/client'
 import { useStudioStore } from '../stores/studio'
 import { useAppStore } from '../stores/app'
 import PlanChangeCard from '../components/PlanChangeCard.vue'
+import IntentEditor from '../components/studio/IntentEditor.vue'
+import { refUrl, type RefImg } from '../utils/refImage'
 import ComicStrip, { type ComicPage, type ComicPanel } from '../components/studio/ComicStrip.vue'
 import ComicScript, { type ScriptPanel, type ScriptMeta } from '../components/studio/ComicScript.vue'
 import { TIERS, CLOTH, tierLabel } from '../utils/tier'
@@ -260,7 +237,6 @@ const ENGINE_OPTS = [
   { key: 'cloud', label: '云模板' },
 ]
 
-type RefImg = { name: string; path: string; url: string }
 type PlanForm = {
   title: string
   intent_text: string
@@ -310,6 +286,7 @@ const saving = ref(false)
 const pushing = ref(false)
 const pushHint = ref('')
 const refInput = ref<HTMLInputElement | null>(null)
+const intentEd = ref<InstanceType<typeof IntentEditor> | null>(null)
 const refUploading = ref(false)
 
 // ── 漫画模式（页序列）───────────────────────────────────────────────────────
@@ -473,240 +450,8 @@ async function applyReturned(st: any) {
 
 const promptKeys = computed(() => Object.keys(prompts.value))
 
-/** 参考图地址：优先 url；老数据只存了 path/name 时按 basename 兜底（/api/images/<name>）。 */
-function refUrl(r: RefImg): string {
-  if (r?.url) return r.url
-  const base = String(r?.path || r?.name || '').replace(/\\/g, '/').split('/').pop() || ''
-  return base ? `/api/images/${encodeURIComponent(base)}` : ''
-}
 const refPreview = computed(() => form.value.ref_images.map(refUrl))
 
-// ── 方案意图内联编辑器：@ 唤起参考图引用，插入的 token 是带缩略图的原子丸子（学 L-Port /prompt）──
-const intentEditor = ref<HTMLDivElement | null>(null)
-
-const PILL_STYLE =
-  'display:inline-flex;align-items:center;gap:3px;height:1.3em;max-height:1.3em;' +
-  'padding:0 7px 0 3px;border-radius:5px;vertical-align:-0.25em;font-size:.92em;' +
-  'white-space:nowrap;font-weight:600;background:rgba(99,102,241,.12);color:#6366f1;'
-const PILL_IMG_STYLE =
-  'width:1.15em;height:1.15em;max-width:1.15em;max-height:1.15em;flex:none;' +
-  'object-fit:cover;border-radius:3px;'
-
-const RE_REF_TOKEN = /(@参考[1-6])/g
-const RE_REF_ONE = /@参考([1-6])/
-
-function pillNode(token: string): HTMLSpanElement {
-  const span = document.createElement('span')
-  span.className = 'pill'
-  span.contentEditable = 'false'
-  span.dataset.name = token
-  span.setAttribute('style', PILL_STYLE)
-  const m = token.match(RE_REF_ONE)
-  const r = m ? form.value.ref_images[Number(m[1]) - 1] : null
-  if (r) {
-    const img = document.createElement('img')
-    img.src = refUrl(r)
-    img.alt = ''
-    img.className = 'pill-thumb'
-    img.setAttribute('style', PILL_IMG_STYLE)
-    img.contentEditable = 'false'
-    img.draggable = false
-    span.appendChild(img)
-  }
-  span.appendChild(document.createTextNode(token))
-  return span
-}
-
-/** 编辑器 DOM → 纯文本：丸子还原成 token，BR 还原成换行。 */
-function serializeIntentNode(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent || ''
-  if (node.nodeName === 'BR') return '\n'
-  if (node instanceof HTMLElement) {
-    if (node.classList.contains('pill')) return node.dataset.name || ''
-    let s = ''
-    node.childNodes.forEach((c) => { s += serializeIntentNode(c) })
-    if (node.nodeName === 'DIV' || node.nodeName === 'P') return s + '\n'
-    return s
-  }
-  return ''
-}
-
-function readIntent(): string {
-  const el = intentEditor.value
-  if (!el) return form.value.intent_text
-  let s = ''
-  el.childNodes.forEach((c) => { s += serializeIntentNode(c) })
-  return s.replace(/\n+$/, '')
-}
-
-/** 纯文本 → 编辑器 DOM：token 段落还原成丸子。 */
-function renderIntent(text: string) {
-  const el = intentEditor.value
-  if (!el) return
-  el.innerHTML = ''
-  const frag = document.createDocumentFragment()
-  text.split('\n').forEach((line, li) => {
-    if (li > 0) frag.appendChild(document.createElement('br'))
-    line.split(RE_REF_TOKEN).forEach((p) => {
-      if (!p) return
-      if (RE_REF_ONE.test(p)) frag.appendChild(pillNode(p))
-      else frag.appendChild(document.createTextNode(p))
-    })
-  })
-  if (!frag.hasChildNodes()) frag.appendChild(document.createElement('br'))
-  el.appendChild(frag)
-}
-
-// 编辑器里的内容已经和 form.intent_text 一致时（自己刚回写的）不重建，保光标
-watch(() => form.value.intent_text, (v) => {
-  const el = intentEditor.value
-  if (!el) return
-  if (readIntent() === v) return
-  renderIntent(v)
-})
-
-/** 粘贴只收纯文本（contenteditable 默认会吃富文本，丸子结构会被冲掉） */
-function onIntentPaste(e: ClipboardEvent) {
-  e.preventDefault()
-  const text = e.clipboardData?.getData('text/plain') || ''
-  if (text) insertNodesAtCaret([document.createTextNode(text)])
-}
-
-function insertNodesAtCaret(nodes: Node[]) {
-  const el = intentEditor.value
-  if (!el) return
-  el.focus()
-  const sel = window.getSelection()
-  let range: Range
-  if (sel && sel.rangeCount && el.contains(sel.getRangeAt(0).startContainer)) {
-    range = sel.getRangeAt(0)
-  } else {
-    range = document.createRange()
-    range.selectNodeContents(el)
-    range.collapse(false)
-  }
-  const pre = range.cloneRange()
-  pre.selectNodeContents(el)
-  pre.setEnd(range.startContainer, range.startOffset)
-  const needLeadingSpace = !!pre.toString() && !/\s$/.test(pre.toString())
-  range.deleteContents()
-  const frag = document.createDocumentFragment()
-  if (needLeadingSpace) frag.appendChild(document.createTextNode(' '))
-  nodes.forEach((n) => frag.appendChild(n))
-  const lastNode = frag.lastChild as Node | null
-  range.insertNode(frag)
-  const after = document.createRange()
-  if (lastNode && lastNode.parentNode) after.setStartAfter(lastNode)
-  else after.selectNodeContents(el)
-  after.collapse(false)
-  sel?.removeAllRanges()
-  sel?.addRange(after)
-  form.value.intent_text = readIntent()
-}
-
-/** 参考图缩略图上的 @参考N 角标：点了把丸子插进约束光标处。 */
-function insertRefToken(i: number) {
-  if (i < 0 || i >= form.value.ref_images.length) return
-  insertNodesAtCaret([pillNode('@参考' + (i + 1)), document.createTextNode(' ')])
-}
-
-// ── @ 联想：光标前有 @xxx 待补全时弹出候选，↑↓选择、Enter/Tab 确认 ──
-const intentMentionOpen = ref(false)
-const intentMentionFilter = ref('')
-const intentMentionIndex = ref(0)
-
-const intentCandidates = computed(() => {
-  const list = form.value.ref_images.map((r, i) => ({
-    token: '@参考' + (i + 1), sub: r.name, url: refUrl(r),
-  }))
-  const q = intentMentionFilter.value
-  if (!q) return list
-  return list.filter((c) => c.token.startsWith('@' + q))
-})
-
-/** 光标前的 @xxx 待补全：返回过滤词 + 待删选区。 */
-function getIntentAtQuery(): { filter: string; del: Range } | null {
-  const sel = window.getSelection()
-  const el = intentEditor.value
-  if (!sel || !sel.rangeCount || !el) return null
-  const r = sel.getRangeAt(0)
-  if (!r.collapsed || !el.contains(r.startContainer)) return null
-  let node: Node | null = r.startContainer
-  let offset = r.startOffset
-  if (node.nodeType !== Node.TEXT_NODE) {
-    const prev = offset > 0 ? node.childNodes[offset - 1] : null
-    if (!prev || prev.nodeType !== Node.TEXT_NODE) return null
-    node = prev
-    offset = (prev.textContent || '').length
-  }
-  const m = ((node.textContent || '').slice(0, offset)).match(/@([\w\u4e00-\u9fa5]*)$/)
-  if (!m) return null
-  const del = document.createRange()
-  del.setStart(node, offset - m[0].length)
-  del.setEnd(node, offset)
-  return { filter: m[1], del }
-}
-
-function updateIntentMention() {
-  const q = getIntentAtQuery()
-  if (!q || !form.value.ref_images.length) {
-    intentMentionOpen.value = false
-    return
-  }
-  intentMentionFilter.value = q.filter
-  intentMentionIndex.value = 0
-  intentMentionOpen.value = true
-}
-
-function onIntentInput() {
-  form.value.intent_text = readIntent()
-  updateIntentMention()
-}
-
-function applyIntentMention(token: string) {
-  const el = intentEditor.value
-  const q = getIntentAtQuery()
-  if (!el || !q) {
-    intentMentionOpen.value = false
-    return
-  }
-  el.focus()
-  const sel = window.getSelection()
-  sel?.removeAllRanges()
-  sel?.addRange(q.del)
-  const frag = document.createDocumentFragment()
-  frag.appendChild(pillNode(token))
-  frag.appendChild(document.createTextNode(' '))
-  const lastNode = frag.lastChild as Node | null
-  q.del.deleteContents()
-  q.del.insertNode(frag)
-  const after = document.createRange()
-  if (lastNode && lastNode.parentNode) after.setStartAfter(lastNode)
-  else after.selectNodeContents(el)
-  after.collapse(false)
-  sel?.removeAllRanges()
-  sel?.addRange(after)
-  form.value.intent_text = readIntent()
-  intentMentionOpen.value = false
-}
-
-function onIntentKeydown(e: KeyboardEvent) {
-  if (!intentMentionOpen.value || !intentCandidates.value.length) return
-  if (e.key === 'ArrowDown') {
-    e.preventDefault()
-    intentMentionIndex.value = (intentMentionIndex.value + 1) % intentCandidates.value.length
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault()
-    intentMentionIndex.value = (intentMentionIndex.value - 1 + intentCandidates.value.length) % intentCandidates.value.length
-  } else if (e.key === 'Enter' || e.key === 'Tab') {
-    e.preventDefault()
-    const c = intentCandidates.value[intentMentionIndex.value]
-    if (c) applyIntentMention(c.token)
-  } else if (e.key === 'Escape') {
-    e.preventDefault()
-    intentMentionOpen.value = false
-  }
-}
 const statusLabel = computed(() =>
   ({ draft: '草案', pushed: '已投 L-Port', returned: '已回传' } as Record<string, string>)[status.value] || status.value)
 const statusTagType = computed<'success' | 'warning' | 'info'>(() =>
@@ -1085,7 +830,6 @@ const formDirty = computed(() => {
   if (!p) return false
   if (form.value.title !== (p.title || '')) return true
   if (form.value.intent_text !== (p.intent_text || '')) return true
-  if (form.value.note !== (p.note || '')) return true
   if (form.value.engines.join(',') !== (p.engines || []).join(',')) return true
   if ((form.value.tier || '') !== (p.tier || '')) return true
   if ((form.value.clothing_level || '') !== (p.clothing_level || '')) return true
@@ -1178,7 +922,7 @@ async function savePlan(): Promise<string> {
       intent_text: form.value.intent_text,
       engines: form.value.engines,
       ref_images: form.value.ref_images,
-      note: form.value.note,
+      // note 不传：页面没有 note 编辑口，带了会把 agent 中途写的 note 打回旧值
       tier: form.value.tier,
       clothing_level: form.value.clothing_level,
       source: 'ui',   // 页面自己改的：不算待审变更，后端不留改前快照
@@ -1366,20 +1110,6 @@ onMounted(async () => {
 .script-bar { display:flex; align-items:center; gap:6px; font-size:13px }
 /* 剧本编辑弹层：整表全宽 */
 :deep(.script-dialog .el-dialog__body) { padding-top:8px }
-.textarea-wrap { position:relative; flex:1; display:flex; min-width:0 }
-.note-editor { flex:1; min-height:44px; padding:5px 11px; border:1px solid var(--el-border-color); border-radius:var(--el-border-radius-base); font-size:14px; line-height:1.5; overflow-y:auto; outline:none; transition:border-color .2s; background:var(--el-fill-color-blank); }
-.note-editor:hover { border-color:var(--el-border-color-hover) }
-.note-editor:focus { border-color:var(--el-color-primary) }
-.note-editor:empty::before { content:attr(data-ph); color:var(--el-text-color-placeholder); pointer-events:none }
-.mention-popup { position:absolute; left:0; bottom:100%; z-index:30; min-width:220px; max-width:340px; margin-bottom:6px; background:var(--el-bg-color-overlay); border:1px solid var(--el-border-color-light); border-radius:10px; box-shadow:var(--el-box-shadow-light); padding:6px 0; }
-.mention-popup-title { font-size:12px; color:var(--el-text-color-secondary); padding:2px 10px 6px }
-.mention-item { display:flex; align-items:center; gap:8px; width:100%; padding:6px 10px; border:none; background:none; cursor:pointer; text-align:left; color:inherit }
-.mention-item:hover, .mention-item.active { background:var(--el-fill-color-light) }
-.mention-thumb { width:40px; height:40px; object-fit:cover; border-radius:6px; flex:0 0 auto }
-.mention-name { font-size:13px; font-weight:600; color:var(--el-color-primary); flex:0 0 auto }
-.mention-sub { font-size:12px; color:var(--el-text-color-secondary); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-/* 方案意图编辑器：在 .grow 里撑满 */
-.grow .note-editor { min-height:96px }
 /* 方案变更卡：夹在内容区和操作行之间，自身不参与伸缩 */
 .chg-card { flex:0 0 auto }
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }

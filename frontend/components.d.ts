@@ -58,6 +58,7 @@ declare module 'vue' {
     ElTabs: typeof import('element-plus/es')['ElTabs']
     ElTag: typeof import('element-plus/es')['ElTag']
     FlowersTool: typeof import('./src/components/tools/FlowersTool.vue')['default']
+    IntentEditor: typeof import('./src/components/studio/IntentEditor.vue')['default']
     LeftNav: typeof import('./src/components/LeftNav.vue')['default']
     LoadingSpinner: typeof import('./src/components/LoadingSpinner.vue')['default']
     MarkdownView: typeof import('./src/components/MarkdownView.vue')['default']
