@@ -78,5 +78,22 @@ case "${1:-status}" in
     (cd "$ROOT" && docker compose build);;
   dsh)
     dsh_cmd "${2:-list}" "${3:-}";;
-  *) echo "用法: cmd.bash {start|stop|rebuild|restart|status|logs [backend|frontend]|build|dsh {list|install <版本>|use <版本>|status [版本]}}"; exit 1;;
+  check)
+    # 推送前自检：扫敏感物 + 核对 gitignore 覆盖 + 列待推规模
+    "$ROOT/scripts/pre-push-check.sh" "${2:-}";;
+  push)
+    # 自检 → 有命中就停下让人确认 → 推送（只推已跟踪 + 已 add 的，不自动 add 全部）
+    "$ROOT/scripts/pre-push-check.sh" || { echo "自检未过，已停下"; exit 1; }
+    echo
+    # 交互确认：非交互 shell（无 tty）时 read 会直接失败 → 视为取消，不盲推
+    ans=""
+    if [ -t 0 ]; then
+      read -r -p "确认推送？(y/N) " ans || ans=""
+    else
+      echo "非交互环境，不自动推送（要推请直接 git push）"
+      exit 1
+    fi
+    [ "$ans" = "y" ] || [ "$ans" = "Y" ] || { echo "已取消"; exit 1; }
+    (cd "$ROOT" && git push -u origin "$(git rev-parse --abbrev-ref HEAD)");;
+  *) echo "用法: cmd.bash {start|stop|rebuild|restart|status|logs [backend|frontend]|build|dsh {list|install <版本>|use <版本>|status [版本]}|check|push}"; exit 1;;
 esac

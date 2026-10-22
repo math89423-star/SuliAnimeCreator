@@ -88,6 +88,23 @@
 dsh agent 保持规划定位：出方案、定方向，禁 `/generate`、`/jobs` 类动作。
 细则见 `docs/POSITIONING.md`；成人向不改变这条边界。
 
+## 代码托管与推送（口径先看这条）
+
+- **本仓库有远端**：`origin = git@github.com:math89423-star/SuliAnimeCreator.git`（**私有**，SSH 推）。
+  与 `SuliQQbot` / `L-Port-Comfy` 同为私有库，同一 GitHub 账号（`math89423-star`）。
+- **破甲内核 `LLMCoreBreak/` 无远端、永不 push**（底线 ③：破甲代码只存本地）。
+  本仓库只是**引用**它的路径（compose 挂载 + profile 软链），不含破甲代码本体。
+- **推之前必查敏感物**：本仓含 NSFW craft 与角色库，推的是**私有库**，别改成 public。
+  `.gitignore` 已挡住真敏感物：`dsh-home/`（含明文 API key 与会话）、`dsh-runtime/`（dsh CLI 各版本，600+ 包/版本）、
+  `.env`、`backend/data/model_settings.json`（设置页 key）、`backend/data/model-patches/`、`backend/data/uploads/`。
+  **用 `./cmd.bash check` 跑自检**（扫密钥形态 + 核对 gitignore 覆盖 + 列待推规模），别只扫 `git diff`：
+  `.gitignore` 对**已跟踪文件无效**——`backend/data/uploads/` 有历史提交留下的图，仍会跟着 push 上去。
+- **推送入口用 `./cmd.bash push`**（自检 → 交互确认 → push）；非交互环境会拒绝自动推送。
+- **推送方式**：SSH（`~/.ssh/config` 里 `github.com` 走 443 端口，22 被墙拦；专用 key 是 `id_ed25519_github`）。
+  HTTPS remote 要 PAT/token，机器上没配，别用。
+- **推已有历史的仓库**：只 `git remote add` + `git push -u origin main`；
+  **别跑 `git init` / 首个 `first commit`**——那是给空仓库准备的，会插无意义提交、往 README 塞垃圾行、重置 reflog。
+
 ## 检索与查证纪律
 
 - 需要查资料先调本地搜索（免 key）：`curl -s "http://127.0.0.1:5001/api/v1/tools/websearch?q=<关键词>&n=8"`（中文须 URL 编码），精读同参数 `webfetch`。

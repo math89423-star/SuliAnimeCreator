@@ -19,6 +19,12 @@
 - 本地：`cd backend && python run.py` + `cd frontend && npm run dev`
 - Docker：`docker compose up --build`
 
+## 代码托管
+- 远端：`git@github.com:math89423-star/SuliAnimeCreator.git`（**私有**，SSH 推；与 `SuliQQbot` / `L-Port-Comfy` 同账号同口径）。
+- 推之前：`./cmd.bash check` 跑自检（扫密钥形态 + 核对 gitignore 覆盖 + 列待推规模），
+  `./cmd.bash push` 自检+确认+推送一并做完。`dsh-home/`（含明文 key）与 `dsh-runtime/` 已被 gitignore 挡住。
+- 破甲内核 `LLMCoreBreak/` 在另一个仓库，**无远端、不外发**；本仓只是引用它的路径。
+
 ## Docker 部署
 - 镜像：`suli-anime-backend`（python3.11 + node24 + ffmpeg）+ `frontend`（nginx serving dist，反代 `/api/` → backend:5001）。
   **dsh CLI 不在镜像里**：装在宿主 `dsh-runtime/<版本>/`，容器挂载使用（见下）。
