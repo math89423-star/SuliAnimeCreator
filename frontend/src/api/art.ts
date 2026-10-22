@@ -29,4 +29,6 @@ export const artPlanApi = {
   comicScriptFromOutline: (body: any) => http.post('/v1/art/comic-script/from-outline', body).then(r => r.data),
   /** 拆格：一条剧本 = 一个方案（页序/格序/上一格链自动排好）。 */
   splitComicScript: (body: any) => http.post('/v1/art/comic-script/split', body).then(r => r.data),
+  /** 收 L-Port 整页分镜回传（comic_page_diverge 的 panel_plan）→ 落成漫画剧本。 */
+  importComicPlan: (body: any) => http.post('/v1/art/comic-plan/import', body).then(r => r.data),
 }

@@ -21,7 +21,7 @@
       <el-tag size="small" :type="statusTagType">{{ statusLabel }}</el-tag>
     </div>
 
-    <!-- 漫画：集号 + 大纲 + 剧本 + 页条 + 格条 -->
+    <!-- 漫画：集号 + 大纲 + 剧本条 + 页/格条 -->
     <ComicStrip
       v-if="mode === 'comic'"
       :pages="pages"
@@ -39,15 +39,26 @@
       @apply-outline="applyOutline"
     >
       <template #script>
-        <ComicScript
-          v-model:panels="scriptPanels"
-          :busy="scriptBusy"
-          @from-outline="scriptFromOutline"
-          @save="saveScript"
-          @split="splitScript"
-        />
+        <div class="script-bar">
+          <span class="suli-muted">剧本 <b class="tnum">{{ scriptPanels.length }}</b> 格</span>
+          <el-tag v-if="scriptMeta.tier" size="small" type="danger">{{ tierLabel(scriptMeta.tier) }}</el-tag>
+          <el-button size="small" :loading="scriptBusy === 'outline'" @click="scriptFromOutline">从大纲转</el-button>
+          <el-button size="small" type="primary" :loading="scriptBusy === 'split'" @click="splitScript">拆格</el-button>
+          <el-button size="small" @click="scriptDialog = true">编辑剧本</el-button>
+        </div>
       </template>
     </ComicStrip>
+
+    <!-- 剧本编辑：整表在宽弹层里改，不挤工作区 -->
+    <el-dialog v-model="scriptDialog" title="编辑剧本" width="min(1400px, 94vw)" top="5vh" class="script-dialog">
+      <ComicScript
+        v-model:panels="scriptPanels"
+        v-model:meta="scriptMeta"
+        :busy="scriptBusy"
+        @save="saveScript"
+        @split="splitScript"
+      />
+    </el-dialog>
 
     <div class="studio-grid">
       <!-- 左：方案（与 agent 讨论产出） -->
@@ -66,43 +77,62 @@
               <el-checkbox v-for="e in ENGINE_OPTS" :key="e.key" :value="e.key" :label="e.label" />
             </el-checkbox-group>
 
-            <div class="block-title">参考图 <span class="suli-muted tnum">{{ form.ref_images.length }}/6</span></div>
-            <div class="refs">
-              <div v-for="(r, i) in form.ref_images" :key="i" class="ref-item">
-                <el-image
-                  class="ref-thumb" :src="refUrl(r)" fit="cover" :alt="r.name"
-                  :preview-src-list="refPreview" :initial-index="i" preview-teleported hide-on-click-modal
-                >
-                  <template #error><div class="ref-thumb-ph"><el-icon><Picture /></el-icon></div></template>
-                </el-image>
-                <div class="ref-meta">
-                  <span class="ref-name" :title="r.name">{{ r.name }}</span>
-                  <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
-                </div>
-              </div>
-              <el-button class="ref-add" size="small" :loading="refUploading" :disabled="form.ref_images.length >= 6" @click="refInput?.click()">
-                + 参考图
-              </el-button>
-              <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
+            <div class="tier-row">
+              <span class="tier-lbl">水位</span>
+              <el-select v-model="form.tier" size="small" clearable placeholder="常规" class="tier-sel">
+                <el-option v-for="t in TIERS" :key="t.value" :label="t.label" :value="t.value" />
+              </el-select>
+              <span class="tier-lbl">衣物</span>
+              <el-select v-model="form.clothing_level" size="small" clearable placeholder="—" class="tier-sel">
+                <el-option v-for="c in CLOTH" :key="c" :label="c" :value="c" />
+              </el-select>
             </div>
 
-            <!-- 漫画格：本格成图（下一格自动带进参考图） -->
-            <template v-if="mode === 'comic'">
-              <div class="block-title">本格成图</div>
-              <div class="page-shot">
-                <el-image
-                  v-if="pageImage" class="page-shot-img" :src="pageImage.url" fit="cover"
-                  :preview-src-list="[pageImage.url]" preview-teleported hide-on-click-modal
-                />
-                <div v-else class="page-shot-ph"><el-icon><Picture /></el-icon></div>
-                <div class="page-shot-act">
-                  <el-button size="small" :loading="shotUploading" @click="shotInput?.click()">上传成图</el-button>
-                  <el-button size="small" text :disabled="!pageImage" @click="removePageImage">移除</el-button>
+            <!-- 参考图 与 本格成图 并排：两个素材区各占一半，省纵向空间 -->
+            <div class="asset-row">
+              <div class="asset-block">
+                <div class="block-title">参考图 <span class="suli-muted tnum">{{ form.ref_images.length }}/6</span></div>
+                <div class="refs">
+                  <div v-for="(r, i) in form.ref_images" :key="i" class="ref-item">
+                    <el-image
+                      class="ref-thumb" :src="refUrl(r)" fit="cover" :alt="r.name"
+                      :preview-src-list="refPreview" :initial-index="i" preview-teleported hide-on-click-modal
+                    >
+                      <template #error><div class="ref-thumb-ph"><el-icon><Picture /></el-icon></div></template>
+                    </el-image>
+                    <div class="ref-meta">
+                      <span class="ref-name" :title="r.name">{{ r.name }}</span>
+                      <el-button link type="danger" size="small" @click="form.ref_images.splice(i, 1)">移除</el-button>
+                    </div>
+                  </div>
+                  <el-button class="ref-add" size="small" :loading="refUploading" :disabled="form.ref_images.length >= 6" @click="refInput?.click()">
+                    + 参考图
+                  </el-button>
+                  <input ref="refInput" type="file" accept="image/*" style="display:none" @change="onRefFile" />
                 </div>
-                <input ref="shotInput" type="file" accept="image/*" style="display:none" @change="onShotFile" />
               </div>
-            </template>
 
+              <!-- 漫画格：本格成图（下一格自动带进参考图） -->
+              <div v-if="mode === 'comic'" class="asset-block">
+                <div class="block-title">本格成图</div>
+                <div class="page-shot">
+                  <el-image
+                    v-if="pageImage" class="page-shot-img" :src="pageImage.url" fit="cover"
+                    :preview-src-list="[pageImage.url]" preview-teleported hide-on-click-modal
+                  />
+                  <div v-else class="page-shot-ph"><el-icon><Picture /></el-icon></div>
+                  <div class="page-shot-act">
+                    <el-button size="small" :loading="shotUploading" @click="shotInput?.click()">上传成图</el-button>
+                    <el-button size="small" text :disabled="!pageImage" @click="removePageImage">移除</el-button>
+                    <input ref="shotInput" type="file" accept="image/*" style="display:none" @change="onShotFile" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 约束：固定高度常驻（不跟上面的内容一起被滚走） -->
+          <div class="note-block">
             <div class="block-title">约束 / 改图指令</div>
             <div class="note-grow">
               <el-input v-model="form.note" type="textarea" :rows="2" />
@@ -193,7 +223,8 @@ import { useStudioStore } from '../stores/studio'
 import { useAppStore } from '../stores/app'
 import PlanChangeCard from '../components/PlanChangeCard.vue'
 import ComicStrip, { type ComicPage, type ComicPanel } from '../components/studio/ComicStrip.vue'
-import ComicScript, { type ScriptPanel } from '../components/studio/ComicScript.vue'
+import ComicScript, { type ScriptPanel, type ScriptMeta } from '../components/studio/ComicScript.vue'
+import { TIERS, CLOTH, tierLabel } from '../utils/tier'
 import { planChangeRows, refNames } from '../utils/planDiff'
 
 defineOptions({ name: 'ArtStudioView' })
@@ -218,6 +249,8 @@ type PlanForm = {
   engines: string[]
   ref_images: RefImg[]
   note: string
+  tier: string
+  clothing_level: string
 }
 /** 漫画页上下文（落在方案的 page 字段） */
 type PageMeta = {
@@ -233,7 +266,7 @@ const DEFAULT_ENGINES = ['novelai', 'tsubaki3', 'seedream']
 
 const plans = ref<any[]>([])
 const curPlanId = ref('')
-const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '' })
+const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '', tier: '', clothing_level: '' })
 const form = ref<PlanForm>(blankForm())
 const studio = useStudioStore()
 const store = useAppStore()
@@ -248,6 +281,7 @@ watch([form, curPlanId], () => {
     engines: form.value.engines,
     note: form.value.note,
     ref_images: form.value.ref_images,
+    tier: form.value.tier,
   })
 }, { deep: true })
 const prompts = ref<Record<string, any>>({})
@@ -275,7 +309,9 @@ const outlineLoading = ref(false)
 const outlineCache = ref<Record<string, string>>({})
 // 漫画剧本：一本剧本 = 页/格分条；拆格后每格变成一个方案
 const scriptPanels = ref<ScriptPanel[]>([])
+const scriptMeta = ref<ScriptMeta>({ premise: '', characters: '', style_hint: '', tier: '' })
 const scriptBusy = ref('')
+const scriptDialog = ref(false)
 const blankPage = (): PageMeta => ({ episode_id: '', index: 0, panel_index: 0, prev_plan_id: '', outline_text: '', image: null })
 const pageMeta = ref<PageMeta>(blankPage())
 const pageImage = computed(() => pageMeta.value.image)
@@ -300,6 +336,7 @@ watch([pageMeta, allPanels], () => {
 watch(scriptPanels, () => {
   studio.setScript(scriptPanels.value.map(p => ({
     page: p.page, panel: p.panel, text: p.text, dialogue: p.dialogue, camera: p.camera,
+    tier: p.tier, clothing_level: p.clothing_level,
   })))
 }, { deep: true })
 
@@ -466,6 +503,7 @@ function toComicPanel(p: any): ComicPanel {
     title: p.title || '',
     status: p.status || 'draft',
     promptCount: Number(p.prompt_count) || 0,
+    tier: p.tier || '',
     image: pg.image || null,
   }
 }
@@ -508,7 +546,7 @@ async function loadComics() {
 /** 读本集漫画剧本。 */
 async function loadScript() {
   const eid = episodeId.value
-  if (!eid) { scriptPanels.value = []; return }
+  if (!eid) { scriptPanels.value = []; scriptMeta.value = { premise: '', characters: '', style_hint: '', tier: '' }; return }
   try {
     const r: any = await api.getComicScript(eid)
     scriptPanels.value = ((r?.data?.panels || []) as any[]).map(p => ({
@@ -518,7 +556,15 @@ async function loadScript() {
       dialogue: p.dialogue || '',
       camera: p.camera || '',
       note: p.note || '',
+      tier: p.tier || '',
+      clothing_level: p.clothing_level || '',
     }))
+    scriptMeta.value = {
+      premise: r?.data?.premise || '',
+      characters: r?.data?.characters || '',
+      style_hint: r?.data?.style_hint || '',
+      tier: r?.data?.tier || '',
+    }
   } catch {
     scriptPanels.value = []
   }
@@ -546,7 +592,11 @@ async function saveScript() {
   if (!eid) return ElMessage.warning('先选集号')
   scriptBusy.value = 'save'
   try {
-    const r: any = await api.saveComicScript({ episode_id: eid, panels: scriptPanels.value })
+    const r: any = await api.saveComicScript({
+      episode_id: eid,
+      panels: scriptPanels.value,
+      ...scriptMeta.value,
+    })
     ElMessage.success(`剧本已存：${r?.data?.panel_count ?? scriptPanels.value.length} 格`)
   } catch (e: any) {
     ElMessage.error('存剧本失败：' + (e?.response?.data?.msg || e?.message || e))
@@ -555,19 +605,25 @@ async function saveScript() {
   }
 }
 
-/** 拆格：一条剧本 = 一个方案（页序/格序/上一格链自动排好），之后逐格直投。 */
+/** 拆格：一条剧本 = 一个方案（页序/格序/上一格链/水位自动排好），之后逐格直投。
+ *  先存剧本再拆：拆格永远按当前表格内容走（弹层里改了没存也不丢）。 */
 async function splitScript() {
   const eid = episodeId.value
   if (!eid) return ElMessage.warning('先选集号')
   if (!scriptPanels.value.length) return ElMessage.warning('剧本还没有格')
   scriptBusy.value = 'split'
   try {
+    await api.saveComicScript({
+      episode_id: eid,
+      panels: scriptPanels.value,
+      ...scriptMeta.value,
+    })
     const r: any = await api.splitComicScript({ episode_id: eid, engines: form.value.engines })
     const d = r?.data || {}
     await loadComics()
     const first = allPanels.value.find(p => p.planId === (d.plan_ids || [])[0])
     if (first) { currentPageIndex.value = first.pageIndex; rebuildPages(); await loadPlan(first.planId) }
-    ElMessage.success(`已拆 ${d.created || 0} 格（跳过 ${d.skipped || 0}）`)
+    ElMessage.success(`已拆 ${d.created || 0} 格（跳过 ${d.skipped || 0}，刷新 ${d.refreshed || 0}）`)
   } catch (e: any) {
     ElMessage.error('拆格失败：' + (e?.response?.data?.msg || e?.message || e))
   } finally {
@@ -786,6 +842,8 @@ const formDirty = computed(() => {
   if (form.value.intent_text !== (p.intent_text || '')) return true
   if (form.value.note !== (p.note || '')) return true
   if (form.value.engines.join(',') !== (p.engines || []).join(',')) return true
+  if ((form.value.tier || '') !== (p.tier || '')) return true
+  if ((form.value.clothing_level || '') !== (p.clothing_level || '')) return true
   if (refNames(form.value.ref_images).join(',') !== refNames(p.ref_images).join(',')) return true
   return false
 })
@@ -820,6 +878,8 @@ async function loadPlan(id: string) {
       engines: Array.isArray(d.engines) && d.engines.length ? d.engines : [...DEFAULT_ENGINES],
       ref_images: Array.isArray(d.ref_images) ? d.ref_images : [],
       note: d.note || '',
+      tier: d.tier || '',
+      clothing_level: d.clothing_level || '',
     }
     const pg = d.page || null
     pageMeta.value = pg
@@ -874,6 +934,8 @@ async function savePlan(): Promise<string> {
       engines: form.value.engines,
       ref_images: form.value.ref_images,
       note: form.value.note,
+      tier: form.value.tier,
+      clothing_level: form.value.clothing_level,
       source: 'ui',   // 页面自己改的：不算待审变更，后端不留改前快照
     }
     // 漫画页上下文：漫画模式必带；单图模式下只在原本就是漫画页时带（别把页信息抹掉）
@@ -1036,22 +1098,37 @@ onMounted(async () => {
 .studio-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .w-plan { width: 240px; }
 .block-title { display:flex; align-items:center; gap:6px; margin:14px 0 6px; font-weight:600; font-size:13px; }
-.studio-grid { display:grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr); gap:18px; margin-top:12px; flex:1 0 auto; min-height:0 }
+.studio-grid { display:grid; grid-template-columns: minmax(420px, 1.3fr) minmax(340px, 1fr); gap:18px; margin-top:12px; flex:1 0 auto; min-height:0 }
 @media (max-width: 1000px) { .studio-grid { grid-template-columns: 1fr; flex:0 0 auto } }
 .studio-col { min-width:0; display:flex; flex-direction:column; min-height:0 }
-/* 左栏纵向平分：意图框上半 / 引擎·参考图·约束下半（各占一半；下半内容多时中段内滚，按钮常驻底部） */
-.grow { flex:1 1 0; min-height:120px; display:flex }
+/* 意图框吃掉富余高度；中段（引擎/素材）按内容占位，不够时才自己滚 */
+.grow { flex:1 1 0; min-height:100px; display:flex }
 .grow :deep(.el-textarea) { flex:1; display:flex }
 .grow :deep(.el-textarea__inner) { height:100%; resize:none }
-.lower { flex:1 1 0; min-height:0; display:flex; flex-direction:column }
+.lower { flex:0 1 auto; min-height:0; display:flex; flex-direction:column }
 .lower-body { flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px; display:flex; flex-direction:column }
 .lower .block-title { margin:8px 0 4px }
 .lower > .lower-body > .block-title:first-child { margin-top:0 }
 .lower .engines { gap:2px 12px }
 .lower .refs { gap:8px }
+/* 素材区：参考图 与 本格成图 并排 */
+.asset-row { display:flex; gap:16px; align-items:flex-start }
+.asset-block { flex:1 1 0; min-width:0 }
+.asset-block .block-title { margin:8px 0 4px }
+/* 水位/衣物：贴着引擎区一行，宽度收住，别把整行拉满 */
+.tier-row { display:flex; align-items:center; gap:6px; margin-top:8px }
+.tier-lbl { font-size:12px; color:var(--suli-text-2) }
+.tier-sel { width:110px }
+/* 剧本条（漫画导航行右侧） */
+.script-bar { display:flex; align-items:center; gap:6px; font-size:13px }
+/* 剧本编辑弹层：整表全宽 */
+:deep(.script-dialog .el-dialog__body) { padding-top:8px }
 .note-grow { flex:1 1 auto; min-height:44px; display:flex }
 .note-grow :deep(.el-textarea) { flex:1; display:flex }
 .note-grow :deep(.el-textarea__inner) { height:100%; resize:none }
+/* 约束块：固定高度常驻底部，不被上面的滚动区带走 */
+.note-block { flex:0 0 auto }
+.note-block .block-title { margin:8px 0 4px }
 /* 方案变更卡：夹在内容区和操作行之间，自身不参与伸缩 */
 .chg-card { flex:0 0 auto }
 .prompt-scroll { flex:1 1 0; min-height:0; overflow:auto; padding-right:4px }
@@ -1077,9 +1154,9 @@ onMounted(async () => {
 .ref-add { align-self:center; }
 /* 漫画页：本页成图槽（缩略图 + 上传/移除） */
 .page-shot { display:flex; align-items:center; gap:10px; }
-.page-shot-img { width:72px; height:96px; border-radius:8px; overflow:hidden; background:var(--el-fill-color-light); flex:0 0 auto; }
-.page-shot-ph { width:72px; height:96px; border-radius:8px; background:var(--el-fill-color-light); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--suli-text-3); flex:0 0 auto; }
-.page-shot-act { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+.page-shot-img { width:56px; height:72px; border-radius:8px; overflow:hidden; background:var(--el-fill-color-light); flex:0 0 auto; }
+.page-shot-ph { width:56px; height:72px; border-radius:8px; background:var(--el-fill-color-light); display:flex; align-items:center; justify-content:center; font-size:20px; color:var(--suli-text-3); flex:0 0 auto; }
+.page-shot-act { display:flex; flex-direction:row; gap:6px; align-items:center; }
 .prompt-card { border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:10px; margin-bottom:10px; }
 .prompt-head { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
 .prompt-row { display:flex; gap:8px; margin-top:6px; }

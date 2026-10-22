@@ -1,6 +1,6 @@
 <template>
   <div class="comic-bar">
-    <!-- 集号 + 大纲 -->
+    <!-- 一行：集号 + 大纲 + 剧本条 -->
     <div class="comic-row">
       <span class="lbl">集号</span>
       <b class="tnum ep">{{ episodeId || '未选' }}</b>
@@ -8,7 +8,7 @@
       <el-button size="small" :disabled="!outline" @click="$emit('apply-outline')">写入本页</el-button>
       <span class="suli-muted tnum">{{ outline ? `${outline.length} 字` : '未读' }}</span>
       <span style="flex:1" />
-      <el-button size="small" type="primary" @click="$emit('new-page')">+ 新页</el-button>
+      <slot name="script" />
     </div>
 
     <div v-if="outline" class="outline-box">
@@ -21,56 +21,51 @@
       <div v-else class="outline-peek">{{ peek }}</div>
     </div>
 
-    <slot name="script" />
-
-    <!-- 页条：第几页 -->
-    <div class="strip-head">
+    <!-- 页条 + 格条 同一行：横向排，纵向只占一条 -->
+    <div class="strip-row">
       <span class="lbl">页</span>
-      <span class="suli-muted tnum">{{ pages.length }}</span>
-    </div>
-    <div class="page-strip">
-      <div
-        v-for="p in pages" :key="p.index"
-        class="page-card" :class="{ active: p.index === currentPageIndex }"
-        @click="$emit('select-page', p.index)"
-      >
-        <div class="page-thumb">
-          <el-image v-if="p.image" :src="p.image.url" fit="cover" :preview-src-list="[p.image.url]" preview-teleported hide-on-click-modal />
-          <span v-else class="page-no">{{ p.index }}</span>
+      <div class="page-strip page-strip-pages">
+        <div
+          v-for="p in pages" :key="p.index"
+          class="page-card" :class="{ active: p.index === currentPageIndex }"
+          @click="$emit('select-page', p.index)"
+        >
+          <div class="page-thumb">
+            <el-image v-if="p.image" :src="p.image.url" fit="cover" :preview-src-list="[p.image.url]" preview-teleported hide-on-click-modal />
+            <span v-else class="page-no">{{ p.index }}</span>
+          </div>
+          <div class="page-meta">
+            <b>第{{ p.index }}页</b>
+            <el-tag size="small" type="info">{{ p.panelCount }} 格</el-tag>
+          </div>
+          <div class="page-sub tnum">{{ p.promptCount ? `${p.promptCount} 提示词` : '—' }}</div>
         </div>
-        <div class="page-meta">
-          <b>第{{ p.index }}页</b>
-          <el-tag size="small" type="info">{{ p.panelCount }} 格</el-tag>
-        </div>
-        <div class="page-sub tnum">{{ p.promptCount ? `${p.promptCount} 提示词` : '—' }}</div>
+        <div v-if="!pages.length" class="suli-muted strip-empty">无页</div>
       </div>
-      <div v-if="!pages.length" class="suli-muted strip-empty">无页</div>
-    </div>
 
-    <!-- 格条：当前页的第几格 -->
-    <div class="strip-head">
       <span class="lbl">格</span>
-      <span class="suli-muted tnum">{{ panels.length }}</span>
-      <span style="flex:1" />
-      <el-button size="small" type="primary" plain :disabled="!currentPageIndex" @click="$emit('new-panel')">+ 一格</el-button>
-    </div>
-    <div class="page-strip">
-      <div
-        v-for="p in panels" :key="p.planId"
-        class="page-card" :class="{ active: p.planId === currentPlanId }"
-        @click="$emit('select', p.planId)"
-      >
-        <div class="page-thumb">
-          <el-image v-if="p.image" :src="p.image.url" fit="cover" :preview-src-list="[p.image.url]" preview-teleported hide-on-click-modal />
-          <span v-else class="page-no">{{ p.panelIndex }}</span>
+      <div class="page-strip page-strip-panels">
+        <div
+          v-for="p in panels" :key="p.planId"
+          class="page-card" :class="{ active: p.planId === currentPlanId }"
+          @click="$emit('select', p.planId)"
+        >
+          <div class="page-thumb">
+            <el-image v-if="p.image" :src="p.image.url" fit="cover" :preview-src-list="[p.image.url]" preview-teleported hide-on-click-modal />
+            <span v-else class="page-no">{{ p.panelIndex }}</span>
+          </div>
+          <div class="page-meta">
+            <b>第{{ p.panelIndex }}格</b>
+            <el-tag size="small" :type="statusType(p.status)">{{ statusLabel(p.status) }}</el-tag>
+            <el-tag v-if="p.tier" size="small" type="danger">{{ tierLabel(p.tier) }}</el-tag>
+          </div>
+          <div class="page-sub tnum">{{ p.promptCount ? `${p.promptCount} 提示词` : '—' }}</div>
         </div>
-        <div class="page-meta">
-          <b>第{{ p.panelIndex }}格</b>
-          <el-tag size="small" :type="statusType(p.status)">{{ statusLabel(p.status) }}</el-tag>
-        </div>
-        <div class="page-sub tnum">{{ p.promptCount ? `${p.promptCount} 提示词` : '—' }}</div>
+        <div v-if="!panels.length" class="suli-muted strip-empty">无格</div>
       </div>
-      <div v-if="!panels.length" class="suli-muted strip-empty">无格</div>
+
+      <el-button size="small" type="primary" plain :disabled="!currentPageIndex" @click="$emit('new-panel')">+ 一格</el-button>
+      <el-button size="small" type="primary" plain :disabled="!currentPageIndex" @click="$emit('new-page')">+ 新页</el-button>
     </div>
   </div>
 </template>
@@ -86,6 +81,7 @@ export interface ComicPanel {
   title: string
   status: string
   promptCount: number
+  tier: string
   image: { name: string; path: string; url: string } | null
 }
 /** 一页 = 若干格（按 pageIndex 聚合） */
@@ -126,28 +122,33 @@ function statusLabel(s: string) { return STATUS_LABEL[s] || s }
 function statusType(s: string): 'success' | 'warning' | 'info' {
   return s === 'returned' ? 'success' : s === 'pushed' ? 'warning' : 'info'
 }
+const TIER_LABEL: Record<string, string> = { tease: '暗示', undress: '半露', explicit: '直白', closeup: '特写' }
+function tierLabel(t: string) { return TIER_LABEL[t] || t }
 </script>
 
 <style scoped>
-.comic-bar { margin-top:10px; }
+.comic-bar { margin-top:8px; }
 .comic-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 .comic-row .lbl { font-size:13px; color:var(--suli-text-2); }
 .comic-row .ep { font-size:14px; }
-.outline-box { margin-top:8px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:8px 10px; background:var(--el-fill-color-lighter); }
+.outline-box { margin-top:6px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:6px 10px; background:var(--el-fill-color-lighter); }
 .outline-head { display:flex; align-items:center; gap:8px; font-size:13px; }
-.outline-md { margin:6px 0 0; max-height:220px; overflow:auto; white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.5; }
-.outline-peek { margin-top:4px; font-size:12px; color:var(--suli-text-2); white-space:pre-wrap; word-break:break-word; }
-.strip-head { display:flex; align-items:center; gap:6px; margin-top:10px; }
-.strip-head .lbl { font-size:12px; color:var(--suli-text-2); font-weight:600; }
-.page-strip { display:flex; gap:10px; overflow-x:auto; padding:6px 2px 4px; align-items:stretch; }
-.page-card { flex:0 0 auto; width:104px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:6px; cursor:pointer; background:var(--suli-surface); }
+.outline-md { margin:6px 0 0; max-height:180px; overflow:auto; white-space:pre-wrap; word-break:break-word; font-size:12px; line-height:1.5; }
+.outline-peek { margin-top:3px; font-size:12px; color:var(--suli-text-2); white-space:pre-wrap; word-break:break-word; }
+.strip-row { display:flex; align-items:center; gap:8px; margin-top:8px; min-width:0; }
+.strip-row .lbl { font-size:12px; color:var(--suli-text-2); font-weight:600; flex:0 0 auto; }
+.page-strip { display:flex; gap:8px; overflow-x:auto; padding:2px 0 4px; align-items:stretch; }
+/* 页条按内容宽（页少时不占空），格条吃掉剩余宽度 */
+.page-strip-pages { flex:0 1 auto; min-width:0; }
+.page-strip-panels { flex:1 1 0; min-width:0; }
+.page-card { flex:0 0 auto; width:88px; border:1px solid var(--el-border-color-lighter); border-radius:10px; padding:5px; cursor:pointer; background:var(--suli-surface); }
 .page-card:hover { border-color:var(--suli-primary); }
 .page-card.active { border-color:var(--suli-primary); box-shadow:0 0 0 1px var(--suli-primary) inset; }
-.page-thumb { width:92px; height:116px; border-radius:8px; overflow:hidden; background:var(--el-fill-color-light); display:flex; align-items:center; justify-content:center; }
+.page-thumb { width:76px; height:92px; border-radius:8px; overflow:hidden; background:var(--el-fill-color-light); display:flex; align-items:center; justify-content:center; }
 .page-thumb :deep(.el-image) { width:100%; height:100%; }
-.page-no { font-size:24px; font-weight:800; color:var(--suli-text-3); }
-.page-meta { display:flex; align-items:center; gap:6px; margin-top:6px; font-size:12px; }
+.page-no { font-size:22px; font-weight:800; color:var(--suli-text-3); }
+.page-meta { display:flex; align-items:center; gap:4px; margin-top:5px; font-size:12px; flex-wrap:wrap; }
 .page-meta b { font-size:12px; }
 .page-sub { margin-top:2px; font-size:11px; color:var(--suli-text-3); }
-.strip-empty { font-size:12px; padding:12px 4px; }
+.strip-empty { font-size:12px; padding:8px 4px; }
 </style>

@@ -852,6 +852,115 @@
           "version": "1.1.0"
         }
       }
+    },
+    {
+      "id": "AP-20261022101312-7061",
+      "created_at": "2026-10-22T10:13:12+00:00",
+      "updated_at": "2026-10-22T10:28:41+00:00",
+      "title": "EP-COMIC-TIER 第1页 第1格",
+      "intent_text": "画面：成年女性 A 站在公寓卧室门内，浅蓝近白及腰长发扎成双丸子头，额侧一对黑色弯角，深色长袖上衣与短裤，赤脚踩在地板上。她侧身反手压下门锁，另一条手臂弯里挂着外套。全景平视略偏侧 3/4，房间纵深可见床与椅。床头灯从右侧打来暖橙硬光，窗外冷蓝夜色自左后方勾出肩线一道亮边。\n景别/运镜：全景 / 平视，稍偏侧 3/4\n【本图水位】tease（氛围暗示）\n【衣物档】L0\n备注：动作：成年女性 A 反手把门锁扣下，另一手还提着外套的领口｜拟声：咔哒｜连续：起始格：衣物完整，赤脚，双丸子头未散｜道具：外套挂在臂弯｜光：右侧床头灯暖橙硬光，窗外冷蓝夜色自左后方勾出肩线一道亮边｜格型：establishing",
+      "engines": [
+        "tsubaki3",
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "tease",
+      "clothing_level": "L0",
+      "status": "draft",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-TIER",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "",
+        "image": null
+      }
+    },
+    {
+      "id": "AP-20261022101312-6471",
+      "created_at": "2026-10-22T10:13:12+00:00",
+      "updated_at": "2026-10-22T10:13:12+00:00",
+      "title": "EP-COMIC-TIER 第1页 第2格",
+      "intent_text": "画面：成年女性 A 半转身，浅蓝近白及腰长发与双丸子头随动作轻晃，额侧黑色弯角反射一点灯色，蓝瞳垂向床沿。深色长袖上衣与短裤的布料被转身带起一道褶。她把外套甩落在椅背上，赤脚在地板上换了一步重心。中景平视，右侧床头灯暖光勾脸侧，明暗分界硬。\n景别/运镜：中景 / 平视\n【本图水位】tease（氛围暗示）\n【衣物档】L0\n备注：动作：A 把外套甩落在椅背上，人已转身朝床的方向｜拟声：啪｜连续：衣物仍完整，赤脚，双丸子头未散，外套从臂弯转移到椅背｜道具：外套搭在椅背一半，椅面空出；床沿被单平整｜光：右侧床头灯暖光为主，硬光在她脸侧留一条明暗分界，窗外冷蓝补光弱｜格型：medium",
+      "engines": [
+        "tsubaki3",
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "tease",
+      "clothing_level": "L0",
+      "status": "draft",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-TIER",
+        "index": 1,
+        "panel_index": 2,
+        "prev_plan_id": "AP-20261022101312-7061",
+        "outline_text": "",
+        "image": null
+      }
+    },
+    {
+      "id": "AP-20261022101312-8141",
+      "created_at": "2026-10-22T10:13:12+00:00",
+      "updated_at": "2026-10-22T10:13:12+00:00",
+      "title": "EP-COMIC-TIER 第1页 第3格",
+      "intent_text": "画面：成年女性 A 的腰腹与手进入画面，深色长袖上衣的下摆被指尖捏住掀起一寸，露出腰侧一小条皮肤。浅蓝近白及腰长发的发尾垂到画面边缘，双丸子头只入镜一角。特写俯视，右侧床头灯暖光贴着手背，硬光在布料褶皱里压出窄影。\n景别/运镜：特写 / 俯视\n【本图水位】undress（半露）\n【衣物档】L1\n备注：动作：A 的手指捏住上衣下摆，缓缓向上掀起一寸｜连续：外套已在椅背，赤脚，双丸子头未散，衣物由完整转为微乱｜道具：上衣下摆被捏起，短裤仍在腰上，床沿被单轻陷｜光：右侧床头灯暖光贴近打在手背与布料上，硬光，指缝下留小片阴影｜格型：detail",
+      "engines": [
+        "tsubaki3",
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "undress",
+      "clothing_level": "L1",
+      "status": "draft",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-TIER",
+        "index": 1,
+        "panel_index": 3,
+        "prev_plan_id": "AP-20261022101312-6471",
+        "outline_text": "",
+        "image": null
+      }
+    },
+    {
+      "id": "AP-20261022101312-7266",
+      "created_at": "2026-10-22T10:13:12+00:00",
+      "updated_at": "2026-10-22T10:13:12+00:00",
+      "title": "EP-COMIC-TIER 第1页 第4格",
+      "intent_text": "画面：成年女性 A 坐在床沿，浅蓝近白及腰长发的一侧丸子松开，长发垂到胸前，额侧黑色弯角压着灯的亮边，蓝瞳抬起看向画外。深色长袖上衣已从一侧肩头滑落，她的前臂横在胸前，上臂压住其余，短裤仍在腰上，被单堆在大腿侧。近景侧 3/4 过肩略仰，画面只收到她的脸、肩与胸口上缘，其余留在画外。右侧床头灯暖硬光打亮锁骨与肩线，冷蓝只在发梢背面留一道边光。\n台词：……先别开灯。\n景别/运镜：近景 / 侧 3/4 过肩，略仰\n【本图水位】explicit（直白）\n【衣物档】L2\n备注：动作：A 坐在床沿，上衣已从肩头滑落一侧，手停在领口没再往下｜连续：外套在椅背，赤脚，上衣由微乱到半褪；双丸子头一侧已松，长发垂到胸前｜道具：上衣滑到一侧肩下，前臂横挡胸前，短裤仍在，被单堆在腿侧｜光：右侧床头灯暖光为唯一主光，硬光打亮她的锁骨与肩，窗外冷蓝在发梢背面留一道冷边｜格型：emotional",
+      "engines": [
+        "tsubaki3",
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "explicit",
+      "clothing_level": "L2",
+      "status": "pushed",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-TIER",
+        "index": 1,
+        "panel_index": 4,
+        "prev_plan_id": "AP-20261022101312-8141",
+        "outline_text": "",
+        "image": null
+      },
+      "push": {
+        "package_id": "PKG-ART-20261022101312-1138",
+        "at": "2026-10-22T10:13:12+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261022101312-1138",
+        "engines": [
+          "tsubaki3",
+          "novelai"
+        ]
+      }
     }
   ],
   "comics": {
@@ -1151,6 +1260,555 @@
         }
       ],
       "updated_at": "2026-10-22T09:58:22+00:00"
+    },
+    "EP-COMIC-TIER": {
+      "episode_id": "EP-COMIC-TIER",
+      "title": "深夜归巢",
+      "premise": "",
+      "characters": "A 成年女性，深色长袖上衣与深色短裤，赤脚，浅蓝近白及腰长发扎成双丸子头，额侧一对黑色弯角，蓝瞳 浅蓝近白及腰长发、双丸子头、额侧黑色弯角、蓝瞳、深色长袖上衣与短裤、赤脚",
+      "style_hint": "写实电影感材质：干净细线勾轮廓，平涂加少量厚涂过渡，配色限定在暖橙与冷蓝两极，皮肤高光柔、布料无反光，整体覆轻微纸纹颗粒",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在公寓卧室门内，浅蓝近白及腰长发扎成双丸子头，额侧一对黑色弯角，深色长袖上衣与短裤，赤脚踩在地板上。她侧身反手压下门锁，另一条手臂弯里挂着外套。全景平视略偏侧 3/4，房间纵深可见床与椅。床头灯从右侧打来暖橙硬光，窗外冷蓝夜色自左后方勾出肩线一道亮边。",
+          "dialogue": "",
+          "camera": "全景 / 平视，稍偏侧 3/4",
+          "note": "动作：成年女性 A 反手把门锁扣下，另一手还提着外套的领口｜拟声：咔哒｜连续：起始格：衣物完整，赤脚，双丸子头未散｜道具：外套挂在臂弯，房门半掩已合，椅背空着，床头灯亮着｜光：床头灯在画面右侧作暖橙主光，硬光，窗外冷蓝夜色从左后方补一道边缘光｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 半转身，浅蓝近白及腰长发与双丸子头随动作轻晃，额侧黑色弯角反射一点灯色，蓝瞳垂向床沿。深色长袖上衣与短裤的布料被转身带起一道褶。她把外套甩落在椅背上，赤脚在地板上换了一步重心。中景平视，右侧床头灯暖光勾脸侧，明暗分界硬。",
+          "dialogue": "",
+          "camera": "中景 / 平视",
+          "note": "动作：A 把外套甩落在椅背上，人已转身朝床的方向｜拟声：啪｜连续：衣物仍完整，赤脚，双丸子头未散，外套从臂弯转移到椅背｜道具：外套搭在椅背一半，椅面空出；床沿被单平整｜光：右侧床头灯暖光为主，硬光在她脸侧留一条明暗分界，窗外冷蓝补光弱｜格型：medium",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 3,
+          "text": "成年女性 A 的腰腹与手进入画面，深色长袖上衣的下摆被指尖捏住掀起一寸，露出腰侧一小条皮肤。浅蓝近白及腰长发的发尾垂到画面边缘，双丸子头只入镜一角。特写俯视，右侧床头灯暖光贴着手背，硬光在布料褶皱里压出窄影。",
+          "dialogue": "",
+          "camera": "特写 / 俯视",
+          "note": "动作：A 的手指捏住上衣下摆，缓缓向上掀起一寸｜连续：外套已在椅背，赤脚，双丸子头未散，衣物由完整转为微乱｜道具：上衣下摆被捏起，短裤仍在腰上，床沿被单轻陷｜光：右侧床头灯暖光贴近打在手背与布料上，硬光，指缝下留小片阴影｜格型：detail",
+          "tier": "undress",
+          "clothing_level": "L1"
+        },
+        {
+          "page": 1,
+          "panel": 4,
+          "text": "成年女性 A 坐在床沿，浅蓝近白及腰长发的一侧丸子松开，长发垂到胸前，额侧黑色弯角压着灯的亮边，蓝瞳抬起看向画外。深色长袖上衣已从一侧肩头滑落，她的前臂横在胸前，上臂压住其余，短裤仍在腰上，被单堆在大腿侧。近景侧 3/4 过肩略仰，画面只收到她的脸、肩与胸口上缘，其余留在画外。右侧床头灯暖硬光打亮锁骨与肩线，冷蓝只在发梢背面留一道边光。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4 过肩，略仰",
+          "note": "动作：A 坐在床沿，上衣已从肩头滑落一侧，手停在领口没再往下｜连续：外套在椅背，赤脚，上衣由微乱到半褪；双丸子头一侧已松，长发垂到胸前｜道具：上衣滑到一侧肩下，前臂横挡胸前，短裤仍在，被单堆在腿侧｜光：右侧床头灯暖光为唯一主光，硬光打亮她的锁骨与肩，窗外冷蓝在发梢背面留一道冷边｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:13:12+00:00"
+    },
+    "EP-TIER-ED4E54": {
+      "episode_id": "EP-TIER-ED4E54",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:40+00:00"
+    },
+    "EP-LINK-0790FC": {
+      "episode_id": "EP-LINK-0790FC",
+      "title": "EP-LINK-0790FC 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:41+00:00"
+    },
+    "EP-SCRIPT-681C79": {
+      "episode_id": "EP-SCRIPT-681C79",
+      "title": "EP-SCRIPT-681C79 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:41+00:00"
+    },
+    "EP-TIER-075D6B": {
+      "episode_id": "EP-TIER-075D6B",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:56+00:00"
+    },
+    "EP-LINK-5063FB": {
+      "episode_id": "EP-LINK-5063FB",
+      "title": "EP-LINK-5063FB 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:57+00:00"
+    },
+    "EP-SCRIPT-D8A541": {
+      "episode_id": "EP-SCRIPT-D8A541",
+      "title": "EP-SCRIPT-D8A541 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:21:57+00:00"
+    },
+    "EP-TIER-5E1686": {
+      "episode_id": "EP-TIER-5E1686",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:22:47+00:00"
+    },
+    "EP-LINK-64511B": {
+      "episode_id": "EP-LINK-64511B",
+      "title": "EP-LINK-64511B 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:22:47+00:00"
+    },
+    "EP-SCRIPT-32FB9B": {
+      "episode_id": "EP-SCRIPT-32FB9B",
+      "title": "EP-SCRIPT-32FB9B 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:22:48+00:00"
+    },
+    "EP-TIER-957AA0": {
+      "episode_id": "EP-TIER-957AA0",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:28:57+00:00"
+    },
+    "EP-LINK-DD31DA": {
+      "episode_id": "EP-LINK-DD31DA",
+      "title": "EP-LINK-DD31DA 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:28:57+00:00"
+    },
+    "EP-SCRIPT-77B414": {
+      "episode_id": "EP-SCRIPT-77B414",
+      "title": "EP-SCRIPT-77B414 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:28:58+00:00"
+    },
+    "EP-TIER-806977": {
+      "episode_id": "EP-TIER-806977",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:29:10+00:00"
+    },
+    "EP-LINK-C90B25": {
+      "episode_id": "EP-LINK-C90B25",
+      "title": "EP-LINK-C90B25 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:29:10+00:00"
+    },
+    "EP-SCRIPT-FA4323": {
+      "episode_id": "EP-SCRIPT-FA4323",
+      "title": "EP-SCRIPT-FA4323 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:29:11+00:00"
+    },
+    "EP-TIER-BF7644": {
+      "episode_id": "EP-TIER-BF7644",
+      "title": "深夜归巢",
+      "premise": "深夜归巢",
+      "characters": "A 成年女性 浅蓝长发",
+      "style_hint": "细线勾轮廓，暖橙冷蓝两极",
+      "tier": "tease",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "成年女性 A 站在门内，浅蓝长发。",
+          "dialogue": "",
+          "camera": "全景 / 平视",
+          "note": "动作：她反手压下门锁｜拟声：咔哒｜连续：起始格：衣物完整，赤脚｜光：床头灯从右侧打来｜格型：establishing",
+          "tier": "tease",
+          "clothing_level": "L0"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "成年女性 A 坐在床沿，长发垂到胸前。",
+          "dialogue": "……先别开灯。",
+          "camera": "近景 / 侧 3/4",
+          "note": "动作：她坐在床沿，手停在领口｜连续：上衣半褪，被单堆在腿侧｜光：暖硬光打亮锁骨｜格型：emotional",
+          "tier": "explicit",
+          "clothing_level": "L2"
+        }
+      ],
+      "updated_at": "2026-10-22T10:43:23+00:00"
+    },
+    "EP-LINK-F86837": {
+      "episode_id": "EP-LINK-F86837",
+      "title": "EP-LINK-F86837 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "少女推门",
+          "dialogue": "",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她回头看货架",
+          "dialogue": "",
+          "camera": "近景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:43:23+00:00"
+    },
+    "EP-SCRIPT-BDDBFC": {
+      "episode_id": "EP-SCRIPT-BDDBFC",
+      "title": "EP-SCRIPT-BDDBFC 漫画剧本",
+      "premise": "",
+      "characters": "",
+      "style_hint": "",
+      "tier": "",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "改过的第一格",
+          "dialogue": "台词一",
+          "camera": "中景",
+          "note": "",
+          "tier": "",
+          "clothing_level": ""
+        }
+      ],
+      "updated_at": "2026-10-22T10:43:23+00:00"
     }
   }
 }

@@ -13,8 +13,8 @@
             <el-breadcrumb-item>{{ route.meta.title || '工作台' }}</el-breadcrumb-item>
           </el-breadcrumb>
           <span style="flex:1" />
-          <span class="suli-muted hide-narrow">项目</span>
-          <el-select v-model="store.projectId" placeholder="项目" class="hide-narrow" style="width:140px" size="small">
+          <span class="suli-muted hide-mid">项目</span>
+          <el-select v-model="store.projectId" placeholder="项目" class="hide-narrow top-sel-project" size="small">
             <el-option v-for="p in store.projects" :key="p.id" :label="p.name" :value="p.id" />
           </el-select>
           <el-button size="small" class="hide-narrow" @click="openProjectDialog('create')">新建</el-button>
@@ -28,8 +28,8 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <span class="suli-muted">Episode</span>
-          <el-select v-model="episodePick" filterable placeholder="选择集号" style="width:150px" size="small" :loading="episodeLoading" @change="onEpisodePicked">
+          <span class="suli-muted hide-mid">Episode</span>
+          <el-select v-model="episodePick" filterable placeholder="选择集号" class="top-sel-episode" size="small" :loading="episodeLoading" @change="onEpisodePicked">
             <el-option
               v-for="e in episodeOptions"
               :key="e.id"
@@ -477,6 +477,11 @@ html,body,#app{height:100%;margin:0;overflow:hidden}
 .main{flex:1;display:flex;flex-direction:column;min-width:0}
 .topbar{margin:12px 12px 0;padding:8px 12px;display:flex;flex-direction:column;gap:6px}
 .topbar-row{display:flex;gap:8px;align-items:center;width:100%}
+/* 顶栏不许被挤成竖排：标签不换行、选择器可缩但不塌 */
+.topbar-row .el-breadcrumb{flex:0 0 auto;white-space:nowrap}
+.topbar-row .suli-muted{white-space:nowrap}
+.top-sel-project{width:140px;min-width:96px;flex:0 1 auto}
+.top-sel-episode{width:150px;min-width:110px;flex:0 1 auto}
 .topbar-steps{display:flex;gap:8px;align-items:center;width:100%;border-top:1px solid var(--suli-border);padding-top:6px}
 .topbar-steps .el-steps{flex:1}
 .center{flex:1;padding:12px;overflow:auto}
@@ -484,4 +489,6 @@ html,body,#app{height:100%;margin:0;overflow:hidden}
 .qr-fab{position:fixed;bottom:16px;z-index:1890;box-shadow:var(--suli-shadow);background:var(--suli-surface)}
 @media (max-width: 1100px) { .topbar-steps{max-width:340px} }
 @media (max-width: 900px) { .topbar-steps, .hide-narrow{display:none} }
+/* 中等宽度：顶栏标签先让位（选择器本身带占位文字，语义不丢） */
+@media (max-width: 1500px) { .hide-mid{display:none} }
 </style>

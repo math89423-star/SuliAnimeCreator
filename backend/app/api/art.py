@@ -129,6 +129,46 @@ def _norm_engines(raw):
     return out
 
 
+# 水位档（与 L-Port comic_page_diverge、skills/video/nsfw-directing 同一套四档）
+# 空串 = 常规镜（不标档位就是常规）。
+_TIERS = ("tease", "undress", "explicit", "closeup")
+# 衣物档 L0-L4：L0 完整 → L4 全裸（跨格只许收紧，不许倒退）
+_CLOTHING = ("L0", "L1", "L2", "L3", "L4")
+_TIER_CN = {"tease": "氛围暗示", "undress": "半露", "explicit": "直白", "closeup": "特写"}
+
+
+def _norm_tier(raw):
+    """水位档归一：空串（常规）或四档之一。旧写法 nsfw/sfw 折到四档。"""
+    k = str(raw or "").strip().lower()
+    if not k:
+        return ""
+    if k == "nsfw":
+        return "explicit"
+    if k == "sfw":
+        return "tease"
+    return k if k in _TIERS else ""
+
+
+def _norm_clothing(raw):
+    """衣物档归一：空串（未定）或 L0-L4（也接受 0-4 数字写法）。"""
+    k = str(raw or "").strip().upper()
+    if not k:
+        return ""
+    if k.isdigit():
+        k = "L" + k
+    return k if k in _CLOTHING else ""
+
+
+def _tier_line(tier, clothing):
+    """档位 → 意图文本里的水位说明（模型只看文本，档位必须写进去）。"""
+    bits = []
+    if tier:
+        bits.append("【本图水位】%s（%s）" % (tier, _TIER_CN.get(tier, tier)))
+    if clothing:
+        bits.append("【衣物档】%s" % clothing)
+    return "\n".join(bits)
+
+
 def _norm_refs(raw):
     """参考图归一：[{name, path, url}]，最多 6 张（对齐 L-Port ref_images 上限）。
 
@@ -238,7 +278,7 @@ def _trim(v):
 
 
 def _plan_snapshot(p):
-    """方案状态快照（变更 diff 的对照基准）：五个可改字段的归一化值。"""
+    """方案状态快照（变更 diff 的对照基准）：可改字段的归一化值。"""
     return {
         "title": p.get("title") or "",
         "intent_text": p.get("intent_text") or "",
@@ -249,6 +289,8 @@ def _plan_snapshot(p):
             if isinstance(r, dict)
         ],
         "note": p.get("note") or "",
+        "tier": p.get("tier") or "",
+        "clothing_level": p.get("clothing_level") or "",
     }
 
 
@@ -261,6 +303,8 @@ def _plan_projection(p):
         "engines": p.get("engines") or [],
         "ref_images": p.get("ref_images") or [],
         "note": p.get("note") or "",
+        "tier": p.get("tier") or "",
+        "clothing_level": p.get("clothing_level") or "",
         "status": p.get("status") or "draft",
         "push": p.get("push") or None,
         "page": p.get("page") or None,
@@ -335,6 +379,10 @@ def upsert_plan():
         p["ref_images"] = _norm_refs(b.get("ref_images"))
     if "note" in b:
         p["note"] = _trim(b.get("note"))
+    if "tier" in b:
+        p["tier"] = _norm_tier(b.get("tier"))
+    if "clothing_level" in b:
+        p["clothing_level"] = _norm_clothing(b.get("clothing_level"))
     if "page" in b:
         p["page"] = _norm_page(b.get("page"))
     # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
@@ -436,7 +484,7 @@ def delete_plan_image(plan_id):
 
 
 def _norm_script_panel(raw):
-    """一格剧本条目归一：{page, panel, text, dialogue, camera, note}。"""
+    """一格剧本条目归一：{page, panel, text, dialogue, camera, note, tier, clothing_level}。"""
     if not isinstance(raw, dict):
         return None
     try:
@@ -451,25 +499,36 @@ def _norm_script_panel(raw):
     dialogue = str(raw.get("dialogue") or "").strip()[:_SCRIPT_PANEL_CAP]
     camera = str(raw.get("camera") or "").strip()[:200]
     note = str(raw.get("note") or "").strip()[:2000]
+    tier = _norm_tier(raw.get("tier"))
+    clothing = _norm_clothing(raw.get("clothing_level"))
     if page <= 0:
         page = 1
     if panel <= 0:
         panel = 1
-    if not (text or dialogue or camera or note):
+    if not (text or dialogue or camera or note or tier or clothing):
         return None
     return {"page": page, "panel": panel, "text": text, "dialogue": dialogue,
-            "camera": camera, "note": note}
+            "camera": camera, "note": note, "tier": tier, "clothing_level": clothing}
 
 
 def _script_of(eid):
     return (_ART_DB.get("comics") or {}).get(eid)
 
 
-def _save_script(eid, title, panels):
+def _save_script(eid, title, panels, meta=None):
+    """存一本漫画剧本（按集号一份）。
+
+    meta：本本元信息 —— premise（前提）/ characters（角色设定）/ style_hint（画风）/ tier（默认水位）。
+    """
+    meta = meta if isinstance(meta, dict) else {}
     comics = _ART_DB.setdefault("comics", {})
     comics[eid] = {
         "episode_id": eid,
         "title": (title or "").strip()[:200] or ("%s 漫画剧本" % eid),
+        "premise": str(meta.get("premise") or "").strip()[:2000],
+        "characters": str(meta.get("characters") or "").strip()[:4000],
+        "style_hint": str(meta.get("style_hint") or "").strip()[:1000],
+        "tier": _norm_tier(meta.get("tier")),
         "panels": panels,
         "updated_at": _anow(),
     }
@@ -478,7 +537,7 @@ def _save_script(eid, title, panels):
 
 
 def _panel_intent(p):
-    """一格剧本 → 方案意图文本（画面/台词/景别，页序由直投时统一补）。"""
+    """一格剧本 → 方案意图文本（画面/台词/景别/水位，页序由直投时统一补）。"""
     bits = []
     if p.get("text"):
         bits.append("画面：%s" % p["text"])
@@ -486,6 +545,8 @@ def _panel_intent(p):
         bits.append("台词：%s" % p["dialogue"])
     if p.get("camera"):
         bits.append("景别/运镜：%s" % p["camera"])
+    if p.get("tier") or p.get("clothing_level"):
+        bits.append(_tier_line(p.get("tier"), p.get("clothing_level")))
     if p.get("note"):
         bits.append("备注：%s" % p["note"])
     return "\n".join(bits)[:_ENGINE_CAP]
@@ -498,6 +559,20 @@ def _outline_of(eid):
         return (_EPS.get(eid) or {}).get("outline_md") or ""
     except Exception:
         return ""
+
+
+def _outline_premise(md):
+    """从大纲取「方向一句话」（没有就空）。"""
+    lines = (md or "").splitlines()
+    for i, ln in enumerate(lines):
+        s = ln.strip()
+        if s.startswith("#") and "方向" in s:
+            for nx in lines[i + 1:]:
+                t = nx.strip()
+                if t:
+                    return t[:2000]
+            return ""
+    return ""
 
 
 def _outline_to_panels(md, per_page=4):
@@ -536,19 +611,22 @@ def _outline_to_panels(md, per_page=4):
             "dialogue": "",
             "camera": r["camera"],
             "note": r["note"],
+            "tier": "",
+            "clothing_level": "",
         })
     return out[:_SCRIPT_MAX_PANELS]
 
 
 @bp.get("/comic-script")
 def get_comic_script():
-    """读本集的漫画剧本（页/格分条）。"""
+    """读本集的漫画剧本（页/格分条 + 本本元信息）。"""
     eid = str(request.args.get("episode_id") or "").strip()
     if not eid:
         return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
     sc = _script_of(eid)
     if sc is None:
-        return ok({"episode_id": eid, "title": "", "panels": [], "updated_at": "", "exists": False})
+        return ok({"episode_id": eid, "title": "", "premise": "", "characters": "",
+                   "style_hint": "", "tier": "", "panels": [], "updated_at": "", "exists": False})
     d = dict(sc)
     d["exists"] = True
     return ok(d)
@@ -558,7 +636,8 @@ def get_comic_script():
 def save_comic_script():
     """存本集的漫画剧本（整体覆盖）。
 
-    body: {episode_id*, title?, panels*: [{page, panel, text, dialogue, camera, note}]}
+    body: {episode_id*, title?, premise?, characters?, style_hint?, tier?,
+           panels*: [{page, panel, text, dialogue, camera, note, tier, clothing_level}]}
     """
     b = request.get_json(force=True, silent=True) or {}
     eid = str(b.get("episode_id") or "").strip()
@@ -573,8 +652,9 @@ def save_comic_script():
         if p:
             panels.append(p)
     panels.sort(key=lambda x: (x["page"], x["panel"]))
-    d = _save_script(eid, b.get("title"), panels)
-    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels), "updated_at": d["updated_at"]})
+    d = _save_script(eid, b.get("title"), panels, b)
+    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels),
+               "tier": d["tier"], "updated_at": d["updated_at"]})
 
 
 @bp.post("/comic-script/from-outline")
@@ -593,8 +673,16 @@ def comic_script_from_outline():
     panels = _outline_to_panels(md, b.get("per_page") or 4)
     if not panels:
         return jsonify({"code": 4004, "msg": "大纲里没解析出分镜"}), 400
-    d = _save_script(eid, b.get("title"), panels)
-    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels), "updated_at": d["updated_at"]})
+    old = _script_of(eid) or {}
+    meta = {
+        "premise": b.get("premise") if b.get("premise") is not None else (_outline_premise(md) or old.get("premise") or ""),
+        "characters": b.get("characters") if b.get("characters") is not None else (old.get("characters") or ""),
+        "style_hint": b.get("style_hint") if b.get("style_hint") is not None else (old.get("style_hint") or ""),
+        "tier": b.get("tier") if b.get("tier") is not None else (old.get("tier") or ""),
+    }
+    d = _save_script(eid, b.get("title"), panels, meta)
+    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels),
+               "premise": d["premise"], "tier": d["tier"], "updated_at": d["updated_at"]})
 
 
 @bp.post("/comic-script/split")
@@ -622,15 +710,25 @@ def comic_script_split():
             existing[(int(pg.get("index") or 0), int(pg.get("panel_index") or 0))] = p
 
     now = _anow()
-    created, skipped, plan_ids = [], [], []
+    created, skipped, refreshed, plan_ids = [], [], [], []
     prev_plan_id = ""
+    book_tier = _norm_tier(sc.get("tier"))
     for it in panels:
         key = (int(it.get("page") or 1), int(it.get("panel") or 1))
+        tier = _norm_tier(it.get("tier")) or book_tier
+        clothing = _norm_clothing(it.get("clothing_level"))
         old = existing.get(key)
         if old is not None:
             skipped.append(old.get("id"))
             plan_ids.append(old.get("id"))
             prev_plan_id = old.get("id") or prev_plan_id
+            # 已存在的格：未投递的按剧本刷新（剧本改了要跟得上）；已投递/已回传的不动
+            if (old.get("status") or "draft") == "draft":
+                old["intent_text"] = _panel_intent(it)
+                old["tier"] = tier
+                old["clothing_level"] = clothing
+                old["updated_at"] = now
+                refreshed.append(old.get("id"))
             continue
         pid = "AP-%s-%04d" % (_time.strftime("%Y%m%d%H%M%S"), _random.randint(0, 9999))
         p = {
@@ -640,6 +738,8 @@ def comic_script_split():
             "engines": list(engines),
             "ref_images": [],
             "note": "",
+            "tier": tier,
+            "clothing_level": clothing,
             "status": "draft",
             "prompts": {},
             "page": {
@@ -654,7 +754,102 @@ def comic_script_split():
         prev_plan_id = pid
     _apersist()
     return ok({"episode_id": eid, "created": len(created), "skipped": len(skipped),
+               "refreshed": len(refreshed),
                "created_ids": created, "plan_ids": plan_ids, "panel_count": len(panels)})
+
+
+def _comic_plan_to_panels(plan):
+    """L-Port comic_page_diverge 的 panel_plan → 本仓剧本格条目。
+
+    字段映射：narrative→画面、dialogue→台词、shot+camera→景别机位、
+    action/sfx/continuity/props/light→备注、tier→水位、clothing_level→衣物档。
+    """
+    out = []
+    for pg in ((plan or {}).get("pages") or []):
+        try:
+            pno = int(pg.get("page") or 0)
+        except (TypeError, ValueError):
+            pno = 0
+        if pno <= 0:
+            pno = 1
+        for i, pn in enumerate(pg.get("panels") or []):
+            if not isinstance(pn, dict):
+                continue
+            try:
+                idx = int(pn.get("index") or 0)
+            except (TypeError, ValueError):
+                idx = 0
+            if idx <= 0:
+                idx = i + 1
+            cam = " / ".join(x for x in (str(pn.get("shot") or "").strip(),
+                                         str(pn.get("camera") or "").strip()) if x)
+            note_bits = []
+            for label, key in (("动作", "action"), ("拟声", "sfx"), ("连续", "continuity"),
+                               ("道具", "props"), ("光", "light"), ("格型", "panel_type")):
+                v = str(pn.get(key) or "").strip()
+                if v:
+                    note_bits.append("%s：%s" % (label, v))
+            item = {
+                "page": pno,
+                "panel": idx,
+                "text": str(pn.get("narrative") or "").strip()[:_SCRIPT_PANEL_CAP],
+                "dialogue": str(pn.get("dialogue") or "").strip()[:_SCRIPT_PANEL_CAP],
+                "camera": cam[:200],
+                "note": "｜".join(note_bits)[:2000],
+                "tier": _norm_tier(pn.get("tier")),
+                "clothing_level": _norm_clothing(pn.get("clothing_level")),
+            }
+            if not (item["text"] or item["dialogue"] or item["camera"] or item["note"]):
+                continue
+            out.append(item)
+    out.sort(key=lambda x: (x["page"], x["panel"]))
+    return out[:_SCRIPT_MAX_PANELS]
+
+
+@bp.post("/comic-plan/import")
+def comic_plan_import():
+    """收 L-Port 整页分镜回传（comic_page_diverge 的 panel_plan）→ 落成本集漫画剧本。
+
+    body: {episode_id*, panel_plan? | output?, title?, premise?, characters?, style_hint?, tier?}
+    → {panel_count, panels, tier}
+    """
+    b = request.get_json(force=True, silent=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺字段: episode_id"}), 400
+    plan = b.get("panel_plan")
+    if not isinstance(plan, dict):
+        out = b.get("output")
+        plan = out.get("panel_plan") if isinstance(out, dict) else None
+    if not isinstance(plan, dict):
+        plan = {}
+    panels = _comic_plan_to_panels(plan)
+    if not panels:
+        return jsonify({"code": 4004, "msg": "panel_plan 里没有格：检查 L-Port 回传的是 comic_page_diverge 输出"}), 400
+    old = _script_of(eid) or {}
+
+    def _pick(key, fallback=""):
+        v = b.get(key)
+        return v if v is not None else fallback
+
+    chars = b.get("characters")
+    if chars is None:
+        arr = plan.get("characters") or []
+        if isinstance(arr, list):
+            chars = "；".join(
+                " ".join(str(x.get(k) or "") for k in ("id", "desc", "anchor") if x.get(k)).strip()
+                for x in arr if isinstance(x, dict)
+            )
+        else:
+            chars = old.get("characters") or ""
+    d = _save_script(eid, _pick("title", plan.get("title") or old.get("title")), panels, {
+        "premise": _pick("premise", old.get("premise") or ""),
+        "characters": chars or "",
+        "style_hint": _pick("style_hint", plan.get("style_base") or old.get("style_hint") or ""),
+        "tier": _pick("tier", old.get("tier") or ""),
+    })
+    return ok({"episode_id": eid, "title": d["title"], "panel_count": len(panels),
+               "tier": d["tier"], "updated_at": d["updated_at"]})
 
 
 def _inbox_root():
@@ -696,6 +891,13 @@ def push_lport():
     # 页面上下文不进它眼里就等于没给。原始意图仍留在方案的 intent_text 里。
     pg = p.get("page") or {}
     intent = (p.get("intent_text") or "").strip()
+    tier = _norm_tier(p.get("tier"))
+    clothing = _norm_clothing(p.get("clothing_level"))
+    # 漫画剧本的本本元信息（前提/角色/画风/默认水位）——直投包要给 L-Port 整页分格用
+    sc = _script_of(pg.get("episode_id")) if pg.get("episode_id") else None
+    sc = sc or {}
+    if not tier:
+        tier = _norm_tier(sc.get("tier"))
     ctx_bits = []
     if pg.get("episode_id"):
         ctx_bits.append("本集集号：%s" % pg["episode_id"])
@@ -704,10 +906,18 @@ def push_lport():
         if pg.get("panel_index"):
             pos += " 第 %s 格" % pg["panel_index"]
         ctx_bits.append("本格是漫画%s：只画这一格画面，人物/服装/场景/画风与前一格保持一致" % pos)
+    if tier:
+        ctx_bits.append("本格水位：%s（%s）——按该档位如实画，不降档"
+                        % (tier, _TIER_CN.get(tier, tier)))
+    if clothing:
+        ctx_bits.append("本格衣物档：%s（跨格只许收紧，不许倒退）" % clothing)
     if pg.get("outline_text"):
         ctx_bits.append("本集大纲（作画面依据，不要把文字画进画面）：\n%s" % pg["outline_text"][:6000])
     if ctx_bits:
         intent = (intent + "\n\n【漫画页上下文】\n" + "\n".join(ctx_bits)).strip()[:40000]
+    elif tier:
+        # 单图方案：水位写进意图文本（模型只读文本）
+        intent = (intent + "\n\n" + _tier_line(tier, clothing)).strip()[:40000]
     # 参考图：优先用方案自带的；漫画格自带为空时，接上链上上一格的成图。
     # 拆格时上一格还没出图，成图是后来挂的 —— 衔接只能发生在直投这一刻。
     refs = list(p.get("ref_images") or [])
@@ -718,6 +928,21 @@ def push_lport():
         if isinstance(pimg, dict) and pimg.get("name"):
             refs = [pimg]
             ref_from = "prev_panel"
+    # 漫画段：L-Port 侧可用 comic_page_diverge 走「整页分格」链路时吃这段
+    comic = None
+    if pg.get("episode_id"):
+        comic = {
+            "episode_id": pg.get("episode_id"),
+            "index": pg.get("index"),
+            "panel_index": pg.get("panel_index"),
+            "premise": sc.get("premise") or "",
+            "characters": sc.get("characters") or "",
+            "style_hint": sc.get("style_hint") or "",
+            "tier": tier,
+            "clothing_level": clothing,
+            "page_count": 1,
+            "panels_per_page": 0,
+        }
     art_plan = {
         "package_id": pkg_id, "kind": "art_plan",
         "plan_id": pid, "title": p.get("title") or "",
@@ -726,7 +951,10 @@ def push_lport():
         "reference_images": [r.get("name") for r in refs],
         "user_image_instruction": p.get("note") or "",
         "note": p.get("note") or "",
+        "tier": tier,
+        "clothing_level": clothing,
         "comic_context": pg or None,
+        "comic": comic,
         "created_at": _anow(),
     }
     manifest = {

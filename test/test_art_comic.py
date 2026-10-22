@@ -152,6 +152,161 @@ def test_comic_pages_flow():
                 pass
 
 
+def test_plan_tier_diff_snapshot():
+    """agent 改水位：后端留改前快照（prev）里要有水位/衣物档，前端才比得出 diff 行。"""
+    suffix = _suffix()
+    pid = None
+    plan_id = ""
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"水位diff自检-{suffix}"})
+        pid = proj["id"]
+        plan = _data("POST", "/api/v1/art/plans", {
+            "title": "水位diff用例", "intent_text": "少女推门", "engines": ["novelai"],
+            "tier": "tease", "clothing_level": "L0", "source": "ui",
+        })
+        plan_id = plan["id"]
+        assert plan["tier"] == "tease" and plan["clothing_level"] == "L0"
+
+        # agent 写盘（source != ui）：留改前快照
+        _data("POST", "/api/v1/art/plans", {
+            "id": plan_id, "title": "水位diff用例", "intent_text": "少女推门",
+            "engines": ["novelai"], "tier": "explicit", "clothing_level": "L2",
+            "source": "agent",
+        })
+        got = _data("GET", f"/api/v1/art/plans/{plan_id}")
+        assert got["tier"] == "explicit" and got["clothing_level"] == "L2"
+        prev = got.get("prev") or {}
+        assert prev.get("tier") == "tease", prev
+        assert prev.get("clothing_level") == "L0", prev
+
+        # 页面自己改的：快照清掉（人已经看过了）
+        _data("POST", "/api/v1/art/plans", {
+            "id": plan_id, "title": "水位diff用例", "intent_text": "少女推门",
+            "engines": ["novelai"], "tier": "undress", "clothing_level": "L1",
+            "source": "ui",
+        })
+        got2 = _data("GET", f"/api/v1/art/plans/{plan_id}")
+        assert not got2.get("prev"), got2.get("prev")
+    finally:
+        if plan_id:
+            try:
+                req("DELETE", f"/api/v1/art/plans/{plan_id}", timeout=30)
+            except Exception:
+                pass
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
+
+
+def test_comic_tier_and_plan_import():
+    """水位档：剧本元信息 + 每格 tier/clothing → 拆格带进方案 → 直投包带 tier/comic 段。
+
+    另测 L-Port 整页分镜回传（comic_page_diverge 的 panel_plan）落成剧本表。
+    """
+    suffix = _suffix()
+    eid = f"EP-TIER-{suffix}"
+    pid = None
+    plan_ids = []
+    pkgs = []
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"档位自检-{suffix}"})
+        pid = proj["id"]
+        _data("POST", f"/api/v1/projects/{pid}/episodes", {"episode_id": eid, "title": "档位自检集"})
+
+        # ① 存剧本：元信息 + 每格档位
+        _data("POST", "/api/v1/art/comic-script", {
+            "episode_id": eid,
+            "premise": "深夜归巢",
+            "characters": "成年女性 A：浅蓝及腰长发、黑弯角",
+            "style_hint": "写实电影感，暖色台灯",
+            "tier": "tease",
+            "panels": [
+                {"page": 1, "panel": 1, "text": "第一格：推门", "dialogue": "", "camera": "全景",
+                 "tier": "tease", "clothing_level": "L0"},
+                {"page": 1, "panel": 2, "text": "第二格：坐在床沿", "dialogue": "……先别开灯。",
+                 "camera": "近景", "tier": "explicit", "clothing_level": "L2"},
+            ],
+        })
+        sc = _data("GET", "/api/v1/art/comic-script", query={"episode_id": eid})
+        assert sc["premise"] == "深夜归巢"
+        assert sc["style_hint"] == "写实电影感，暖色台灯"
+        assert sc["tier"] == "tease"
+        assert sc["panels"][0]["tier"] == "tease" and sc["panels"][0]["clothing_level"] == "L0"
+        assert sc["panels"][1]["tier"] == "explicit" and sc["panels"][1]["clothing_level"] == "L2"
+
+        # ② 拆格：档位进方案，意图里带水位
+        sp = _data("POST", "/api/v1/art/comic-script/split", {"episode_id": eid, "engines": ["novelai"]})
+        assert sp["created"] == 2, sp
+        plan_ids.extend(sp["plan_ids"])
+        rows = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
+        assert [r["tier"] for r in rows] == ["tease", "explicit"], rows
+        assert [r["clothing_level"] for r in rows] == ["L0", "L2"], rows
+        assert "【本图水位】explicit" in rows[1]["intent_text"], rows[1]["intent_text"]
+        assert "【衣物档】L2" in rows[1]["intent_text"], rows[1]["intent_text"]
+
+        # ③ 直投：包里有 tier / clothing / comic 段，水位写进意图与页上下文
+        pushed = _data("POST", "/api/v1/art/push-lport", {"plan_id": sp["plan_ids"][1]})
+        pkgs.append(pushed["package_id"])
+        pkg_dir = INBOX / pushed["package_id"]
+        art_plan = json.loads((pkg_dir / "art_plan.json").read_text(encoding="utf-8"))
+        assert art_plan["tier"] == "explicit", art_plan["tier"]
+        assert art_plan["clothing_level"] == "L2", art_plan["clothing_level"]
+        assert art_plan["comic"]["tier"] == "explicit", art_plan["comic"]
+        assert art_plan["comic"]["premise"] == "深夜归巢", art_plan["comic"]
+        assert art_plan["comic"]["style_hint"] == "写实电影感，暖色台灯", art_plan["comic"]
+        assert "本格水位：explicit" in art_plan["intent_text"], art_plan["intent_text"]
+
+        # ④ L-Port 整页分镜回传 → 落成剧本表（字段映射：narrative/action/tier/clothing_level）
+        plan = {"title": "深夜归巢", "style_base": "细线勾轮廓，暖橙冷蓝两极",
+                "characters": [{"id": "A", "desc": "成年女性", "anchor": "浅蓝长发"}],
+                "pages": [{"page": 1, "layout": "stack_4", "panels": [
+                    {"index": 1, "panel_type": "establishing", "shot": "全景", "camera": "平视",
+                     "action": "她反手压下门锁", "dialogue": "", "sfx": "咔哒",
+                     "tier": "tease", "clothing_level": "L0",
+                     "continuity": "起始格：衣物完整，赤脚",
+                     "light": "床头灯从右侧打来", "narrative": "成年女性 A 站在门内，浅蓝长发。"},
+                    {"index": 2, "panel_type": "emotional", "shot": "近景", "camera": "侧 3/4",
+                     "action": "她坐在床沿，手停在领口", "dialogue": "……先别开灯。", "sfx": "",
+                     "tier": "explicit", "clothing_level": "L2",
+                     "continuity": "上衣半褪，被单堆在腿侧",
+                     "light": "暖硬光打亮锁骨", "narrative": "成年女性 A 坐在床沿，长发垂到胸前。"},
+                ]}]}
+        r = _data("POST", "/api/v1/art/comic-plan/import", {"episode_id": eid, "panel_plan": plan})
+        assert r["panel_count"] == 2, r
+        sc2 = _data("GET", "/api/v1/art/comic-script", query={"episode_id": eid})
+        assert sc2["title"] == "深夜归巢", sc2["title"]
+        assert sc2["style_hint"] == "细线勾轮廓，暖橙冷蓝两极", sc2["style_hint"]
+        assert "浅蓝长发" in sc2["characters"], sc2["characters"]
+        assert sc2["panels"][0]["tier"] == "tease" and sc2["panels"][0]["clothing_level"] == "L0"
+        assert sc2["panels"][1]["tier"] == "explicit" and sc2["panels"][1]["clothing_level"] == "L2"
+        assert sc2["panels"][1]["dialogue"] == "……先别开灯。"
+        assert "全景" in sc2["panels"][0]["camera"] and "平视" in sc2["panels"][0]["camera"]
+        assert "反手压下门锁" in sc2["panels"][0]["note"]
+        assert "咔哒" in sc2["panels"][0]["note"]
+
+        # ⑤ 再拆格：已存在的格按新剧本刷新（仅未投递的），已投递的不动
+        sp2 = _data("POST", "/api/v1/art/comic-script/split", {"episode_id": eid})
+        assert sp2["created"] == 0, sp2
+        assert sp2["refreshed"] == 1, sp2      # 第2格已投递（直投过），不刷
+        rows2 = _data("GET", "/api/v1/art/comics", query={"episode_id": eid})
+        assert [r["tier"] for r in rows2] == ["tease", "explicit"], rows2
+    finally:
+        for pkg in pkgs:
+            _rm_push_dir(pkg)
+        for x in plan_ids:
+            try:
+                req("DELETE", f"/api/v1/art/plans/{x}", timeout=30)
+            except Exception:
+                pass
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
+
+
 def test_comic_push_inherits_prev_panel_image():
     """拆格建出来的格不带上一格成图（拆格时还没出图）—— 直投那一刻必须接上。
 

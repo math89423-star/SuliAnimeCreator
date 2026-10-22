@@ -115,7 +115,7 @@
 纯问答、能力介绍、没写盘的回复一律不写这一行。前端只认这一行给填充入口，不再猜关键词；你写了，前端点按钮后还会验盘（空盘会拦下），所以没成功不要写。
 
 单图创作页（art 域）**不写 APPLY 行**：那里没有集号，改盘走 `POST /api/v1/art/plans`（带 id 覆盖写），
-后端会留一份改前快照，主人在方案页和右栏对话里直接看到字段级变更卡（约束/意图/引擎/参考图的新旧对照）。
+后端会留一份改前快照，主人在方案页和右栏对话里直接看到字段级变更卡（约束/意图/引擎/参考图/水位/衣物档的新旧对照）。
 所以改完盘在回话里说清「改了哪几个字段、旧值是什么」即可，别重复贴整份方案。
 会话键 = 那一页「正在改的那个对象」：方案 / 集号 / 参考素材 / 投流批次。
 没有对象的页面（美术工具、设置、展览）按页面各自分桶，不塞剧集上下文；
@@ -138,23 +138,33 @@
 
 ### 剧本（art 域 comics 段，按集号一份）
 
-- 读：`GET /api/v1/art/comic-script?episode_id=<集号>` → `{episode_id, title, panels[], updated_at, exists}`
-- 存：`POST /api/v1/art/comic-script` body `{episode_id*, title?, panels*: [{page, panel, text, dialogue, camera, note}]}`（整本覆盖）
-- 从大纲转：`POST /api/v1/art/comic-script/from-outline` body `{episode_id*, per_page?}`（大纲分镜表一行 = 一格）
+- 读：`GET /api/v1/art/comic-script?episode_id=<集号>` → `{episode_id, title, premise, characters, style_hint, tier, panels[], updated_at, exists}`
+- 存：`POST /api/v1/art/comic-script` body `{episode_id*, title?, premise?, characters?, style_hint?, tier?, panels*: [...]}`（整本覆盖）
+- 从大纲转：`POST /api/v1/art/comic-script/from-outline` body `{episode_id*, per_page?}`（大纲分镜表一行 = 一格；前提自动取大纲的「方向一句话」）
 - 拆格：`POST /api/v1/art/comic-script/split` body `{episode_id*, engines?}` → 一条剧本 = 一个方案，
-  页序/格序/上一格链自动排好；**幂等**（同一页格已有方案就跳过）。
+  页序/格序/上一格链/水位自动排好；**幂等**（同一页格已有方案就跳过，未投递的按新剧本刷新，已投递的不动）。
+- 收 L-Port 整页分镜回传：`POST /api/v1/art/comic-plan/import` body `{episode_id*, panel_plan}`（或 `{episode_id, output}`）
+  → 落成剧本表。字段映射：`narrative→画面`、`dialogue→台词`、`shot+camera→景别/运镜`、
+  `action/sfx/continuity/props/light→备注`、`tier→水位`、`clothing_level→衣物档`；`title/style_base/characters` 进本本元信息。
 
-剧本一格一条：`{page, panel, text(画面), dialogue(台词), camera(景别/运镜), note(备注)}`。
+剧本一格一条：`{page, panel, text(画面), dialogue(台词), camera(景别/运镜), note(备注), tier(水位), clothing_level(衣物档)}`。
+
+**水位四档**（与 L-Port `comic_page_diverge`、`skills/video/nsfw-directing` 同一套）：`tease` 暗示 / `undress` 半露 /
+`explicit` 直白 / `closeup` 特写；空串 = 常规镜。**衣物档 L0-L4**：L0 完整 → L4 全裸，跨格只许收紧不许倒退。
+本本元信息里的 `tier` 是默认水位，单格 `tier` 覆盖它；两处都空即常规。
 
 ### 格与方案
 
 - 落盘：`POST /api/v1/art/plans` 带 `page`（其余字段与单图方案一样）。
+  方案顶层可选 `tier`（水位四档）与 `clothing_level`（L0-L4）——单图/漫画都能标。
 - 格序列：`GET /api/v1/art/comics?episode_id=<集号>` → 该集全部格，按 (index, panel_index) 升序；
   前端按 index 聚成页条，页内按 panel_index 聚成格条。
 - 成图：`POST /api/v1/art/plans/<plan_id>/image`（multipart，字段名 `file`）→ 落 uploads 并写进 `page.image`；
   撤图 `DELETE /api/v1/art/plans/<plan_id>/image`。
 - 直投：`POST /api/v1/art/push-lport` 会把页上下文拼进包里的 `intent_text`
-  （【漫画页上下文】段：集号 / 页 / 格 / 大纲快照），并另存 `comic_context`；参考图由方案的 `ref_images` 决定。
+  （【漫画页上下文】段：集号 / 页 / 格 / 本格水位 / 本格衣物档 / 大纲快照），并另存 `comic_context`；参考图由方案的 `ref_images` 决定。
+- **水位落两处**：方案顶层 `tier` / `clothing_level`（页面可改），直投时进包顶层的同名字段；
+  同时写进 `intent_text`（模型只读文本，档位不写进去就会被降档）。
 - **格间衔接的两个载体**：本格成图（下一格建页时前端自动带进参考图）+ 大纲快照（整页共享，写一次全页可用）。
   跨页时链自动接上：页内第一格的 `prev_plan_id` 指向上一页的末格。
 - **衔接兜底在直投那一刻**：拆格时上一格还没出图，格是空的；等上一格出了图、这一格才直投时，
@@ -175,6 +185,8 @@
 | `engines` | 目标引擎名（`novelai` / `manga3` / `seedream` …） | 决定跑哪几个 `blueprint_to_<engine>` |
 | `reference_images` + `ref_images/<文件名>` | 参考图 | 解到 `outputs/suli_art_refs/<plan_id>/`，路径作 `reference_images` 喂 VLM 分析 |
 | `user_image_instruction` | 画面指令（取方案的 `note`） | 发散节点的画面约束 |
+| `tier` / `clothing_level` | 水位档 / 衣物档 | L-Port 走 `comic_page_diverge` 时的 `tier` 入参 |
+| `comic` | 漫画段：`premise` / `characters` / `style_hint` / `tier` / 页格定位 | L-Port 走「整页分格」链路时的入参 |
 | `comic_context` | 页上下文副本（集号/页/格/大纲） | L-Port 不读，留档排查用 |
 | `manifest.json` | 包元信息 + hint | 收件箱列表 |
 | `refs.json` | 参考图清单 | 解图用 |
@@ -189,6 +201,19 @@
 链条是 发散 → 结构化 → 翻译·<引擎> → 回传。所以直投完要等那边点，不是投完自动回。
 L-Port 的发散/结构化/翻译用它在设置页选的 LLM；那条模型路由挂掉会直接报
 `BAD_RESPONSE / HTTP 402 Endpoint is unavailable`，与本仓字段无关——先查 L-Port 的模型配置。
+
+### 漫画整页分镜（L-Port 的 comic_page_diverge）
+
+L-Port 侧有专门的整页分格节点 `comic_page_diverge`：入参 `premise` / `characters` / `style_hint` /
+`page_count` / `panels_per_page` / `tier`（四档水位）/ `reference_images`，
+出参 `panel_plan`（页 → 格：格型/景别/机位/台词/拟声/**水位**/**衣物档**/连续性/光/叙事）+
+`panel_narratives`（逐格，可直接喂 `intent_blueprint`）+ `comic_report`。
+它按 R18 纪律写：档位如实不降档、遮挡三件套、裁切控水位、跨格连续性账本（L 档只收紧）。
+
+本仓对应的两个口：
+- **出**：`comic` 段（前提/角色/画风/水位）+ `tier` 已随直投包进 L-Port 收件箱。
+- **回**：L-Port 跑完把 `panel_plan` 推给 `POST /api/v1/art/comic-plan/import` → 落成本集剧本表，
+  再「拆格」把每格变成一个方案，逐格直投。
 
 ## 前端状态自查（导演页不展示状态标签）
 
