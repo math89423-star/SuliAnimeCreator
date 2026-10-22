@@ -11,7 +11,19 @@ dsh-home/
 # dsh CLI 各版本（宿主安装目录，600+ 包/版本）：不入库，用 scripts/dsh-runtime.sh install 装
 dsh-runtime/
 # 运行期数据/素材（容器写入、可能含敏感素材，不入库）
-backend/data/uploads/
+# 上传素材：默认全忽略，但**角色设定图例外**——
+# character_db.json 的 assets 段按文件名引用它们，前端 /api/images/<name> 直接取，
+# 不入库 = 换台机器克隆仓库后角色页缺图。设定图是项目资产（角色三视图），不是运行期垃圾。
+# 清单 = character_db.json 的 assets 段引用的全部 8 张（正/侧/背 + 着装/半着装）。
+backend/data/uploads/*
+!backend/data/uploads/78ed161fb45a4132af6b6e1e643d673d.jpg
+!backend/data/uploads/8272539708514268bba0633cdd89a9ea.jpg
+!backend/data/uploads/3348bca37d1b4ed6b391d5445ec6841a.jpg
+!backend/data/uploads/6d8db722dce242298d7590f7d8a60085.jpg
+!backend/data/uploads/a1c65c2052214486b37e04ce725ab6a9.jpg
+!backend/data/uploads/74549305b1a64169a964d7012fc6a5a8.jpg
+!backend/data/uploads/c59dfe6a3b75426a9f0131d1e445b91a.png
+!backend/data/uploads/b4af235a91fa4576bcfa23574ef226f2.png
 backend/data/traffic_out/
 backend/data/traffic_thumbs/
 backend/data/_orphan_backup_*/
