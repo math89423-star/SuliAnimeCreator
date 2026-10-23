@@ -103,3 +103,58 @@ def test_lport_prompts_validation():
     st, d = req("POST", "/api/v1/scriptboard/shots/prompts/import",
                 body={"episode_id": "EP-NOPE", "prompts": [{"director_cn": "x"}] * 65}, timeout=30)
     assert st == 400 and d.get("code") == 4001, d
+
+
+def test_video_prompt_return_roundtrip():
+    """L-Port 视频提示词定稿回传：写 lport_video_prompts，覆盖语义，缺镜不造镜。"""
+    suffix = _suffix()
+    pid = None
+    try:
+        proj = _data("POST", "/api/v1/projects", {"name": f"视频提示词回传自检-{suffix}"})
+        pid = proj["id"]
+        eid = f"EP-LPVP-{suffix}"
+        _data("POST", f"/api/v1/projects/{pid}/episodes", {"episode_id": eid, "title": "视频提示词自检集"})
+        s1 = _data("POST", "/api/v1/scriptboard/shots",
+                   {"episode_id": eid, "duty": "视频提示词镜一", "duration_s": 5})
+        r = _data("POST", "/api/v1/scriptboard/shots/video-prompts/import", {
+            "episode_id": eid, "source": "lport:video_prompt", "package_id": f"PKG-{eid}-1",
+            "prompts": [
+                {"shot_id": s1["id"], "prompt": "@image1 is the first frame...\n[0-5s] she turns.",
+                 "engine": "pixai", "video_model": "tsubaki-video", "ref_mode": "startframe",
+                 "tier": "nsfw", "duration_s": 5,
+                 "refs": [{"tag": "@image1", "name": "f.png", "role": "character"}],
+                 "ref_note": "含 1 张多图参考", "applied": ["时长按上限夹到 10s"]},
+                {"shot_id": "SHOT-NOPE-VIDEO", "prompt": "不存在的镜"},
+                {"shot_id": s1["id"], "prompt": "   "},
+            ]})
+        assert r["count"] == 1 and r["updated"] == [s1["id"]], r
+        assert r["missing"] == ["SHOT-NOPE-VIDEO"] and r["skipped"] == 1, r
+        lp = _shots(eid)[s1["id"]]["lport_video_prompts"]
+        assert lp["prompt"].startswith("@image1"), lp
+        assert lp["engine"] == "pixai" and lp["video_model"] == "tsubaki-video", lp
+        assert lp["ref_mode"] == "startframe" and lp["tier"] == "nsfw", lp
+        assert lp["refs"][0]["tag"] == "@image1" and lp["applied"], lp
+        assert lp["source"] == "lport:video_prompt" and lp["at"], lp
+
+        # 重传覆盖：新 prompt 落盘，旧字段不残留
+        _data("POST", "/api/v1/scriptboard/shots/video-prompts/import", {
+            "episode_id": eid, "prompts": [{"shot_id": s1["id"], "prompt": "NEW PROMPT"}]})
+        lp2 = _shots(eid)[s1["id"]]["lport_video_prompts"]
+        assert lp2["prompt"] == "NEW PROMPT" and "engine" not in lp2, lp2
+    finally:
+        if pid:
+            try:
+                req("DELETE", f"/api/v1/projects/{pid}", query={"mode": "cascade"}, timeout=60)
+            except Exception:
+                pass
+
+
+def test_video_prompts_validation():
+    st, d = req("POST", "/api/v1/scriptboard/shots/video-prompts/import", body={}, timeout=30)
+    assert st == 400 and d.get("code") == 4001, d
+    st, d = req("POST", "/api/v1/scriptboard/shots/video-prompts/import",
+                body={"episode_id": "EP-NOPE", "prompts": [{"shot_id": "S1"}]}, timeout=30)
+    assert st == 400 and d.get("code") == 4001, d
+    st, d = req("POST", "/api/v1/scriptboard/shots/video-prompts/import",
+                body={"episode_id": "EP-NOPE", "prompts": [{"shot_id": "S1", "prompt": "x"}] * 65}, timeout=30)
+    assert st == 400 and d.get("code") == 4001, d

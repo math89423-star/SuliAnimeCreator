@@ -1,6 +1,6 @@
 """PixAI 视频（v4.0 系列）组装：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行。纯函数。"""
 import re
-from .images import first_image, img_url, collect_refs, REF_ROLE_PHRASE, MAX_REFS
+from .images import first_image, img_url, collect_refs, collect_refs_fell_back, REF_ROLE_PHRASE, MAX_REFS
 from .text import DIALOG, strip_prefix, pixai_preformatted
 from .tiers import TIERS, normalize_tier
 
@@ -76,9 +76,10 @@ def apply_pixai_model_deltas(prompt_out, vcfg, duration):
     return " ".join(out.split()), applied
 
 
-def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode="startframe", video_model="tsubaki-video"):
+def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode="startframe", video_model="tsubaki-video", fallback_refs=None):
     """PixAI v4.0 系列格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行。
-    mode='startframe' 走 Keyframe（锁首帧构图）；'reference' 走 Multi-Reference（只锚身份，动作自由）。"""
+    mode='startframe' 走 Keyframe（锁首帧构图）；'reference' 走 Multi-Reference（只锚身份，动作自由）。
+    fallback_refs：镜级一张图都没有时的兜底（角色立绘 / 本集参考图），按 Multi-Reference 用。"""
     character = character or {}
     locks = locks or []
     style = (style_bible or "").strip() or "2D anime illustration"
@@ -101,9 +102,12 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     duration = min(max(duration, 0.5), float(vcfg["max_s"]))
     multi_ok = vcfg["ref"] == "multi"
     first = first_image(shot)
-    ordered, truncated = collect_refs(shot)
+    ordered, truncated = collect_refs(shot, fallback_refs)
+    fell_back = collect_refs_fell_back(shot, fallback_refs)
     extras = [x for x in ordered if x is not first]
     ref_note = ""
+    if fell_back:
+        ref_note = "本镜无镜级图，已自动用角色立绘/本集参考图作 Multi-Reference"
     if truncated:
         ref_note = f"参考图超过 {MAX_REFS} 张上限，只取前 {MAX_REFS} 张"
     if extras and not multi_ok:
@@ -113,7 +117,8 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
         eff_mode = "startframe"
     elif extras and mode == "startframe":
         eff_mode = "reference"
-        ref_note += ("；" if ref_note else "") + f"含 {len(extras)} 张多图参考，已按 Multi-Reference 出（与 Keyframe 互斥）"
+        if not fell_back:
+            ref_note += ("；" if ref_note else "") + f"含 {len(extras)} 张多图参考，已按 Multi-Reference 出（与 Keyframe 互斥）"
 
     identity = character.get("identity", "the character") or "the character"
     anchors = ", ".join([x for x in [
@@ -141,8 +146,8 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
                      if l.get("surface_en") and l["surface_en"].lower() in prompt_out.lower()]
         return {"shot_id": shot.get("id", ""), "mode": "PixAI-I2V", "engine": "pixai",
                 "video_model": vkey, "video_model_label": vcfg["label"], "video_note": vcfg["note"],
-                "ref_mode": (eff_mode if (first or tagged) else "t2v"), "preformatted": True,
-                "applied": applied_deltas,
+                "ref_mode": (eff_mode if (first or (multi_ok and tagged)) else "t2v"), "preformatted": True,
+                "fallback_used": fell_back, "applied": applied_deltas,
                 "refs": ref_entries, "ref_note": ref_note,
                 "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
                 "missing_image": not bool(first),
@@ -230,7 +235,8 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             "video_model": vkey, "video_model_label": vcfg["label"], "video_note": vcfg["note"],
             "applied": applied_deltas,
             "refs": ref_entries, "ref_note": ref_note,
-            "ref_mode": (eff_mode if (first or tagged) else "t2v"),
+            "ref_mode": (eff_mode if (first or (multi_ok and tagged)) else "t2v"),
+            "fallback_used": fell_back,
             "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
             "missing_image": not bool(first),
             "first_image": first.get("name") if first else "",

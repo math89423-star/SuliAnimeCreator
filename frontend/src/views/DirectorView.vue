@@ -168,6 +168,16 @@
               <span class="tnum pr-dur">{{ r.duration_s }}s</span>
               <el-tag size="small" :type="r.lp ? 'success' : 'info'">{{ r.lp ? '已回传' : '未回传' }}</el-tag>
             </div>
+            <div v-if="r.lpv" class="pr-body">
+              <div class="pr-line"><b class="pr-k">视频提示词</b><span class="pr-v pr-video">{{ r.lpv.prompt }}</span></div>
+              <div class="pr-line">
+                <b class="pr-k">参数</b>
+                <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ r.lpv.ref_mode || '—' }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
+              </div>
+              <div v-if="(r.lpv.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv.applied || []).join('；') }}</span></div>
+              <div v-if="r.lpv.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv.ref_note }}</span></div>
+              <div class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}</div>
+            </div>
             <div v-if="r.lp" class="pr-body">
               <div class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
               <div v-if="r.lp.camera_note" class="pr-line"><b class="pr-k">镜头</b><span class="pr-v">{{ r.lp.camera_note }}</span></div>
@@ -175,9 +185,9 @@
               <div v-if="(r.lp.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
               <div class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
             </div>
-            <div v-else class="pr-body pr-empty">—</div>
+            <div v-if="!r.lp && !r.lpv" class="pr-body pr-empty">—</div>
             <div class="pr-right">
-              <el-button v-if="r.lp" size="small" @click="copyPrompt(r)">复制</el-button>
+              <el-button v-if="r.lp || r.lpv" size="small" @click="copyPrompt(r)">复制</el-button>
             </div>
           </div>
         </div>
@@ -338,13 +348,16 @@ async function refresh() {
 
 // 提示词回传页：L-Port 逐镜详细提示词（scriptboard shots[].lport_prompts，seg_prompt 回传）
 const promptRefreshing = ref(false)
-const promptRows = computed(() => (store.shots as any[]).map((s: any) => ({ ...s, lp: s.lport_prompts || null })))
-const lpDoneCount = computed(() => promptRows.value.filter((r: any) => r.lp && (r.lp.director_cn || r.lp.key_text_en)).length)
+const promptRows = computed(() => (store.shots as any[]).map((s: any) => ({ ...s, lp: s.lport_prompts || null, lpv: s.lport_video_prompts || null })))
+const lpDoneCount = computed(() => promptRows.value.filter((r: any) => r.lp || r.lpv).length)
 async function reloadPrompts() {
   promptRefreshing.value = true
   try { await refresh() } catch {} finally { promptRefreshing.value = false }
 }
 function promptText(r: any): string {
+  if (r.lpv?.prompt) {
+    return `【${r.id}】${r.lpv.video_model || r.lpv.engine || ''} · ${r.lpv.ref_mode || ''} · ${r.lpv.duration_s || r.duration_s}秒\n${r.lpv.prompt}`
+  }
   const lp = r.lp
   if (!lp) return ''
   const L: string[] = [`【${r.id}】${r.duration_s}秒`]
@@ -360,7 +373,7 @@ async function copyPrompt(r: any) {
   catch { ElMessage.warning('复制失败，手动选中吧') }
 }
 async function copyAllPrompts() {
-  const chunks = promptRows.value.filter((r: any) => r.lp).map(promptText).filter(Boolean)
+  const chunks = promptRows.value.filter((r: any) => r.lp || r.lpv).map(promptText).filter(Boolean)
   if (!chunks.length) return
   try { await navigator.clipboard.writeText(chunks.join('\n\n')); ElMessage.success(`已复制 ${chunks.length} 镜提示词`) }
   catch { ElMessage.warning('复制失败，手动选中吧') }

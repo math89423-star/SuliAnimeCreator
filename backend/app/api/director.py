@@ -48,6 +48,29 @@ def _req_tier(raw, ep, rows):
     return normalize_tier(raw) or _detect_tier(ep, rows)
 
 
+def _episode_fallback_refs(ep, character, limit=6):
+    """空镜兜底参考：角色立绘打头，再接本集参考图（去重、截到上限）。
+
+    只在镜级一张图都没有时由 build_pixai 采用：立绘作 @image1 身份锚，
+    不冒充首帧（ref_mode 走 reference，不锁构图）。
+    """
+    out, seen = [], set()
+
+    def add(name, role="", desc="", label=""):
+        name = str(name or "").strip()
+        if not name or name in seen or len(out) >= limit:
+            return
+        seen.add(name)
+        out.append({"name": name, "kind": "ref", "role": role, "desc": desc, "label": label})
+
+    add((character or {}).get("avatar_path"), role="character", desc="character identity reference")
+    for im in (ep or {}).get("ref_images") or []:
+        if isinstance(im, dict):
+            add(im.get("name"), role=(im.get("role") or ""), desc=(im.get("desc") or ""),
+                label=(im.get("label") or ""))
+    return out
+
+
 @bp.post("/prompts/assemble")
 def assemble():
     b = request.get_json(force=True) or {}
@@ -118,8 +141,10 @@ def assemble_i2va_episode(eid):
     chars = list(_repo.chars_map().values())
     character = b.get("character") or (chars[0] if chars else {})
     rows = _repo.list_shots_by_episode(eid)
+    ep = _repo.get_episode(eid)
+    fallback_refs = _episode_fallback_refs(ep, character)
     if engine == "pixai":
-        out = [build_pixai(s, character, locks, style, tier, ref_mode, video_model) for s in rows]
+        out = [build_pixai(s, character, locks, style, tier, ref_mode, video_model, fallback_refs) for s in rows]
     else:
         out = [build_i2va(s, character, locks, style, music, tier) for s in rows]
     total = round(sum(float(p["duration_s"]) for p in out), 1)
@@ -330,16 +355,19 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
     add_file("beats.json", _json.dumps(beats, ensure_ascii=False, indent=2))
 
     # 3) 分镜 + 媒体 + 提示词（ref_mode 逐镜落盘：请求值只当默认，生效值以组装结算为准）
+    fallback_refs = _episode_fallback_refs(ep, character)
     shots_out, prompts_out = [], {}
     for shot in rows:
         sid = shot.get("id", "")
-        r = (build_pixai(shot, character, [], "", tier, req_mode, video_model)
+        r = (build_pixai(shot, character, [], "", tier, req_mode, video_model, fallback_refs)
              if engine == "pixai"
              else build_i2va(shot, character, [], "", "", tier))
         entry = {k: shot.get(k) for k in
                  ("id", "episode_id", "ord", "duty", "duty_en", "duration_s",
                   "camera", "sound", "key_text_en", "tier", "images", "image")}
         entry["ref_mode"] = r.get("ref_mode", "")
+        entry["refs"] = r.get("refs") or []
+        entry["ref_note"] = r.get("ref_note", "")
         shots_out.append(entry)
         for x in shot_images(shot):
             if x.get("name"):
@@ -361,11 +389,22 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
     for shot in rows:
         r = build_prompt(shot, character, [], "")
         imgs = shot_images(shot)
+        if not imgs and fallback_refs:
+            imgs = [dict(x) for x in fallback_refs]
         first = first_image(shot)
         pkg_shots.append({"id": shot.get("id"), "assembled_en": r["assembled_en"],
+                          "duty": shot.get("duty", ""),
+                          "duty_en": shot.get("duty_en", ""),
+                          "key_text_en": shot.get("key_text_en", ""),
+                          "ref_mode": next((x.get("ref_mode", "") for x in shots_out
+                                            if x.get("id") == shot.get("id")), ""),
+                          "refs": next((x.get("refs", []) for x in shots_out
+                                        if x.get("id") == shot.get("id")), []),
                           "locks_hit": r["locks_hit"],
                           "visual_basis": ([f"首帧 {img_url(first.get('name'))}"] if first else []),
                           "images": [{"name": x.get("name"), "kind": x.get("kind", "ref"),
+                                      "role": (x.get("role") or ""),
+                                      "desc": (x.get("desc") or ""),
                                       "url": img_url(x.get("name"))} for x in imgs],
                           "first_image": first.get("name") if first else "",
                           "first_image_url": img_url(first.get("name")) if first else "",
@@ -545,6 +584,7 @@ def draft_doc():
     chars = list(chars_map.values())
     character = chars_map.get(cid) if cid else (chars[0] if chars else {})
     rows = _repo.list_shots_by_episode(eid)
+    fallback_refs = _episode_fallback_refs(ep, character)
     tier = _req_tier(tier, ep, rows)
     total = round(sum(float(s.get("duration_s") or 0) for s in rows), 1)
 
@@ -580,7 +620,7 @@ def draft_doc():
     L.append("## 逐镜提示词（复制即用）")
     for s in rows:
         sid = s.get("id", "")
-        r = (build_pixai(s, character, [], "", tier, req_mode, video_model)
+        r = (build_pixai(s, character, [], "", tier, req_mode, video_model, fallback_refs)
              if engine == "pixai"
              else build_i2va(s, character, [], "", "", tier))
         L.append("")

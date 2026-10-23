@@ -700,6 +700,90 @@ def import_shot_prompts():
                "skipped": skipped, "count": len(updated), "source": source})
 
 
+# ── L-Port 视频提示词回传（PixAI/H3 定稿，落 lport_video_prompts）──────────
+# 与上面的中性导演提示词分两口：那边管分镜文本，这边管可直接投产的视频提示词全文。
+_LP_VIDEO_CAP = {
+    "engine": 20, "video_model": 40, "ref_mode": 20, "tier": 20,
+    "prompt": 8000, "ref_note": 500,
+}
+
+
+def _norm_video_prompt_item(item):
+    """单条视频提示词归一（纯函数）：无 shot_id 或无 prompt 返回 None。"""
+    if not isinstance(item, dict):
+        return None
+    sid = str(item.get("shot_id") or item.get("id") or "").strip()[:64]
+    prompt = item.get("prompt")
+    if not sid or not isinstance(prompt, str) or not prompt.strip():
+        return None
+    row = {}
+    for k, cap in _LP_VIDEO_CAP.items():
+        v = item.get(k)
+        if isinstance(v, str) and v.strip():
+            row[k] = v.strip()[:cap]
+    refs = []
+    for r in (item.get("refs") or [])[:8]:
+        if not isinstance(r, dict):
+            continue
+        refs.append({"tag": str(r.get("tag") or "")[:20],
+                     "name": str(r.get("name") or "")[:120],
+                     "role": str(r.get("role") or "")[:40]})
+    if refs:
+        row["refs"] = refs
+    applied = [str(x)[:160] for x in (item.get("applied") or []) if str(x).strip()][:8]
+    if applied:
+        row["applied"] = applied
+    d = item.get("duration_s")
+    try:
+        d = float(d) if d is not None else None
+    except (TypeError, ValueError):
+        d = None
+    if d and d > 0:
+        row["duration_s"] = round(d, 1)
+    row["prompt"] = prompt.strip()[:8000]
+    return sid, row
+
+
+@bp.post("/shots/video-prompts/import")
+def import_shot_video_prompts():
+    """L-Port 视频提示词回传（回程）：body {episode_id, prompts[], source?, package_id?}。
+
+    prompts 每项 {shot_id, prompt*, engine?, video_model?, ref_mode?, tier?,
+    duration_s?, refs?, ref_note?, applied?}，按 shot_id 写进该镜的 lport_video_prompts
+    （当前版本，覆盖旧的）；只写本集已存在的镜，缺镜报告 missing 不造镜。"""
+    import datetime as _dt
+    b = request.get_json(force=True) or {}
+    eid = str(b.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺少 episode_id"}), 400
+    raw = b.get("prompts")
+    if not isinstance(raw, list) or not raw:
+        return jsonify({"code": 4001, "msg": "prompts 为空数组"}), 400
+    if len(raw) > 64:
+        return jsonify({"code": 4001, "msg": "单次最多 64 镜"}), 400
+    source = str(b.get("source") or "lport")[:40]
+    pkg_id = str(b.get("package_id") or "")[:64]
+    items = [x for x in (_norm_video_prompt_item(it) for it in raw[:64]) if x]
+    if not items:
+        return jsonify({"code": 4001, "msg": "prompts 里没有可回传的条目（缺 shot_id 或 prompt）"}), 400
+    updated, missing, skipped = [], [], len(raw[:64]) - len(items)
+    for sid, row in items:
+        s = _SHOTS.get(sid)
+        if not s or s.get("episode_id") != eid:
+            missing.append(sid)
+            continue
+        s["lport_video_prompts"] = {
+            "source": source,
+            "package_id": pkg_id,
+            "at": _dt.datetime.now().isoformat(timespec="seconds"),
+            **row,
+        }
+        updated.append(sid)
+    _persist()
+    return ok({"episode_id": eid, "updated": updated, "missing": missing,
+               "skipped": skipped, "count": len(updated), "source": source})
+
+
 REF_ROLES = ("character", "outfit", "style", "face", "pose", "scene", "prop")
 
 
