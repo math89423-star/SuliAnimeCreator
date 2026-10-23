@@ -86,6 +86,11 @@
               <el-select v-model="form.clothing_level" size="small" clearable placeholder="—" class="tier-sel">
                 <el-option v-for="c in CLOTH" :key="c" :label="c" :value="c" />
               </el-select>
+              <span class="tier-lbl">出图</span>
+              <el-select v-model="form.page_mode" size="small" class="tier-sel">
+                <el-option label="分格出图" value="panel" />
+                <el-option label="整页出图" value="full_page" />
+              </el-select>
             </div>
 
             <!-- 参考图 与 本格成图 并排：两个素材区各占一半，省纵向空间 -->
@@ -245,6 +250,7 @@ type PlanForm = {
   note: string
   tier: string
   clothing_level: string
+  page_mode: string
 }
 /** 漫画页上下文（落在方案的 page 字段） */
 type PageMeta = {
@@ -260,7 +266,7 @@ const DEFAULT_ENGINES = ['novelai', 'tsubaki3', 'seedream']
 
 const plans = ref<any[]>([])
 const curPlanId = ref('')
-const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '', tier: '', clothing_level: '' })
+const blankForm = (): PlanForm => ({ title: '', intent_text: '', engines: [...DEFAULT_ENGINES], ref_images: [], note: '', tier: '', clothing_level: '', page_mode: 'panel' })
 const form = ref<PlanForm>(blankForm())
 const studio = useStudioStore()
 const store = useAppStore()
@@ -276,6 +282,7 @@ watch([form, curPlanId], () => {
     note: form.value.note,
     ref_images: form.value.ref_images,
     tier: form.value.tier,
+    page_mode: form.value.page_mode,
   })
 }, { deep: true })
 const prompts = ref<Record<string, any>>({})
@@ -833,6 +840,7 @@ const formDirty = computed(() => {
   if (form.value.engines.join(',') !== (p.engines || []).join(',')) return true
   if ((form.value.tier || '') !== (p.tier || '')) return true
   if ((form.value.clothing_level || '') !== (p.clothing_level || '')) return true
+  if ((form.value.page_mode || 'panel') !== (p.page_mode || 'panel')) return true
   if (refNames(form.value.ref_images).join(',') !== refNames(p.ref_images).join(',')) return true
   return false
 })
@@ -869,6 +877,7 @@ async function loadPlan(id: string) {
       note: d.note || '',
       tier: d.tier || '',
       clothing_level: d.clothing_level || '',
+      page_mode: d.page_mode || 'panel',
     }
     const pg = d.page || null
     pageMeta.value = pg
@@ -925,6 +934,7 @@ async function savePlan(): Promise<string> {
       // note 不传：页面没有 note 编辑口，带了会把 agent 中途写的 note 打回旧值
       tier: form.value.tier,
       clothing_level: form.value.clothing_level,
+      page_mode: form.value.page_mode,
       source: 'ui',   // 页面自己改的：不算待审变更，后端不留改前快照
     }
     // 漫画页上下文：漫画模式必带；单图模式下只在原本就是漫画页时带（别把页信息抹掉）

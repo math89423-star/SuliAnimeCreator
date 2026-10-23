@@ -292,6 +292,7 @@ def _plan_snapshot(p):
         "note": p.get("note") or "",
         "tier": p.get("tier") or "",
         "clothing_level": p.get("clothing_level") or "",
+        "page_mode": p.get("page_mode") or "panel",
     }
 
 
@@ -306,6 +307,7 @@ def _plan_projection(p):
         "note": p.get("note") or "",
         "tier": p.get("tier") or "",
         "clothing_level": p.get("clothing_level") or "",
+        "page_mode": p.get("page_mode") or "panel",
         "status": p.get("status") or "draft",
         "push": p.get("push") or None,
         "page": p.get("page") or None,
@@ -358,7 +360,7 @@ def plan_status(plan_id):
 def upsert_plan():
     """建/改方案。agent 与主人讨论出的方案也调这里落库（brief 里点名本接口）。
 
-    body: {id?, title?, intent_text?, engines?, ref_images?, note?, source?}
+    body: {id?, title?, intent_text?, engines?, ref_images?, note?, source?, page_mode?}
     source=ui 表示是页面上主人自己改的（不带待审快照）；其余来源（agent 写盘）留改前快照 prev。
     """
     b = request.get_json(force=True, silent=True) or {}
@@ -384,6 +386,8 @@ def upsert_plan():
         p["tier"] = _norm_tier(b.get("tier"))
     if "clothing_level" in b:
         p["clothing_level"] = _norm_clothing(b.get("clothing_level"))
+    if "page_mode" in b:
+        p["page_mode"] = str(b.get("page_mode") or "panel").strip() or "panel"
     if "page" in b:
         p["page"] = _norm_page(b.get("page"))
     # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
@@ -983,6 +987,7 @@ def push_lport():
         "note": note_out,
         "tier": tier,
         "clothing_level": clothing,
+        "page_mode": p.get("page_mode") or "panel",
         "comic_context": pg or None,
         "comic": comic,
         "created_at": _anow(),

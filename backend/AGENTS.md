@@ -189,6 +189,9 @@
 | `tier` / `clothing_level` | 水位档 / 衣物档 | L-Port 走 `comic_page_diverge` 时的 `tier` 入参 |
 | `comic` | 漫画段：`premise` / `characters` / `style_hint` / `tier` / 页格定位 | L-Port 走「整页分格」链路时的入参 |
 | `comic_context` | 页上下文副本（集号/页/格/大纲） | L-Port 不读，留档排查用 |
+| `page_mode` | `panel`（默认，一格一图）或 `full_page`（整页单图多格） | L-Port 按此分流：`full_page` 走单图整页生成，`panel` 走 `comic_page_diverge` |
+| `page_layout` | 版面网格（`2x2`/`3x3`/`4-koma`/`1+2`/`splash+insets`） | 整页模式下描述格子布局（L-Port 透给引擎 prompt） |
+| `reading_order` | `rtl`（默认，日漫）/ `ltr` | 整页模式下的阅读顺序 |
 | `manifest.json` | 包元信息 + hint | 收件箱列表 |
 | `refs.json` | 参考图清单 | 解图用 |
 

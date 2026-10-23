@@ -21,6 +21,8 @@ compatibility: Portable — plain local files. Sources: NovelAI official docs, P
 
 **一句话分工**：角色与多角色同框 → NovelAI；成套漫画/版面文字/光照 → Tsubaki.3；带字图、编辑、组图、写实向 → Seedream；跨图一致性（角色/服装/地点复用）与精确指令 → Mango 3。
 
+> **整页漫画**（单图内多格）的版面/阅读顺序/气泡写法 → `skills/image/full-page-manga/SKILL.md`；各家按上表轨道落笔。
+
 ## 1 四家共用的三条铁律
 
 1. **tag 与自然语言不混用**：NovelAI 吃 tag（可混短句）；Tsubaki.3、Seedream、Mango 3 **明确反对 tag 堆**——只写描述。

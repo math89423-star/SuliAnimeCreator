@@ -1,5 +1,5 @@
 /** 方案变更对比：逐字段给旧值/新值，参考图按文件名比增删。
- *  基准统一是后端方案字段（title/intent_text/engines/ref_images/note/tier/clothing_level），
+ *  基准统一是后端方案字段（title/intent_text/engines/ref_images/note/tier/clothing_level/page_mode），
  *  before 可以是写盘前快照（后端 prev）或回合前的方案详情。
  */
 
@@ -33,6 +33,12 @@ function tierText(v: any): string {
   return k ? tierLabel(k) : '常规'
 }
 
+/** 出图模式显示：空/panel = 分格出图 */
+function pageModeText(v: any): string {
+  const k = String(v ?? '').trim()
+  return k === 'full_page' ? '整页出图' : '分格出图'
+}
+
 export function refNames(v: any): string[] {
   if (!Array.isArray(v)) return []
   return v.map(x => String((x as any)?.name || '')).filter(Boolean)
@@ -62,6 +68,9 @@ export function diffPlanRows(before: any, after: any): PlanDiffRow[] {
   const bc = text(b.clothing_level)
   const ac = text(a.clothing_level)
   if (bc !== ac) rows.push({ key: 'clothing_level', label: '衣物档', before: bc, after: ac })
+  const bp = pageModeText(b.page_mode)
+  const ap = pageModeText(a.page_mode)
+  if (bp !== ap) rows.push({ key: 'page_mode', label: '出图模式', before: bp, after: ap })
   const bn = refNames(b.ref_images)
   const an = refNames(a.ref_images)
   const added = an.filter(n => !bn.includes(n))
