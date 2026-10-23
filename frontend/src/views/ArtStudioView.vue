@@ -1091,8 +1091,9 @@ onMounted(async () => {
 @media (max-width: 1000px) { .studio-grid { grid-template-columns: 1fr; flex:0 0 auto } }
 .studio-col { min-width:0; display:flex; flex-direction:column; min-height:0 }
 /* 意图框吃掉富余高度；中段（引擎/素材）按内容占位，不够时才自己滚 */
-.grow { flex:1 1 0; min-height:100px; display:flex }
-.lower { flex:0 1 auto; min-height:0; display:flex; flex-direction:column }
+/* 方案意图：默认跟内容等高（编辑器自带 96px 下限，超长到上限转内部滚动），余下高度全给下方素材区 */
+.grow { flex:0 1 auto; max-height:40vh; display:flex }
+.lower { flex:1 1 auto; min-height:0; display:flex; flex-direction:column }
 .lower-body { flex:1 1 auto; min-height:0; overflow:auto; padding-right:4px; display:flex; flex-direction:column }
 .lower .block-title { margin:8px 0 4px }
 .lower > .lower-body > .block-title:first-child { margin-top:0 }
