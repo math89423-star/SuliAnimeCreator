@@ -1,7 +1,7 @@
 """H3 单图动画（I2VA / T2VA-fallback）：对齐行 + 三字段。纯函数，无 Flask、无跨蓝图导入。"""
 from .images import first_image, img_url
 from .text import DIALOG, CJK, PRONOUN_EN, looks_full, strip_prefix, strip_pixai_scaffold, pixai_preformatted
-from .tiers import TIERS, normalize_tier
+from .tiers import TIERS, normalize_tier, water_clause
 import re
 
 I2VA_ALIGN = ("For the target video, at 0.00 seconds into the target video, "
@@ -110,6 +110,10 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
 
     duty_l = duty.lower()
     tier_clause = f" {tcfg['clause']}" if (tcfg and not full) else ""
+    # 水位四档不受 full 影响：full 是"作者已写足可见层"，水位仍要交代演到哪一步，否则切镜必飘
+    w_clause = water_clause(shot.get("water_level")) if tier == "nsfw" else ""
+    if w_clause:
+        tier_clause = f"{tier_clause} {w_clause}" if tier_clause else f" {w_clause}"
     anchor_dup = bool(tcfg and tcfg.get("anchor")) and tcfg["anchor"].split(",")[0].strip().lower() in duty_l
     head = f"{style}, {tcfg['anchor']}" if (tcfg and tcfg.get("anchor") and not anchor_dup) else style
     cam_clause = "" if pre_fmt else f"The camera {move_en}. "

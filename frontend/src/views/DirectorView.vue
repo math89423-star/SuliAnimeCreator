@@ -144,7 +144,7 @@
     <div class="dir-flow">
       <ShotCard
         v-for="(s, i) in store.shots" :key="s.id"
-        :shot="s" :index="i" :tier-label="tierLabel"
+        :shot="s" :index="i" :tier-label="tierLabel" :on-saved="reloadPrompts"
       />
     </div>
     </template>
@@ -169,14 +169,20 @@
               <el-tag size="small" :type="r.lp ? 'success' : 'info'">{{ r.lp ? '已回传' : '未回传' }}</el-tag>
             </div>
             <div v-if="r.lpv" class="pr-body">
-              <div class="pr-line"><b class="pr-k">视频提示词</b><span class="pr-v pr-video">{{ r.lpv.prompt }}</span></div>
+              <div class="pr-line">
+                <b class="pr-k">视频提示词</b>
+                <div class="pr-v" style="flex:1;min-width:0">
+                  <el-input v-model="vpDrafts[r.id]" type="textarea" :autosize="{ minRows: 4, maxRows: 18 }" resize="vertical" />
+                </div>
+              </div>
               <div class="pr-line">
                 <b class="pr-k">参数</b>
                 <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ r.lpv.ref_mode || '—' }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
+                <el-tag v-if="r.lpv.edited" size="small" type="warning">人工改</el-tag>
               </div>
               <div v-if="(r.lpv.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv.applied || []).join('；') }}</span></div>
               <div v-if="r.lpv.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv.ref_note }}</span></div>
-              <div class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}</div>
+              <div class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}<template v-if="r.lpv.edited_at"> · 改于 {{ r.lpv.edited_at }}</template></div>
             </div>
             <div v-if="r.lp" class="pr-body">
               <div class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
@@ -188,6 +194,8 @@
             <div v-if="!r.lp && !r.lpv" class="pr-body pr-empty">—</div>
             <div class="pr-right">
               <el-button v-if="r.lp || r.lpv" size="small" @click="copyPrompt(r)">复制</el-button>
+              <el-button v-if="r.lpv" size="small" type="primary" :disabled="!vpDirty(r)" @click="saveVp(r)">保存</el-button>
+              <el-button v-if="r.lpv?.edited" size="small" @click="unlockVp(r)">解锁</el-button>
             </div>
           </div>
         </div>
@@ -349,6 +357,40 @@ async function refresh() {
 // 提示词回传页：L-Port 逐镜详细提示词（scriptboard shots[].lport_prompts，seg_prompt 回传）
 const promptRefreshing = ref(false)
 const promptRows = computed(() => (store.shots as any[]).map((s: any) => ({ ...s, lp: s.lport_prompts || null, lpv: s.lport_video_prompts || null })))
+// 视频提示词人工编辑缓冲：draft 存在且与库值不同才算脏；保存后 reload 会把 draft 归位
+const vpDrafts = ref<Record<string, string>>({})
+watch(promptRows, (rows: any[]) => {
+  const next: Record<string, string> = {}
+  for (const r of rows) {
+    if (!r.lpv?.prompt) continue
+    const cur = vpDrafts.value[r.id]
+    next[r.id] = cur !== undefined && cur !== r.lpv.prompt ? cur : r.lpv.prompt
+  }
+  vpDrafts.value = next
+}, { immediate: true })
+function vpDirty(r: any): boolean {
+  return !!r.lpv?.prompt && (vpDrafts.value[r.id] ?? r.lpv.prompt) !== r.lpv.prompt
+}
+async function saveVp(r: any) {
+  const p = (vpDrafts.value[r.id] || '').trim()
+  if (!p) return
+  try {
+    await api.saveVideoPrompt(r.id, { prompt: p })
+    ElMessage.success('已保存')
+    await reloadPrompts()
+  } catch (e: any) {
+    ElMessage.error('保存失败：' + (e?.message || e))
+  }
+}
+async function unlockVp(r: any) {
+  try {
+    await api.unlockVideoPrompt(r.id)
+    ElMessage.success('已解锁')
+    await reloadPrompts()
+  } catch (e: any) {
+    ElMessage.error('解锁失败：' + (e?.message || e))
+  }
+}
 const lpDoneCount = computed(() => promptRows.value.filter((r: any) => r.lp || r.lpv).length)
 async function reloadPrompts() {
   promptRefreshing.value = true

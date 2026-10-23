@@ -33,6 +33,8 @@ export const boardApi = {
   freezeEpisode: (eid: string) => http.post(`/v1/scriptboard/episode/${eid}/freeze`).then(r => r.data),
   episodeVersions: (eid: string) => http.get(`/v1/scriptboard/episode/${eid}/versions`).then(r => r.data),
   updateShot: (sid: string, p: any) => http.put(`/v1/scriptboard/shots/${sid}`, p).then(r => r.data),
+  saveVideoPrompt: (sid: string, p: any) => http.put(`/v1/scriptboard/shots/${sid}/video-prompt`, p).then(r => r.data),
+  unlockVideoPrompt: (sid: string) => http.delete(`/v1/scriptboard/shots/${sid}/video-prompt/edit`).then(r => r.data),
   deleteShot: (sid: string) => http.delete(`/v1/scriptboard/shots/${sid}`).then(r => r.data),
   clearEpisode: (eid: string, target: 'shots' | 'outline' | 'script') => http.post(`/v1/scriptboard/clear/${eid}`, { target }).then(r => r.data),
 }

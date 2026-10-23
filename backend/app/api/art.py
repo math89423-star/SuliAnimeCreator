@@ -1023,6 +1023,9 @@ def push_lport():
             _json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
         (pkgdir / "art_plan.json").write_text(
             _json.dumps(art_plan, ensure_ascii=False, indent=2), encoding="utf-8")
+        # manifest.files 声明了 refs.json：散包也落一份，别只塞在 zip 里（谁改成读目录就断）
+        (pkgdir / "refs.json").write_text(
+            _json.dumps(refs, ensure_ascii=False, indent=2), encoding="utf-8")
     except OSError as e:
         return jsonify({"code": 4005, "msg": "写 L-Port 收件箱失败：%s" % e}), 500
 

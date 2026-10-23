@@ -13,7 +13,7 @@ SECTIONS = ["head", "half", "full"]
 ATTIRES = ["undressed", "dressed"]
 SLOTS = ["front", "side", "back"]
 OUTFIT_CATS = ["headwear", "top", "bottom", "shoes"]
-DIMS = ["hairstyle", "face", "physique", "identity"]
+DIMS = ["hairstyle", "face", "physique", "identity", "anchor_en"]
 
 _DB = load("character_db.json", {})
 _CHARS = _DB.get("chars", {})
@@ -50,6 +50,7 @@ def create():
     _CHARS[cid] = {"id": cid, "name": b.get("name", "新角色"),
         "hairstyle": b.get("hairstyle", ""), "face": b.get("face", ""),
         "physique": b.get("physique", ""), "identity": b.get("identity", ""),
+        "anchor_en": b.get("anchor_en", ""),
         "avatar_path": "", "created_at": _now(), "updated_at": _now()}
     _DOCS[cid] = {"doc_html": ""}
     _VERSIONS[cid] = []
@@ -90,7 +91,7 @@ def update_one(cid):
     c = _CHARS.get(cid)
     if not c:
         return ok({})
-    for k in ["name", "hairstyle", "face", "physique", "identity"]:
+    for k in ["name", "hairstyle", "face", "physique", "identity", "anchor_en"]:
         if k in b:
             c[k] = b[k]
     c["updated_at"] = _now()

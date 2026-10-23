@@ -46,6 +46,7 @@
           <div class="seg-tags">
             <el-tag v-if="r.draft" size="small" type="warning">草案</el-tag>
             <el-tag v-if="r.tier" size="small" :type="r.tier === 'nsfw' ? 'danger' : 'info'">{{ r.tier }}</el-tag>
+            <el-tag v-if="r.water_level" size="small" type="danger" effect="plain">{{ WATER_LABEL[r.water_level] || r.water_level }}</el-tag>
           </div>
           <div class="seg-id">{{ r.id }}</div>
           <el-popconfirm title="删掉该镜？" confirm-button-text="删" cancel-button-text="留" @confirm="removeShot(r.id)">
@@ -87,6 +88,7 @@ import { useSettingsStore } from '../stores/settings'
 import { castNames, loadCastInput } from '../utils/cast'
 import { purgeLegacySeeds } from '../utils/legacySeeds'
 const store = useAppStore()
+const WATER_LABEL: Record<string, string> = { tease: '暗示', undress: '半露', explicit: '直白', closeup: '特写' }
 const settings = useSettingsStore()
 // 剧本底稿：空着等生成/手写。旧演示样稿（含固定人名那两句）不再预填，
 // 老浏览器里残留的同一份样稿也清掉，免得 debounce 自动保存把它写进库里。

@@ -364,7 +364,7 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
              else build_i2va(shot, character, [], "", "", tier))
         entry = {k: shot.get(k) for k in
                  ("id", "episode_id", "ord", "duty", "duty_en", "duration_s",
-                  "camera", "sound", "key_text_en", "tier", "images", "image")}
+                  "camera", "sound", "key_text_en", "tier", "water_level", "images", "image")}
         entry["ref_mode"] = r.get("ref_mode", "")
         entry["refs"] = r.get("refs") or []
         entry["ref_note"] = r.get("ref_note", "")
@@ -411,6 +411,7 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
                           "duration_s": shot.get("duration_s", 0),
                           "sound": shot.get("sound", ""),
                           "tier": (shot.get("tier") or ""),
+                          "water_level": (shot.get("water_level") or ""),
                           "camera": shot.get("camera", {}),
                           "boundaries": {"start": shot.get("start_boundary", {}),
                                          "end": shot.get("end_boundary", {})}})
@@ -498,6 +499,28 @@ def _director_inbox_root():
         return None
 
 
+def _prune_episode_packages(root, eid, keep_id):
+    """同集重推只留最新包：旧 PKG-EP-<集号>-* 整目录删掉。
+
+    收件箱是投递箱不是档案柜——重推十次就堆十份同名同集的包，L-Port 列表里全是重复行，
+    跑链时还得人工挑哪个是新的。集号前缀严格匹配，不会误删别的集的包。
+    """
+    import shutil
+    pkgs = root / "suli_packages"
+    # 包名形如 PKG-EP-WEDDING-02-<epoch>（集号去掉 EP- 前缀），按 keep_id 反推前缀最稳
+    prefix = keep_id.rsplit("-", 1)[0] + "-"
+    removed = []
+    try:
+        for d in pkgs.iterdir():
+            if not d.is_dir() or d.name == keep_id or not d.name.startswith(prefix):
+                continue
+            shutil.rmtree(d, ignore_errors=True)
+            removed.append(d.name)
+    except OSError:
+        pass
+    return removed
+
+
 @bp.post("/push-lport")
 def push_lport():
     """导演草案直投 L-Port：把本集交付包写进 L-Port 收件箱（共享挂载 suli_packages/），
@@ -539,6 +562,21 @@ def push_lport():
             _json.dumps(built["manifest"], ensure_ascii=False, indent=2), encoding="utf-8")
         (pkgdir / "package.json").write_text(
             _json.dumps(built["package_json"], ensure_ascii=False, indent=2), encoding="utf-8")
+        # 散包落全：manifest 声明的文件不能只活！在 zip 里——L-Port 载包口有一部分读的是散包
+        # （character.json / episode_refs.json 等），缺一个就是人物锚全空。
+        import zipfile as _zipfile
+        from io import BytesIO as _BytesIO
+        from pathlib import Path as _Path
+        with _zipfile.ZipFile(_BytesIO(built["zip_bytes"])) as _z:
+            for _zi in _z.namelist():
+                if _zi.endswith("/"):
+                    continue
+                _rel = _Path(_zi)
+                if _rel.is_absolute() or ".." in _rel.parts:
+                    continue
+                _tgt = pkgdir / _rel
+                _tgt.parent.mkdir(parents=True, exist_ok=True)
+                _tgt.write_bytes(_z.read(_zi))
     except OSError as e:
         return jsonify({"code": 4005, "msg": "写 L-Port 收件箱失败：%s" % e}), 500
 
@@ -551,6 +589,11 @@ def push_lport():
         "receipt_count_at_push": len(built["receipt_rows"]),
     }
     _ppersist()
+    pruned = _prune_episode_packages(root, eid, pkg_id)
+    if pruned:
+        for old in pruned:
+            _PUSH_STORE.get("pushes", {}).pop(old, None)
+        _ppersist()
     return ok({
         "package_id": pkg_id, "episode_id": eid,
         "project_id": project_id, "project_name": project_name,
@@ -559,6 +602,7 @@ def push_lport():
         "shot_count": len(built["package_json"]["shots"]),
         "receipt_count": len(built["receipt_rows"]),
         "missing": built["missing"],
+        "pruned": pruned,
         "hint": "已落 L-Port 收件箱 suli_packages/%s：L-Port 侧在 story_text 插件载入 package.json 跑完分镜后，调 push-shots-to-suli 回写分镜，并在本项目回执页登记回执（package_id=%s），这边轮询即亮。要详细提示词，L-Port 文本工作区再点「写详细提示词并回传」（seg_prompt → push-prompts-to-suli），导演页「提示词」页签即可看到。" % (pkg_id, pkg_id),
     })
 

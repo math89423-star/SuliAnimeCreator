@@ -2,7 +2,7 @@
 import re
 from .images import first_image, img_url, collect_refs, collect_refs_fell_back, REF_ROLE_PHRASE, MAX_REFS
 from .text import DIALOG, strip_prefix, pixai_preformatted
-from .tiers import TIERS, normalize_tier
+from .tiers import TIERS, normalize_tier, water_clause
 
 PIXAI_CAM = {
     "固定": "fixed shot, the camera holds still",
@@ -120,11 +120,16 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
         if not fell_back:
             ref_note += ("；" if ref_note else "") + f"含 {len(extras)} 张多图参考，已按 Multi-Reference 出（与 Keyframe 互斥）"
 
-    identity = character.get("identity", "the character") or "the character"
+    def _en_only(t):
+        """英文正文不吃中文锚：角色库字段是中文时整句丢掉，身份交给 @image1 / 参考图。"""
+        t = (t or "").strip()
+        return "" if re.search(r"[\u3400-\u9fff]", t) else t
+
+    identity = _en_only(character.get("anchor_en") or "") or _en_only(character.get("identity", "")) or "the character"
     anchors = ", ".join([x for x in [
         identity,
-        f"{character.get('hairstyle', '')} {character.get('face', '')}".strip(),
-        (character.get("outfits_text") or "").strip()[:100],
+        _en_only(f"{character.get('hairstyle', '')} {character.get('face', '')}".strip()),
+        _en_only((character.get("outfits_text") or "").strip()[:100]),
         ", ".join([l.get("surface_en", "") for l in locks if l.get("surface_en")])[:120] or "",
     ] if x])
 
@@ -185,6 +190,9 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
         beat += f". {tcfg['clause']}"
     else:
         beat += "."
+    w_clause = water_clause(shot.get("water_level")) if tier == "nsfw" else ""
+    if w_clause:
+        beat = beat.rstrip(".") + ". " + w_clause
     carry_bits = []
     if multi_ok:
         for tag, x in tagged:

@@ -1,20 +1,103 @@
 """scriptboard 蓝图：剧本存管 + 自动拆分镜(LLM优先，规则回退) + 结构门。落盘 backend/data/scriptboard_db.json。"""
+import re as _re
 from flask import Blueprint, request, jsonify
 from ..services.disk_store import load, save
 
 bp = Blueprint("scriptboard", __name__, url_prefix="/api/v1/scriptboard")
 
-# 分级只两档：sfw/nsfw（空串=常规镜）。旧四档读到自动归 nsfw。
+# 分级门档只两档：sfw/nsfw（空串=常规镜）——前端标签与组装层都只认这两个。
 TIER_KEYS = ("", "sfw", "nsfw")
+# 水位四档（与 art 域 tier、L-Port comic_page_diverge、skills/video/nsfw-directing 同一套）：
+# 单独存 water_level，不把 explicit/closeup 折成 nsfw——折掉就丢了"这镜演到哪一步"，切镜没法对账。
+WATER_KEYS = ("", "tease", "undress", "explicit", "closeup")
+CROP_KEYS = ("extreme_close", "closeup", "close", "medium_close", "medium",
+             "medium_full", "full", "wide", "extreme_wide")
+MOVEMENT_KEYS = ("固定", "推", "拉", "摇", "移", "跟", "环绕", "升降", "手持", "航拍")
+SHOT_MIN_S, SHOT_MAX_S = 1.0, 15.0
 
 
 def _norm_tier(v):
     v = (v or "").strip()
     if v in TIER_KEYS:
         return v
-    if v in ("tease", "undress", "explicit", "closeup"):
+    if v in WATER_KEYS[1:]:
         return "nsfw"
     return ""
+
+
+def _norm_water(v):
+    """水位四档归一；空串=未标。门档值（nsfw/sfw）不算水位。"""
+    v = (v or "").strip()
+    return v if v in WATER_KEYS else ""
+
+
+def _resolve_tier_water(body, cur_tier="", cur_water=""):
+    """门档 + 水位一起解，返回 (tier, water_level)。
+
+    来四档 → 门档归 nsfw、水位留原文；只来门档 → 保留已存水位（页面存盘不会把档位洗掉）；
+    显式传 water_level 才改水位（传空串＝清掉）。
+    """
+    raw = str(body.get("tier") or "").strip()
+    tier, water = cur_tier, cur_water
+    if "water_level" in body:
+        water = _norm_water(body.get("water_level"))
+    if raw in WATER_KEYS[1:]:
+        tier, water = "nsfw", raw
+    elif raw:
+        tier = _norm_tier(raw)
+        if tier != "nsfw" and "water_level" not in body:
+            water = ""
+    if water and not tier:
+        tier = "nsfw"
+    return tier, water
+
+
+def _ep_slug(eid):
+    """集号 → 镜号前缀：全段去符号、掐 18 字。
+
+    旧写法取 eid[-4:]，EP-WEDDING-01 会出 SHOT-G-01-M001 这种半截号段，两个不同集撞前缀。
+    """
+    s = _re.sub(r"[^0-9A-Za-z_-]", "", (eid or "").upper())
+    if s.startswith("EP-"):
+        s = s[3:]
+    return (s.strip("-_")[:18]) or "EP"
+
+
+def _episode_known(eid):
+    """集骨架是否存在：剧本库 / 已有镜 / 项目登记，任一命中即算。防给不存在的集建孤儿镜。"""
+    if eid in _EPS:
+        return True
+    if any(s.get("episode_id") == eid for s in _SHOTS.values()):
+        return True
+    try:
+        from .projects import project_id_for_episode
+        if project_id_for_episode(eid):
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def _bad_camera(cam):
+    """景别/运镜白名单校验；返回错误文案，合法返回空串。脏值会一路拼进组装层提示词。"""
+    crop = str((cam or {}).get("crop") or "medium").strip()
+    move = str((cam or {}).get("movement") or "固定").strip()
+    if crop not in CROP_KEYS:
+        return "crop 非法：%s（只收 %s）" % (crop, " / ".join(CROP_KEYS))
+    if move not in MOVEMENT_KEYS:
+        return "movement 非法：%s（只收 %s）" % (move, " / ".join(MOVEMENT_KEYS))
+    return ""
+
+
+def _normalize_duration(val, default=5.0):
+    """单镜时长：数字且在 1-15 秒内。返回 (秒, 错误文案)。"""
+    try:
+        dur = float(val if val is not None else default)
+    except (TypeError, ValueError):
+        return None, "duration_s 必须是数字"
+    if not (SHOT_MIN_S <= dur <= SHOT_MAX_S):
+        return None, "duration_s 越界：%s（单镜 %.0f-%.0f 秒）" % (dur, SHOT_MIN_S, SHOT_MAX_S)
+    return (int(dur) if dur == int(dur) else round(dur, 2)), ""
 
 _DB = load("scriptboard_db.json", {"eps": {}, "shots": {}})
 _EPS = _DB.get("eps", {})
@@ -388,18 +471,19 @@ def draft_from_outline(eid):
     created = []
     for spec in specs:
         while True:
-            sid = f"SHOT-{eid[-4:]}-M{n:03d}"
+            sid = f"SHOT-{_ep_slug(eid)}-M{n:03d}"
             if sid not in used and sid not in _SHOTS:
                 break
             n += 1
         cam = spec.get("camera") if isinstance(spec.get("camera"), dict) else {}
+        tier, water = _resolve_tier_water(spec)
         row = {"id": sid, "episode_id": eid, "ord": top,
                "duty": spec.get("duty", ""), "duty_en": spec.get("duty_en", ""),
                "duration_s": spec.get("duration_s", 3),
                "camera": {"crop": cam.get("crop", "medium"), "height": "eye",
                           "movement": cam.get("movement", "固定")},
                "sound": spec.get("sound", ""), "key_text_en": spec.get("duty_en", ""),
-               "tier": _norm_tier(spec.get("tier")), "draft": True}
+               "tier": tier, "water_level": water, "draft": True}
         _SHOTS[sid] = row
         used.add(sid)
         created.append(sid)
@@ -447,7 +531,7 @@ def auto_split(eid):
         engine_set.add(eng)
         prefix = "[AI拆]" if eng == "llm" else "[规则拆]"
         for j, c in enumerate(cuts, 1):
-            sid = f"SHOT-{eid[-4:]}-{i:03d}-{j}"
+            sid = f"SHOT-{_ep_slug(eid)}-{i:03d}-{j}"
             _SHOTS[sid] = {"id": sid, "episode_id": eid,
                            "duty": prefix + c.get("duty", ""),
                            "duration_s": c.get("duration_s", 5),
@@ -479,29 +563,40 @@ def list_shots():
 
 @bp.post("/shots")
 def create_shot():
-    """手工加镜（一行一行排）：body {episode_id, duty, duration_s, sound, camera, key_text_en}。"""
+    """手工加镜（一行一行排）：body {episode_id, duty, duration_s, sound, camera, key_text_en, tier, water_level}。"""
     b = request.get_json(force=True) or {}
     eid = b.get("episode_id", "")
     if not eid:
         return jsonify({"code": 4001, "msg": "缺少 episode_id"}), 400
+    if not _episode_known(eid):
+        return jsonify({"code": 4004, "msg": "集不存在：%s（先在项目里建集再建镜）" % eid}), 404
+    cam = b.get("camera") if isinstance(b.get("camera"), dict) else {}
+    bad = _bad_camera(cam)
+    if bad:
+        return jsonify({"code": 4001, "msg": bad}), 400
+    dur, err = _normalize_duration(b.get("duration_s"), 5)
+    if err:
+        return jsonify({"code": 4001, "msg": err}), 400
     own = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
     n = 1
     used = {s.get("id", "") for s in own}
+    slug = _ep_slug(eid)
     while True:
-        sid = f"SHOT-{eid[-4:]}-M{n:03d}"
+        sid = f"SHOT-{slug}-M{n:03d}"
         if sid not in used and sid not in _SHOTS:
             break
         n += 1
     top = max([s.get("ord", 0) for s in own] + [-1]) + 1
-    cam = b.get("camera") if isinstance(b.get("camera"), dict) else {}
+    tier, water = _resolve_tier_water(b)
     row = {"id": sid, "episode_id": eid, "ord": top,
            "duty": b.get("duty", ""), "duty_en": b.get("duty_en", ""),
-           "duration_s": b.get("duration_s", 3),
+           "duration_s": dur,
            "camera": {"crop": cam.get("crop", "medium"), "height": cam.get("height", "eye"),
                       "movement": cam.get("movement", "固定")},
            "sound": b.get("sound", ""), "key_text_en": b.get("key_text_en", ""),
+           "video_negative": str(b.get("video_negative") or "")[:4000],
            "note": str(b.get("note", ""))[:500],
-           "tier": _norm_tier(b.get("tier")), "draft": bool(b.get("draft", False))}
+           "tier": tier, "water_level": water, "draft": bool(b.get("draft", False))}
     _SHOTS[sid] = row
     _persist()
     return ok(row)
@@ -512,17 +607,29 @@ def update_shot(sid):
     s = _SHOTS.get(sid)
     if not s:
         return jsonify({"code": 4001, "msg": "shot 不存在"}), 400
-    for k in ("duty", "duty_en", "duration_s", "sound", "key_text_en", "ord", "image"):
+    cam_new = b.get("camera") if isinstance(b.get("camera"), dict) else None
+    if cam_new is not None:
+        merged = {**(s.get("camera") or {}), **cam_new}
+        bad = _bad_camera(merged)
+        if bad:
+            return jsonify({"code": 4001, "msg": bad}), 400
+    if "duration_s" in b:
+        dur, err = _normalize_duration(b.get("duration_s"), s.get("duration_s") or 5)
+        if err:
+            return jsonify({"code": 4001, "msg": err}), 400
+        s["duration_s"] = dur
+    for k in ("duty", "duty_en", "sound", "key_text_en", "ord", "image", "video_negative"):
         if k in b:
-            s[k] = b[k]
+            s[k] = str(b[k])[:4000] if k == "video_negative" else b[k]
     if "note" in b:
         s["note"] = str(b.get("note") or "")[:500]
     if "draft" in b:
         s["draft"] = bool(b.get("draft"))
-    if "tier" in b:
-        s["tier"] = _norm_tier(b.get("tier"))
-    if "camera" in b and isinstance(b["camera"], dict):
-        s["camera"] = {**(s.get("camera") or {}), **b["camera"]}
+    if "tier" in b or "water_level" in b:
+        s["tier"], s["water_level"] = _resolve_tier_water(
+            b, s.get("tier", ""), s.get("water_level", ""))
+    if cam_new is not None:
+        s["camera"] = {**(s.get("camera") or {}), **cam_new}
     _persist()
     return ok(s)
 
@@ -568,7 +675,7 @@ def import_shots():
         sid = str(item.get("id") or item.get("shot_id") or "").strip()
         if not sid:
             while True:
-                cand = f"SHOT-{eid[-4:]}-M{n:03d}"
+                cand = f"SHOT-{_ep_slug(eid)}-M{n:03d}"
                 n += 1
                 if cand not in used and cand not in _SHOTS:
                     sid = cand
@@ -579,10 +686,17 @@ def import_shots():
             dur = float(item.get("duration_s", item.get("duration_seconds", 5)) or 5)
         except (TypeError, ValueError):
             dur = 5
-        dur = min(max(dur, 1), 30)
+        dur = min(max(dur, SHOT_MIN_S), SHOT_MAX_S)
+        dur = int(dur) if dur == int(dur) else round(dur, 2)
         cam = item.get("camera") if isinstance(item.get("camera"), dict) else {}
         framing = item.get("framing") if isinstance(item.get("framing"), dict) else {}
         crop = str(cam.get("crop") or item.get("crop") or framing.get("size") or "medium").strip() or "medium"
+        # 回执里的脏景别/运镜：不整批 400（回执是批量口），落到默认值再照常收
+        if crop not in CROP_KEYS:
+            crop = "medium"
+        move = str(cam.get("movement") or "固定").strip()
+        if move not in MOVEMENT_KEYS:
+            move = "固定"
         row = _SHOTS.get(sid)
         if row and row.get("episode_id") == eid:
             row["duty"] = duty or row.get("duty", "")
@@ -591,24 +705,27 @@ def import_shots():
             row["duration_s"] = dur
             row["camera"] = {**(row.get("camera") or {}), "crop": crop,
                              "height": cam.get("height", (row.get("camera") or {}).get("height", "eye")),
-                             "movement": cam.get("movement", (row.get("camera") or {}).get("movement", "固定"))}
+                             "movement": cam.get("movement") if cam.get("movement") in MOVEMENT_KEYS
+                                          else (row.get("camera") or {}).get("movement", "固定")}
             row["sound"] = str(item.get("sound", item.get("sound_cn", row.get("sound", ""))) or "")
             row["key_text_en"] = str(item.get("key_text_en") or row.get("key_text_en", ""))[:2000]
-            row["tier"] = _norm_tier(item.get("tier", row.get("tier", "")))
+            row["tier"], row["water_level"] = _resolve_tier_water(
+                item, row.get("tier", ""), row.get("water_level", ""))
             row["draft"] = True
             row["note"] = f"{source}回执"[:500]
             updated.append(sid)
         else:
             if sid in _SHOTS:
                 continue
+            tier, water = _resolve_tier_water(item)
             _SHOTS[sid] = {"id": sid, "episode_id": eid, "ord": top,
                            "duty": duty, "duty_en": duty_en, "duration_s": dur,
                            "camera": {"crop": crop, "height": cam.get("height", "eye"),
-                                      "movement": cam.get("movement", "固定")},
+                                      "movement": move},
                            "sound": str(item.get("sound", item.get("sound_cn", "")) or ""),
                            "key_text_en": str(item.get("key_text_en") or "")[:2000],
                            "note": f"{source}回执"[:500],
-                           "tier": _norm_tier(item.get("tier")), "draft": True}
+                           "tier": tier, "water_level": water, "draft": True}
             used.add(sid)
             top += 1
             created.append(sid)
@@ -704,7 +821,7 @@ def import_shot_prompts():
 # 与上面的中性导演提示词分两口：那边管分镜文本，这边管可直接投产的视频提示词全文。
 _LP_VIDEO_CAP = {
     "engine": 20, "video_model": 40, "ref_mode": 20, "tier": 20,
-    "prompt": 8000, "ref_note": 500,
+    "prompt": 8000, "negative": 4000, "ref_note": 500,
 }
 
 
@@ -746,11 +863,12 @@ def _norm_video_prompt_item(item):
 
 @bp.post("/shots/video-prompts/import")
 def import_shot_video_prompts():
-    """L-Port 视频提示词回传（回程）：body {episode_id, prompts[], source?, package_id?}。
+    """L-Port 视频提示词回传（回程）：body {episode_id, prompts[], source?, package_id?, force?}。
 
     prompts 每项 {shot_id, prompt*, engine?, video_model?, ref_mode?, tier?,
     duration_s?, refs?, ref_note?, applied?}，按 shot_id 写进该镜的 lport_video_prompts
-    （当前版本，覆盖旧的）；只写本集已存在的镜，缺镜报告 missing 不造镜。"""
+    （当前版本，覆盖旧的）；只写本集已存在的镜，缺镜报告 missing 不造镜。
+    人工改过的镜（edited=true）默认不覆盖：要覆盖必须显式 force=true。"""
     import datetime as _dt
     b = request.get_json(force=True) or {}
     eid = str(b.get("episode_id") or "").strip()
@@ -766,22 +884,81 @@ def import_shot_video_prompts():
     items = [x for x in (_norm_video_prompt_item(it) for it in raw[:64]) if x]
     if not items:
         return jsonify({"code": 4001, "msg": "prompts 里没有可回传的条目（缺 shot_id 或 prompt）"}), 400
-    updated, missing, skipped = [], [], len(raw[:64]) - len(items)
+    updated, missing, skipped, kept = [], [], len(raw[:64]) - len(items), []
+    force = bool(b.get("force"))
     for sid, row in items:
         s = _SHOTS.get(sid)
         if not s or s.get("episode_id") != eid:
             missing.append(sid)
             continue
+        cur = s.get("lport_video_prompts") or {}
+        if cur.get("edited") and not force:
+            # 人工改过的镜：回传不冲掉，留在 kept 里让调用方知道
+            kept.append(sid)
+            continue
+        prev = {"prev_prompt": cur.get("prompt"), "prev_at": cur.get("at")} if cur.get("edited") else {}
         s["lport_video_prompts"] = {
             "source": source,
             "package_id": pkg_id,
             "at": _dt.datetime.now().isoformat(timespec="seconds"),
             **row,
+            **({"overwrote_edit": True, **prev} if force and cur.get("edited") else {}),
         }
         updated.append(sid)
     _persist()
     return ok({"episode_id": eid, "updated": updated, "missing": missing,
-               "skipped": skipped, "count": len(updated), "source": source})
+               "kept": kept, "skipped": skipped, "count": len(updated), "source": source})
+
+
+@bp.put("/shots/<sid>/video-prompt")
+def save_video_prompt(sid):
+    """人工编辑视频提示词：写进该镜 lport_video_prompts 并上锁（edited=true）。
+
+    锁上之后 L-Port 再回传默认不覆盖；要覆盖走 import 带 force=true，
+    或先 DELETE .../video-prompt/edit 解锁。"""
+    import datetime as _dt
+    b = request.get_json(force=True) or {}
+    s = _SHOTS.get(sid)
+    if not s:
+        return jsonify({"code": 4001, "msg": "shot 不存在"}), 400
+    prompt = str(b.get("prompt") or "").strip()
+    if not prompt:
+        return jsonify({"code": 4001, "msg": "提示词不能为空"}), 400
+    cur = dict(s.get("lport_video_prompts") or {})
+    cur["prompt"] = prompt[:8000]
+    if "negative" in b:
+        cur["negative"] = str(b.get("negative") or "")[:4000]
+    for k, cap in (("engine", 20), ("video_model", 40), ("ref_mode", 20), ("tier", 20)):
+        if isinstance(b.get(k), str) and b.get(k).strip():
+            cur[k] = b[k].strip()[:cap]
+    if b.get("duration_s") is not None:
+        d, err = _normalize_duration(b.get("duration_s"), s.get("duration_s") or 5)
+        if not err:
+            cur["duration_s"] = d
+    cur["edited"] = True
+    cur["edited_at"] = _dt.datetime.now().isoformat(timespec="seconds")
+    if not cur.get("source"):
+        cur["source"] = "manual"
+    cur.setdefault("at", cur["edited_at"])
+    s["lport_video_prompts"] = cur
+    _persist()
+    return ok(cur)
+
+
+@bp.delete("/shots/<sid>/video-prompt/edit")
+def unlock_video_prompt(sid):
+    """解锁：清掉 edited 标记，下次回传可以覆盖（不删当前正文）。"""
+    s = _SHOTS.get(sid)
+    if not s:
+        return jsonify({"code": 4001, "msg": "shot 不存在"}), 400
+    cur = dict(s.get("lport_video_prompts") or {})
+    if not cur:
+        return ok({})
+    cur.pop("edited", None)
+    cur.pop("edited_at", None)
+    s["lport_video_prompts"] = cur
+    _persist()
+    return ok(cur)
 
 
 REF_ROLES = ("character", "outfit", "style", "face", "pose", "scene", "prop")
