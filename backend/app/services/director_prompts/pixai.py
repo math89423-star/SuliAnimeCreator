@@ -3,6 +3,7 @@ import re
 from .images import first_image, img_url, collect_refs, collect_refs_fell_back, REF_ROLE_PHRASE, MAX_REFS
 from .text import DIALOG, strip_prefix, pixai_preformatted
 from .tiers import TIERS, normalize_tier, water_clause
+from .genmode import normalize_gen_mode, infer_gen_mode, resolve_gen_mode
 
 PIXAI_CAM = {
     "固定": "fixed shot, the camera holds still",
@@ -30,20 +31,23 @@ PIXAI_TONE = {
 
 # PixAI 视频各型号差异（官方口径）：同一套提示词框架，但这几项按型号分叉
 PIXAI_MODELS = {
-    "tsubaki-video": {"label": "Tsubaki Video", "max_s": 15, "audio": True, "ref": "multi", "cam_in_prompt": True,
+    "tsubaki-video": {"label": "Tsubaki Video", "max_s": 15, "audio": True, "ref": "multi", "last": True,
+                      "cam_in_prompt": True,
                       "note": "新旗舰视频模型；多图参考 + 音频；官方文档未收录，按 v4.0 家族口径（时长档位以界面为准）"},
     "tsubaki-video-flash": {"label": "Tsubaki Video Flash", "max_s": 15, "audio": True, "ref": "multi",
-                            "cam_in_prompt": True,
+                            "last": True, "cam_in_prompt": True,
                             "note": "Tsubaki Video 的快速档；多图参考 + 音频；同上按 v4.0 家族口径"},
-    "v4": {"label": "V4.0 Preview / Lite", "max_s": 15, "audio": True, "ref": "multi", "cam_in_prompt": True,
+    "v4": {"label": "V4.0 Preview / Lite", "max_s": 15, "audio": True, "ref": "multi", "last": True,
+           "cam_in_prompt": True,
            "note": "多图+参考视频；参考图是语义锚；Keyframe 与 Multi-Reference 互斥"},
-    "v3.2": {"label": "V3.2", "max_s": 10, "audio": True, "ref": "startframe", "cam_in_prompt": True,
+    "v3.2": {"label": "V3.2", "max_s": 10, "audio": True, "ref": "startframe", "last": True,
+             "cam_in_prompt": True,
              "note": "精准跟词 + 配音；首/尾帧"},
     "v3.0": {"label": "V3.0 Lite", "max_s": 10, "audio": False,
-             "ref": "startframe", "cam_in_prompt": True,
+             "ref": "startframe", "last": True, "cam_in_prompt": True,
              "note": "界面上是 V3.0 Lite（复杂动作、首尾可控）；锁角色强；含舞蹈预设；无音频"},
     "v2.7": {"label": "V2.7 (High Dynamics)", "max_s": 10, "audio": False, "ref": "startframe",
-             "cam_in_prompt": False, "note": "相机走独立下拉，提示词里不要写运镜；仅首帧；无音频"},
+             "last": False, "cam_in_prompt": False, "note": "相机走独立下拉，提示词里不要写运镜；仅首帧；无音频"},
 }
 
 
@@ -101,24 +105,28 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     vkey = (video_model or "tsubaki-video").strip() if (video_model or "tsubaki-video").strip() in PIXAI_MODELS else "tsubaki-video"
     duration = min(max(duration, 0.5), float(vcfg["max_s"]))
     multi_ok = vcfg["ref"] == "multi"
-    first = first_image(shot)
     ordered, truncated = collect_refs(shot, fallback_refs)
     fell_back = collect_refs_fell_back(shot, fallback_refs)
-    extras = [x for x in ordered if x is not first]
-    ref_note = ""
-    if fell_back:
-        ref_note = "本镜无镜级图，已自动用角色立绘/本集参考图作 Multi-Reference"
+    # 生成方式：镜上写的 gen_mode 是 Suli 定的意图；没写时按素材推，
+    # 页面默认值（mode）只在完全没有素材线索时兜底。结算再按型号能力降级。
+    want = normalize_gen_mode(shot.get("gen_mode"))
+    if not want:
+        want = "multi-ref" if (mode == "reference" and ordered) else ""
+    eff_gen, eff_mode, gen_notes = resolve_gen_mode(
+        want, shot, multi_ok=multi_ok, last_ok=bool(vcfg.get("last")), fallback_used=fell_back)
+    if eff_gen == "i2v-first-last":
+        # 首尾帧只吃两张：首帧起点、尾帧收束
+        ordered = [x for x in ordered if x.get("kind") in ("first", "last")][:2]
+    elif eff_gen != "multi-ref":
+        ordered = [x for x in ordered if x.get("kind") != "last"]
+    if eff_gen == "t2v":
+        ordered = []
+    first = next((x for x in ordered if x.get("kind") == "first"), None) or (ordered[0] if ordered else None)
+    ref_note = "；".join([n for n in gen_notes if n])
+    if fell_back and eff_gen == "multi-ref":
+        ref_note = ("；".join([x for x in [ref_note, "本镜无镜级图，已自动用角色立绘/本集参考图作 Multi-Reference"] if x]))
     if truncated:
-        ref_note = f"参考图超过 {MAX_REFS} 张上限，只取前 {MAX_REFS} 张"
-    if extras and not multi_ok:
-        ref_note += ("；" if ref_note else "") + f"{vcfg['label']}不支持多图参考，已忽略 {len(extras)} 张额外参考"
-    eff_mode = mode
-    if not multi_ok:
-        eff_mode = "startframe"
-    elif extras and mode == "startframe":
-        eff_mode = "reference"
-        if not fell_back:
-            ref_note += ("；" if ref_note else "") + f"含 {len(extras)} 张多图参考，已按 Multi-Reference 出（与 Keyframe 互斥）"
+        ref_note = "；".join([x for x in [ref_note, f"参考图超过 {MAX_REFS} 张上限，只取前 {MAX_REFS} 张"] if x])
 
     def _en_only(t):
         """英文正文不吃中文锚：角色库字段是中文时整句丢掉，身份交给 @image1 / 参考图。"""
@@ -145,17 +153,21 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
         tail = f"{style}, anime image-to-video"
         if tcfg and "adult" not in duty.lower():
             tail = tail + (f", {tcfg['anchor']}" if tcfg.get("anchor") else "")
+        end_tag = next((tag for tag, x in tagged if x.get("kind") == "last"), "")
+        if eff_gen == "i2v-first-last" and end_tag:
+            lines.append(f"The clip must end exactly on {end_tag}.")
         prompt_out = re.sub(r"\n{3,}", "\n\n", "\n\n".join(lines + ["", tail + "."]))
         prompt_out, applied_deltas = apply_pixai_model_deltas(prompt_out, vcfg, duration)
         locks_hit = [l.get("id") for l in locks
                      if l.get("surface_en") and l["surface_en"].lower() in prompt_out.lower()]
         return {"shot_id": shot.get("id", ""), "mode": "PixAI-I2V", "engine": "pixai",
                 "video_model": vkey, "video_model_label": vcfg["label"], "video_note": vcfg["note"],
-                "ref_mode": (eff_mode if (first or (multi_ok and tagged)) else "t2v"), "preformatted": True,
+                "ref_mode": eff_mode, "gen_mode": want or infer_gen_mode(shot),
+                "gen_mode_eff": eff_gen, "preformatted": True,
                 "fallback_used": fell_back, "applied": applied_deltas,
                 "refs": ref_entries, "ref_note": ref_note,
                 "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
-                "missing_image": not bool(first),
+                "missing_image": (eff_gen != "t2v" and not bool(first)),
                 "first_image": first.get("name") if first else "",
                 "first_image_url": img_url(first.get("name")) if first else "",
                 "duration_s": duration, "prompt": prompt_out[:2000], "locks_hit": locks_hit}
@@ -168,7 +180,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
                          f"and the composition of @image1 unchanged at the start.")
     else:
         lines.append(f"{anchors} as the subject of the clip.")
-    if multi_ok:
+    if eff_gen in ("multi-ref", "i2v-first-last"):
         for tag, x in tagged:
             if x is first:
                 continue
@@ -194,7 +206,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     if w_clause:
         beat = beat.rstrip(".") + ". " + w_clause
     carry_bits = []
-    if multi_ok:
+    if eff_gen in ("multi-ref", "i2v-first-last"):
         for tag, x in tagged:
             if x is first:
                 continue
@@ -202,6 +214,10 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             carry_bits.append(f"the {REF_ROLE_PHRASE.get(role, 'reference')} from {tag}")
     if carry_bits:
         beat = beat.rstrip(".") + ". Carry " + " and ".join(carry_bits) + " into this shot."
+    if eff_gen == "i2v-first-last":
+        end_tag = next((tag for tag, x in tagged if x.get("kind") == "last"), "")
+        if end_tag:
+            beat = beat.rstrip(".") + f". The clip must end exactly on {end_tag}."
     lines.append("")
     lines.append(beat if beat.endswith(".") else beat + ".")
 
@@ -243,10 +259,12 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             "video_model": vkey, "video_model_label": vcfg["label"], "video_note": vcfg["note"],
             "applied": applied_deltas,
             "refs": ref_entries, "ref_note": ref_note,
-            "ref_mode": (eff_mode if (first or (multi_ok and tagged)) else "t2v"),
+            "ref_mode": eff_mode,
+            "gen_mode": want or infer_gen_mode(shot),
+            "gen_mode_eff": eff_gen,
             "fallback_used": fell_back,
             "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
-            "missing_image": not bool(first),
+            "missing_image": (eff_gen != "t2v" and not bool(first)),
             "first_image": first.get("name") if first else "",
             "first_image_url": img_url(first.get("name")) if first else "",
             "duration_s": duration, "prompt": prompt, "locks_hit": locks_hit}

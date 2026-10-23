@@ -48,6 +48,9 @@
             <el-tag v-if="r.tier" size="small" :type="r.tier === 'nsfw' ? 'danger' : 'info'">{{ r.tier }}</el-tag>
             <el-tag v-if="r.water_level" size="small" type="danger" effect="plain">{{ WATER_LABEL[r.water_level] || r.water_level }}</el-tag>
           </div>
+          <el-select v-model="r.gen_mode" size="small" class="seg-gen" placeholder="生成方式" @change="saveRow(r, true)">
+            <el-option v-for="g in genModeOpts" :key="g.key" :label="g.label" :value="g.key" />
+          </el-select>
           <div class="seg-id">{{ r.id }}</div>
           <el-popconfirm title="删掉该镜？" confirm-button-text="删" cancel-button-text="留" @confirm="removeShot(r.id)">
             <template #reference><el-button link type="danger" size="small">删</el-button></template>
@@ -89,6 +92,12 @@ import { castNames, loadCastInput } from '../utils/cast'
 import { purgeLegacySeeds } from '../utils/legacySeeds'
 const store = useAppStore()
 const WATER_LABEL: Record<string, string> = { tease: '暗示', undress: '半露', explicit: '直白', closeup: '特写' }
+// 生成方式：意图由本页定，能力校验在组装层（型号不支持就降级并回报）
+const genModeOpts = ref<{ key: string; label: string }[]>([
+  { key: '', label: '自动' }, { key: 't2v', label: '纯文本' },
+  { key: 'i2v-first', label: '首帧' }, { key: 'i2v-first-last', label: '首尾帧' },
+  { key: 'multi-ref', label: '多图参考' },
+])
 const settings = useSettingsStore()
 // 剧本底稿：空着等生成/手写。旧演示样稿（含固定人名那两句）不再预填，
 // 老浏览器里残留的同一份样稿也清掉，免得 debounce 自动保存把它写进库里。
@@ -165,7 +174,7 @@ async function addShot() {
   await loadShots()
 }
 async function saveRow(r: any, silent = false) {
-  await api.updateShot(r.id, { duty: r.duty, duty_en: r.duty_en || '', duration_s: r.duration_s, sound: r.sound, note: r.note || '', tier: r.tier || '', camera: { crop: r.camera?.crop || 'medium', movement: r.camera?.movement || '固定' } })
+  await api.updateShot(r.id, { duty: r.duty, duty_en: r.duty_en || '', duration_s: r.duration_s, sound: r.sound, note: r.note || '', tier: r.tier || '', gen_mode: r.gen_mode || '', camera: { crop: r.camera?.crop || 'medium', movement: r.camera?.movement || '固定' } })
   if (!silent) ElMessage.success('已保存')
   await loadStat()
 }
@@ -244,7 +253,7 @@ async function genOutlineExpert() {
   const brief = [
     `@data/uploads/${img}`,
     `集号：${store.episodeId}`,
-    '请按这张单图出方案大纲：看图写一份方案大纲markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/备注 / 合计时长），2-5镜，单镜3-8秒。然后 PUT /api/v1/scriptboard/outline/<集号> 保存 {outline_md: 全文, outline_image: 本图basename}，最后回复方向一句话+镜数+合计时长。只出大纲，不要写分镜库。',
+    '请按这张单图出方案大纲：看图写一份方案大纲markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/生成方式/备注（生成方式填 t2v / i2v-first / i2v-first-last / multi-ref） / 合计时长），2-5镜，单镜3-8秒。然后 PUT /api/v1/scriptboard/outline/<集号> 保存 {outline_md: 全文, outline_image: 本图basename}，最后回复方向一句话+镜数+合计时长。只出大纲，不要写分镜库。',
     `总时长要求：${total}秒内，按此时长分配镜数与每镜秒数（优先保证单镜3-8秒）。`,
     '目标引擎：PixAI 视频（提示词按 PixAI 视频格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行，见 skills/video/pixai-video-prompting）。',
   ].join('\n')
@@ -343,6 +352,11 @@ onMounted(async () => {
     const rows = (r?.data || r || []) as any[]
     tierOpts.value = [{ key: '', label: '不分级' }, ...rows.map(t => ({ key: t.key, label: t.label }))]
   } catch {}
+  try {
+    const g = await api.genModes()
+    const rows = (g?.data || g || []) as any[]
+    if (rows.length) genModeOpts.value = [{ key: '', label: '自动' }, ...rows.map(x => ({ key: x.key, label: x.label }))]
+  } catch {}
   await loadScript()
   await loadShots()
 })
@@ -380,6 +394,7 @@ onMounted(async () => {
 .seg-label { font-weight: 700; font-size: 13px; }
 .seg-meta { font-size: 12px; color: var(--suli-text-2); margin: 4px 0; }
 .seg-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+.seg-gen { width: 100%; margin-top: 4px; }
 .seg-id { font-family: var(--suli-mono); font-size: 11px; color: var(--suli-text-3); margin: 4px 0; }
 .clip-thumb { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; cursor: zoom-in; }
 .clip-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; }

@@ -10,6 +10,9 @@ TIER_KEYS = ("", "sfw", "nsfw")
 # 水位四档（与 art 域 tier、L-Port comic_page_diverge、skills/video/nsfw-directing 同一套）：
 # 单独存 water_level，不把 explicit/closeup 折成 nsfw——折掉就丢了"这镜演到哪一步"，切镜没法对账。
 WATER_KEYS = ("", "tease", "undress", "explicit", "closeup")
+# 生成方式四档：Suli 定的意图（纯文本 / 首帧 / 首尾帧 / 多图参考）。
+# 组装层按型号能力结算成 ref_mode（t2v/startframe/reference），存的是意图不是结算值。
+GEN_KEYS = ("", "t2v", "i2v-first", "i2v-first-last", "multi-ref")
 CROP_KEYS = ("extreme_close", "closeup", "close", "medium_close", "medium",
              "medium_full", "full", "wide", "extreme_wide")
 MOVEMENT_KEYS = ("固定", "推", "拉", "摇", "移", "跟", "环绕", "升降", "手持", "航拍")
@@ -29,6 +32,15 @@ def _norm_water(v):
     """水位四档归一；空串=未标。门档值（nsfw/sfw）不算水位。"""
     v = (v or "").strip()
     return v if v in WATER_KEYS else ""
+
+
+def _norm_gen_mode(v):
+    """生成方式归一：认枚举、中文别名与 ref_mode 旧值；认不出回空串（＝按素材推断）。"""
+    from ..services.director_prompts.genmode import normalize_gen_mode
+    v = (v or "").strip()
+    if v in GEN_KEYS:
+        return v
+    return normalize_gen_mode(v)
 
 
 def _resolve_tier_water(body, cur_tier="", cur_water=""):
@@ -366,11 +378,11 @@ def _sync_screenplay_from_outline(ep, eid):
                 continue
             if any("镜号" in c or "---" in c for c in cells):
                 continue
-            mid, content, dur, move = (cells + ["", "", "", ""])[:4]
+            mid, content, dur, move, gen = (cells + ["", "", "", "", ""])[:5]
             if not content or len(beats) >= 8:
                 continue
-            tail = f"（{dur}，{move}）" if (dur or move) else ""
-            beats.append(f"{mid or '镜'+str(len(beats)+1)}：{content}{tail}")
+            tail = "，".join([x for x in (dur, move, gen) if x])
+            beats.append(f"{mid or '镜'+str(len(beats)+1)}：{content}" + (f"（{tail}）" if tail else ""))
         total = ""
         for ln in lines:
             if "合计" in ln and ("镜" in ln or "秒" in ln):
@@ -483,6 +495,7 @@ def draft_from_outline(eid):
                "camera": {"crop": cam.get("crop", "medium"), "height": "eye",
                           "movement": cam.get("movement", "固定")},
                "sound": spec.get("sound", ""), "key_text_en": spec.get("duty_en", ""),
+               "gen_mode": _norm_gen_mode(spec.get("gen_mode")),
                "tier": tier, "water_level": water, "draft": True}
         _SHOTS[sid] = row
         used.add(sid)
@@ -561,6 +574,13 @@ def list_shots():
     rows.sort(key=lambda x: (x.get("ord", 0), x.get("id", "")))
     return ok(rows)
 
+@bp.get("/gen-modes")
+def gen_modes():
+    """镜级生成方式枚举（前端下拉用）：[{key,label}]。"""
+    from ..services.director_prompts.genmode import gen_mode_list
+    return ok(gen_mode_list())
+
+
 @bp.post("/shots")
 def create_shot():
     """手工加镜（一行一行排）：body {episode_id, duty, duration_s, sound, camera, key_text_en, tier, water_level}。"""
@@ -596,6 +616,7 @@ def create_shot():
            "sound": b.get("sound", ""), "key_text_en": b.get("key_text_en", ""),
            "video_negative": str(b.get("video_negative") or "")[:4000],
            "note": str(b.get("note", ""))[:500],
+           "gen_mode": _norm_gen_mode(b.get("gen_mode")),
            "tier": tier, "water_level": water, "draft": bool(b.get("draft", False))}
     _SHOTS[sid] = row
     _persist()
@@ -621,6 +642,8 @@ def update_shot(sid):
     for k in ("duty", "duty_en", "sound", "key_text_en", "ord", "image", "video_negative"):
         if k in b:
             s[k] = str(b[k])[:4000] if k == "video_negative" else b[k]
+    if "gen_mode" in b:
+        s["gen_mode"] = _norm_gen_mode(b.get("gen_mode"))
     if "note" in b:
         s["note"] = str(b.get("note") or "")[:500]
     if "draft" in b:
@@ -711,6 +734,8 @@ def import_shots():
             row["key_text_en"] = str(item.get("key_text_en") or row.get("key_text_en", ""))[:2000]
             row["tier"], row["water_level"] = _resolve_tier_water(
                 item, row.get("tier", ""), row.get("water_level", ""))
+            if item.get("gen_mode"):
+                row["gen_mode"] = _norm_gen_mode(item.get("gen_mode"))
             row["draft"] = True
             row["note"] = f"{source}回执"[:500]
             updated.append(sid)
@@ -725,6 +750,7 @@ def import_shots():
                            "sound": str(item.get("sound", item.get("sound_cn", "")) or ""),
                            "key_text_en": str(item.get("key_text_en") or "")[:2000],
                            "note": f"{source}回执"[:500],
+                           "gen_mode": _norm_gen_mode(item.get("gen_mode")),
                            "tier": tier, "water_level": water, "draft": True}
             used.add(sid)
             top += 1
@@ -821,6 +847,7 @@ def import_shot_prompts():
 # 与上面的中性导演提示词分两口：那边管分镜文本，这边管可直接投产的视频提示词全文。
 _LP_VIDEO_CAP = {
     "engine": 20, "video_model": 40, "ref_mode": 20, "tier": 20,
+    "gen_mode": 20, "gen_mode_eff": 20,
     "prompt": 8000, "negative": 4000, "ref_note": 500,
 }
 

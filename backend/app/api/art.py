@@ -308,6 +308,7 @@ def _plan_projection(p):
         "tier": p.get("tier") or "",
         "clothing_level": p.get("clothing_level") or "",
         "page_mode": p.get("page_mode") or "panel",
+        "shot_id": p.get("shot_id") or "",
         "status": p.get("status") or "draft",
         "push": p.get("push") or None,
         "page": p.get("page") or None,
@@ -321,6 +322,55 @@ def _plan_projection(p):
 def list_plans():
     rows = sorted((_ART_DB.get("plans") or []), key=lambda p: p.get("updated_at") or "", reverse=True)
     return ok([_plan_projection(p) for p in rows])
+
+
+@bp.get("/plans/by-shot")
+def plans_by_shot():
+    """按镜取图像提示词：{shot_id: {plan_id, title, engines, tier, clothing_level, prompts}}。
+
+    关联优先用 plan.shot_id；没写的按 page.episode_id + panel_index 对到该集第 N 镜（按 ord）兜底。
+    同一镜有多个方案时留最近更新的那个。
+    """
+    eid = (request.args.get("episode_id") or "").strip()
+    if not eid:
+        return jsonify({"code": 4001, "msg": "缺少 episode_id"}), 400
+    from .scriptboard import _SHOTS
+    shots = [s for s in _SHOTS.values() if s.get("episode_id") == eid]
+    ordered = sorted(shots, key=lambda x: (x.get("ord", 0), x.get("id", "")))
+    by_id = {s.get("id"): s for s in shots}
+    out = {}
+    for p in (_ART_DB.get("plans") or []):
+        sid = (p.get("shot_id") or "").strip()
+        if sid:
+            if sid not in by_id:
+                continue
+        else:
+            pg = p.get("page") or {}
+            if (pg.get("episode_id") or "") != eid:
+                continue
+            pi = pg.get("panel_index") or 0
+            if not pi or pi > len(ordered):
+                continue
+            sid = ordered[pi - 1].get("id")
+        if not sid:
+            continue
+        if sid in out and (p.get("updated_at") or "") <= (out[sid].get("_u") or ""):
+            continue
+        pr = p.get("prompts") or {}
+        out[sid] = {
+            "plan_id": p.get("id"), "title": p.get("title") or "",
+            "engines": p.get("engines") or [], "tier": p.get("tier") or "",
+            "clothing_level": p.get("clothing_level") or "",
+            "status": p.get("status") or "draft",
+            "prompts": {k: {"positive": (v or {}).get("positive") or "",
+                            "negative": (v or {}).get("negative") or "",
+                            "note": (v or {}).get("note") or ""}
+                        for k, v in pr.items()},
+            "_u": p.get("updated_at") or "",
+        }
+    for v in out.values():
+        v.pop("_u", None)
+    return ok(out)
 
 
 @bp.get("/plans/<plan_id>")
@@ -390,6 +440,8 @@ def upsert_plan():
         p["page_mode"] = str(b.get("page_mode") or "panel").strip() or "panel"
     if "page" in b:
         p["page"] = _norm_page(b.get("page"))
+    if "shot_id" in b:
+        p["shot_id"] = str(b.get("shot_id") or "").strip()[:64]
     # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
     # source=ui 是主人在页面上自己改的——人已经看过了，清掉待审快照。
     if str(b.get("source") or "").strip().lower() == "ui":

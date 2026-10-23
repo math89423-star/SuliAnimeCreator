@@ -20,6 +20,7 @@
             <el-tag v-if="shot.draft" size="small" type="warning">草案</el-tag>
             <el-tag v-if="shot.tier" size="small" :type="shot.tier === 'nsfw' ? 'danger' : 'info'">{{ tierLabel(shot.tier) }}</el-tag>
             <el-tag v-if="shot.water_level" size="small" type="danger" effect="plain">{{ waterLabel(shot.water_level) }}</el-tag>
+            <el-tag v-if="shot.gen_mode" size="small" type="info" effect="plain">{{ GEN_LABEL[shot.gen_mode] || shot.gen_mode }}</el-tag>
             <el-tag v-if="refs.length" size="small" type="info">参考×{{ refs.length }}</el-tag>
             <el-tag v-if="!first" size="small" type="danger">缺首帧</el-tag>
           </div>
@@ -100,6 +101,7 @@
             <span class="sd-k">景别</span><span class="sd-v">{{ cropLabel(shot) }}</span>
             <span class="sd-k">运镜</span><span class="sd-v">{{ shot.camera?.movement || '—' }}</span>
             <span class="sd-k">时长</span><span class="sd-v tnum">{{ shot.duration_s }}s</span>
+            <span class="sd-k">生成方式</span><span class="sd-v">{{ genModeText }}</span>
             <span class="sd-k">水位</span><span class="sd-v">{{ shot.water_level ? waterLabel(shot.water_level) : '—' }}</span>
             <span class="sd-k">分级</span><span class="sd-v">{{ shot.tier || '—' }}</span>
             <span class="sd-k">台词</span><span class="sd-v">{{ shot.sound || '—' }}</span>
@@ -117,6 +119,7 @@ import { api } from '../../api/client'
 import { imgUrl, firstImg, refImgs, cropLabel } from '../../composables/useShotImages'
 const props = defineProps<{ shot: any; index: number; tierLabel: (k: string) => string; onSaved?: () => void }>()
 const WATER_LABEL: Record<string, string> = { tease: '暗示', undress: '半露', explicit: '直白', closeup: '特写' }
+const GEN_LABEL: Record<string, string> = { 't2v': '纯文本', 'i2v-first': '首帧', 'i2v-first-last': '首尾帧', 'multi-ref': '多图参考' }
 const waterLabel = (k: string) => WATER_LABEL[k] || k
 const REF_KIND: Record<string, string> = { first: '首帧', ref: '参考', last: '尾帧' }
 const REF_ROLE: Record<string, string> = {
@@ -132,6 +135,12 @@ const refs = computed(() => refImgs(props.shot))
 // 没有首帧但有参考图时，缩略图先用第一张参考图，别显示"无图"
 const thumb = computed(() => first.value || refs.value[0] || null)
 const vp = computed(() => props.shot?.lport_video_prompts || {})
+// 意图 → 结算：型号不支持时组装层会降级，两个值不同就把降级结果一并显示
+const genModeText = computed(() => {
+  const want = GEN_LABEL[props.shot?.gen_mode] || '自动'
+  const eff = GEN_LABEL[vp.value?.gen_mode_eff] || ''
+  return eff && eff !== want ? `${want} → ${eff}` : want
+})
 const lp = computed(() => props.shot?.lport_prompts || null)
 const positive = computed(() => (vp.value.prompt || props.shot?.duty_en || '').trim())
 const negativeNote = computed(() => (

@@ -365,6 +365,9 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
         entry = {k: shot.get(k) for k in
                  ("id", "episode_id", "ord", "duty", "duty_en", "duration_s",
                   "camera", "sound", "key_text_en", "tier", "water_level", "images", "image")}
+        # 生成方式：gen_mode 是 Suli 定的意图，ref_mode 是按型号能力结算后的结果
+        entry["gen_mode"] = r.get("gen_mode") or shot.get("gen_mode") or ""
+        entry["gen_mode_eff"] = r.get("gen_mode_eff") or ""
         entry["ref_mode"] = r.get("ref_mode", "")
         entry["refs"] = r.get("refs") or []
         entry["ref_note"] = r.get("ref_note", "")
@@ -396,6 +399,10 @@ def _build_director_bundle(eid, cid="", project_id="", project_name="",
                           "duty": shot.get("duty", ""),
                           "duty_en": shot.get("duty_en", ""),
                           "key_text_en": shot.get("key_text_en", ""),
+                          "gen_mode": next((x.get("gen_mode", "") for x in shots_out
+                                           if x.get("id") == shot.get("id")), ""),
+                          "gen_mode_eff": next((x.get("gen_mode_eff", "") for x in shots_out
+                                               if x.get("id") == shot.get("id")), ""),
                           "ref_mode": next((x.get("ref_mode", "") for x in shots_out
                                             if x.get("id") == shot.get("id")), ""),
                           "refs": next((x.get("refs", []) for x in shots_out

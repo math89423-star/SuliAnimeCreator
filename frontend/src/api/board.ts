@@ -18,6 +18,8 @@ export const boardApi = {
   mediaDelete: (name: string) => http.delete(`/v1/uploads/media/${encodeURIComponent(name)}`).then(r => r.data),
   mediaBatchDelete: (names: string[]) => http.post('/v1/uploads/media/batch-delete', { names }).then(r => r.data),
   listShots: (eid: string) => http.get('/v1/scriptboard/shots', { params: { episode_id: eid } }).then(r => r.data),
+  /** 镜级生成方式枚举：[{key,label}]（t2v / i2v-first / i2v-first-last / multi-ref）。 */
+  genModes: () => http.get('/v1/scriptboard/gen-modes').then(r => r.data),
   createShot: (p: any) => http.post('/v1/scriptboard/shots', p).then(r => r.data),
   uploadShotImage: (sid: string, f: File, kind = 'ref', extra: any = {}) => { const fd = new FormData(); fd.append('file', f); fd.append('kind', kind); if (extra.role) fd.append('role', extra.role); if (extra.desc) fd.append('desc', extra.desc); return http.post(`/v1/scriptboard/shots/${sid}/image`, fd).then(r => r.data) },
   setShotImageMeta: (sid: string, name: string, meta: any) => http.post(`/v1/scriptboard/shots/${sid}/image/meta`, { name, ...meta }).then(r => r.data),

@@ -57,7 +57,7 @@ def _lead_pair(names=None):
     return lead, foil
 
 
-def _outline_template(episode_id, total_s, shots_n, engine, tier, hint="", cast=None):
+def _outline_template(episode_id, total_s, shots_n, engine, tier, hint="", cast=None, ref_image=""):
     total_s = total_s or 15
     tier_name = {"nsfw": "成人向", "sfw": "普通"}.get(tier or "", "常规")
     C = _cast_names(cast, hint, episode_id)
@@ -77,13 +77,16 @@ def _outline_template(episode_id, total_s, shots_n, engine, tier, hint="", cast=
         "",
         "## 分镜大纲表",
         "",
-        "| 镜号 | 内容一句话 | 预计时长 | 运镜方向 | 备注 |",
-        "| --- | --- | --- | --- | --- |",
+        "| 镜号 | 内容一句话 | 预计时长 | 运镜方向 | 生成方式 | 备注 |",
+        "| --- | --- | --- | --- | --- | --- |",
     ]
     per = max(3, min(8, round(total_s / max(1, shots_n))))
     for i in range(1, shots_n + 1):
         mov = MOVEMENTS[i % len(MOVEMENTS)]
-        lines.append("| %d | 氛围延续第%d镜 | %d秒 | %s | 草案待定稿 |" % (i, i, per, mov))
+        # 有大纲配图时第一镜挂首帧，生成方式照实写；其余镜没有素材，按纯文本
+        gen = "i2v-first" if (ref_image and i == 1) else "t2v"
+        lines.append("| %d | 氛围延续第%d镜 | %d秒 | %s | %s | 草案待定稿 |"
+                     % (i, i, per, mov, gen))
     lines += ["", "## 合计时长", "", "约 %s 秒，共 %d 镜。" % (per * shots_n, shots_n), ""]
     return "\n".join(lines)
 
@@ -103,7 +106,10 @@ def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", r
         if cfg.get("provider") == "opencode" and cfg.get("key") and cfg.get("model"):
             model_id = re.sub(r"^opencode-go/", "", cfg["model"])
             prompt = ("只做方案大纲 markdown，含：方向一句话/基调与档位/分镜大纲表"
-                      "(镜号|内容一句话|预计时长|运镜方向|备注)/合计时长。"
+                      "(镜号|内容一句话|预计时长|运镜方向|生成方式|备注)/合计时长。"
+                      "生成方式只能填 t2v / i2v-first / i2v-first-last / multi-ref 之一："
+                      "t2v=纯文本不锚图，i2v-first=首帧锁构图，i2v-first-last=首尾帧，"
+                      "multi-ref=多图只锚身份。按这镜实际能不能拿到图来填，拿不到就写 t2v。"
                       "%d-%d镜，单镜3-8秒，总计约%d秒，引擎%s档位%s。%s背景：%s"
                       % (shots_n, shots_n, total_s, engine or "pixai",
                          tier or "常规", cast_hint, (hint or "")[:800]))
@@ -114,7 +120,7 @@ def build_outline_md(episode_id, total_s=15, engine="pixai", tier="", hint="", r
                 return txt, "llm"
     except Exception:
         pass
-    return _outline_template(episode_id, total_s, shots_n, engine, tier, hint, C["cast"]), "template"
+    return _outline_template(episode_id, total_s, shots_n, engine, tier, hint, C["cast"], ref_image), "template"
 
 
 def _norm_crop(v):
@@ -132,56 +138,143 @@ def _norm_crop(v):
 
 
 def _norm_dur(v, fallback):
+    """时长归一：认 5 / 5s / 5秒 / 约5秒；认不出回 fallback。"""
+    m = re.search(r"\d+(?:\.\d+)?", str(v or ""))
+    if not m:
+        return fallback
     try:
-        d = float(v)
-        return max(1, min(8, int(round(d))))
+        return max(1, min(8, int(round(float(m.group(0))))))
     except (ValueError, TypeError):
         return fallback
 
 
+def _norm_move(v):
+    """运镜归一：取正文里最先出现的那个词（"手持轻晃跟拍"→手持，不是按词表顺序抢），
+    认不出回空串（由调用方按位置兜底）。"""
+    t = (v or "").strip()
+    hits = [(t.find(m), m) for m in MOVEMENTS if m and m in t]
+    return min(hits)[1] if hits else ""
+
+
+def _table_columns(header):
+    """大纲表头 → 列下标。认得出就按名字取，认不出按老位置（0..4）兜底。"""
+    cells = [c.strip() for c in (header or "").strip().strip("|").split("|")]
+    cols = {}
+    for i, c in enumerate(cells):
+        if "镜号" in c:
+            cols["mid"] = i
+        elif "内容" in c:
+            cols["content"] = i
+        elif "时长" in c or "秒" in c:
+            cols["dur"] = i
+        elif "运镜" in c:
+            cols["move"] = i
+        elif "生成" in c:
+            cols["gen"] = i
+        elif "备注" in c:
+            cols["note"] = i
+    if "content" not in cols:
+        cols = {"mid": 0, "content": 1, "dur": 2, "move": 3, "gen": 4, "note": 5}
+    return cols
+
+
+def _parse_outline_rows(text):
+    """大纲表 → 行参数：内容 / 时长 / 运镜 / 生成方式 / 备注。
+
+    表头认名字取列（老五列表没有生成方式列就按位置兜底），列值不再丢：
+    旧实现只取 cells[1] 当内容，时长/运镜/备注全扔，运镜靠轮转补——大纲写了等于没写。
+    """
+    from .director_prompts.genmode import normalize_gen_mode
+    rows = [l for l in text.splitlines() if l.strip().startswith("|")]
+    clean = [l for l in rows if not re.match(r'^\|\s*:?-', l.strip())]
+    if not clean:
+        return []
+    cols = _table_columns(clean[0])
+    out = []
+    for l in clean[1:]:
+        cells = [c.strip() for c in l.strip().strip("|").split("|")]
+
+        def cell(key, pos, default=""):
+            i = cols.get(key, pos)
+            return cells[i] if 0 <= i < len(cells) else default
+
+        duty = cell("content", 1)
+        if not duty:
+            continue
+        out.append({
+            "duty": duty[:60],
+            "duration_s": cell("dur", 2),
+            "movement": _norm_move(cell("move", 3)),
+            "gen_mode": normalize_gen_mode(cell("gen", 4)),
+            "note": cell("note", 5)[:80],
+        })
+    return out
+
+
 def split_outline_to_shots(outline_md, episode_id, total_s=15, tier=""):
-    """大纲转草案参数：优先 llm_cuts 逐段拆，失败按表行数均分。返回 (list, tag)。"""
+    """大纲转草案参数。返回 (list, tag)。
+
+    大纲表是方案的唯一真相（镜数、内容、时长、运镜、生成方式都照表）；
+    llm_cuts 只用来补英文正文与音效，不重写镜数/内容——否则表里定的东西白写。
+    没有表行时才退回 llm_cuts，再退回均分模板。
+    """
     text = (outline_md or "").strip()
     total_s = int(total_s or 15)
-    rows = [l for l in text.splitlines() if l.strip().startswith("|")]
-    data_rows = [l for l in rows if not re.match(r'^\|\s*-', l.strip())][1:]
-    n = min(5, max(2, len(data_rows) or 3))
-    duties = []
-    for l in data_rows:
-        cells = [c.strip() for c in l.strip().strip("|").split("|")]
-        if len(cells) >= 2 and cells[1]:
-            duties.append(cells[1][:60])
+    parsed = _parse_outline_rows(text)
+    n = min(5, max(2, len(parsed) or 3))
+    cuts = []
     try:
         from .llm import llm_cuts
-        cuts = llm_cuts(text[:2000])[:n]
-        if cuts:
-            per = max(3, min(8, round(total_s / len(cuts))))
-            out = []
-            for i, c in enumerate(cuts):
-                out.append({
-                    "duty": c.get("duty", "")[:80] or ("大纲第%d镜" % (i + 1)),
-                    "duty_en": c.get("key_text_en", "")[:200] or "",
-                    "duration_s": _norm_dur(c.get("duration_s"), per),
-                    "sound": c.get("sound", "") or "",
-                    "tier": (tier or "").strip(),
-                    "camera": {"crop": _norm_crop(c.get("crop")),
-                               "movement": MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
-                })
-            return out, "llm"
+        cuts = llm_cuts(text[:2000])[:n] or []
     except Exception:
-        pass
+        cuts = []
+
+    if parsed:
+        per = max(3, min(8, round(total_s / len(parsed))))
+        out = []
+        for i, row in enumerate(parsed[:5]):
+            c = cuts[i] if i < len(cuts) else {}
+            out.append({
+                "duty": row["duty"],
+                "duty_en": str(c.get("key_text_en") or "")[:200],
+                "duration_s": _norm_dur(row.get("duration_s"), per),
+                "sound": str(c.get("sound") or ""),
+                "gen_mode": row.get("gen_mode") or "",
+                "tier": (tier or "").strip(),
+                "camera": {"crop": _norm_crop(c.get("crop")),
+                           "movement": row.get("movement") or MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
+            })
+        return out, "outline"
+
+    if cuts:
+        from .director_prompts.genmode import normalize_gen_mode
+        per = max(3, min(8, round(total_s / len(cuts))))
+        out = []
+        for i, c in enumerate(cuts):
+            out.append({
+                "duty": c.get("duty", "")[:80] or ("大纲第%d镜" % (i + 1)),
+                "duty_en": c.get("key_text_en", "")[:200] or "",
+                "duration_s": _norm_dur(c.get("duration_s"), per),
+                "sound": c.get("sound", "") or "",
+                "gen_mode": normalize_gen_mode(c.get("gen_mode")),
+                "tier": (tier or "").strip(),
+                "camera": {"crop": _norm_crop(c.get("crop")),
+                           "movement": _norm_move(c.get("movement")) or MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
+            })
+        return out, "llm"
     per = max(3, min(8, round(total_s / n)))
     out = []
     for i in range(n):
-        duty = duties[i] if i < len(duties) else ("大纲第%d镜" % (i + 1))
+        p = parsed[i] if i < len(parsed) else {}
         out.append({
-            "duty": duty,
+            "duty": p.get("duty") or ("大纲第%d镜" % (i + 1)),
             "duty_en": "",
-            "duration_s": per,
+            "duration_s": _norm_dur(p.get("duration_s"), per),
             "sound": "",
+            "gen_mode": p.get("gen_mode") or "",
             "tier": (tier or "").strip(),
             "camera": {"crop": "medium",
-                       "movement": MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
+                       "movement": p.get("movement") or MOVEMENTS[(i + 1) % len(MOVEMENTS)]},
         })
     return out, "template"
 
