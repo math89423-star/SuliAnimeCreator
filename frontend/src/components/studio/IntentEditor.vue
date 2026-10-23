@@ -267,8 +267,8 @@ function onPaste(e: ClipboardEvent) {
 </template>
 
 <style scoped>
-.textarea-wrap { position: relative; flex: 1; display: flex; min-width: 0 }
-.intent-editor { flex: 1; min-height: 96px; padding: 5px 11px; border: 1px solid var(--el-border-color); border-radius: var(--el-border-radius-base); font-size: 14px; line-height: 1.5; overflow-y: auto; outline: none; transition: border-color .2s; background: var(--el-fill-color-blank) }
+.textarea-wrap { position: relative; display: block; min-width: 0 }
+.intent-editor { width: 100%; box-sizing: border-box; min-height: 96px; height: 250px; max-height: 80vh; padding: 5px 11px; border: 1px solid var(--el-border-color); border-radius: var(--el-border-radius-base); font-size: 14px; line-height: 1.5; overflow-y: auto; outline: none; transition: border-color .2s; background: var(--el-fill-color-blank); resize: vertical }
 .intent-editor:hover { border-color: var(--el-border-color-hover) }
 .intent-editor:focus { border-color: var(--el-color-primary) }
 .mention-popup { position: absolute; left: 0; bottom: 100%; z-index: 30; min-width: 220px; max-width: 340px; margin-bottom: 6px; background: var(--el-bg-color-overlay); border: 1px solid var(--el-border-color-light); border-radius: 10px; box-shadow: var(--el-box-shadow-light); padding: 6px 0 }
