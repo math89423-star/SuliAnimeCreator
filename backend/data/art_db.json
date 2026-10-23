@@ -1185,6 +1185,1004 @@
           "novelai"
         ]
       }
+    },
+    {
+      "id": "AP-20261023142732-9927",
+      "created_at": "2026-10-23T14:27:32+00:00",
+      "prompts": {
+        "novelai": {
+          "positive": "masterpiece, best quality, very aesthetic, absurdres, 1girl, long silver hair, gradient hair, pale green hair tips, hair spread on pillow, blue-purple eyes, half-closed eyes, blush, slight smile, looking up, dark green ribbon headband, tilted headwear, white leaf hair ornament, dark blue bow, dark brown long-sleeve dress, black lace collar, bare collarbone, collarbone, pushed up skirt, skirt around waist, green and cream layered frills, crumpled clothes, black pantyhose, legs together, lying on back, on bed, arm up, empty hand, reaching upward, one white high-heel pump dangling from toe, motion blur, solo, indoor, bedroom, bed, beige bedsheet, wrinkled sheets, pillow, nightstand, warm tungsten lamp, glowing filament, window, moonlight through gap, medium shot, from above, diagonal composition, warm orange light from upper left, cold white moonlight stripe across bed, rim light on hair, light trailing behind lamp, subtle motion blur, shallow depth of field, cel shading, soft gradient, beige and warm orange and cold cyan palette",
+          "negative": "",
+          "params": {
+            "base_prompt": "masterpiece, best quality, very aesthetic, absurdres, 1girl, solo, indoor, bedroom, bed, beige bedsheet, wrinkled sheets, pillow, nightstand, warm tungsten lamp, glowing filament, window, moonlight through gap, medium shot, from above, diagonal composition, warm orange light from upper left, cold white moonlight stripe across bed, rim light on hair, light trailing behind lamp, subtle motion blur, shallow depth of field, cel shading, soft gradient, beige and warm orange and cold cyan palette",
+            "character_prompts": [
+              {
+                "negative": "bad anatomy, bad hands, missing fingers, extra digits, fewer digits, fused fingers, broken limbs, malformed limbs",
+                "position": {
+                  "x": 0.7,
+                  "y": 0.3
+                },
+                "prompt": "girl, long silver hair, gradient hair, pale green hair tips, hair spread on pillow, blue-purple eyes, half-closed eyes, blush, slight smile, looking up, dark green ribbon headband, tilted headwear, white leaf hair ornament, dark blue bow, dark brown long-sleeve dress, black lace collar, bare collarbone, collarbone, pushed up skirt, skirt around waist, green and cream layered frills, crumpled clothes, black pantyhose, legs together, lying on back, on bed, arm up, empty hand, reaching upward, one white high-heel pump dangling from toe, motion blur"
+              }
+            ]
+          },
+          "note": "镜1 推倒，L1 微乱",
+          "source": "lport",
+          "package_id": "PKG-ART-20261023142732-9422",
+          "at": "2026-10-23T14:29:23+00:00"
+        }
+      },
+      "title": "白玫瑰之夜 20s · 镜1 推倒",
+      "intent_text": "婚房床沿：他把她推倒在床上，她后背陷进米色床单，银发散在枕头上，白玫瑰捧花从手里掉到地板。参考图1 是人物与构图锚。水位 explicit 前段（衣物完整、微乱），衣物档 L1。中景，手持轻微晃动，床头暖钨丝台灯 + 窗缝冷光。",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [
+        {
+          "name": "ref_405857da.png",
+          "path": "data/uploads/ref_405857da.png",
+          "url": "/api/images/ref_405857da.png"
+        }
+      ],
+      "tier": "explicit",
+      "clothing_level": "L1",
+      "page": {
+        "episode_id": "EP-WEDDING-03",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "",
+        "image": null
+      },
+      "shot_id": "SHOT-WEDDING-03-M001",
+      "prev": {
+        "title": "",
+        "intent_text": "",
+        "engines": [],
+        "ref_images": [],
+        "note": "",
+        "tier": "",
+        "clothing_level": "",
+        "page_mode": "panel"
+      },
+      "prev_at": "2026-10-23T14:27:32+00:00",
+      "updated_at": "2026-10-23T14:29:23+00:00",
+      "status": "returned",
+      "push": {
+        "package_id": "PKG-ART-20261023142732-9422",
+        "at": "2026-10-23T14:27:32+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261023142732-9422",
+        "engines": [
+          "novelai"
+        ]
+      },
+      "blueprint": {
+        "dimension_narratives": {
+          "artist": {
+            "cn": "",
+            "en": ""
+          },
+          "body": {
+            "cn": "及腰银发散乱铺在枕头上，发梢呈浅青绿渐变摊开在枕套布面上；双颊泛浅粉红晕；蓝紫色眼瞳半睁；露出一小截锁骨；黑色半透明丝袜包裹的双腿并拢斜放",
+            "en": ""
+          },
+          "character": {
+            "cn": "单一女性角色，仰卧在婚房卧室的床铺上，后背陷进米色床单，头落在画面右上方",
+            "en": ""
+          },
+          "clothing": {
+            "cn": "深棕色长袖洋装，裙摆被推挤着向上堆叠到腿根；裙摆由绿与米黄的多层荷叶边构成，已皱成一团；黑色蕾丝领口歪向一边，露出一小截锁骨；黑色半透明丝袜包裹双腿；一只白色尖头细跟高跟鞋仍挂在脚尖、鞋跟离地，另一只已掉在床尾地板上、鞋口朝上；深绿色缎带发箍被撞得微微歪斜；发箍右侧的白色叶片状头饰与深蓝蝴蝶结侧倒在枕边。",
+            "en": ""
+          },
+          "composition": {
+            "cn": "中景正面略高俯视机位，头部位于画面右上方，米色床铺占据画面中下部，床沿与掉落在地板的捧花连成一条向左下延伸的对角线，形成斜向引导；画面边缘带轻微晃动虚影，台灯光源边缘有轻微拖影，焦点落在人物上半身与枕边区域，床尾地板上的高跟鞋与散落花朵处于次要清晰层级。",
+            "en": ""
+          },
+          "director_notes": {
+            "cn": "情绪命题为亲密之后的慵懒余韵与未散尽的暧昧松弛：歪斜的深绿缎带发箍、堆叠到腿根的裙摆、脱手落地的白玫瑰捧花、悬在床单上方的空握掌心、嘴角残留未散尽的笑，共同承载这一命题；左上方暖钨丝橙黄光与右侧窗缝冷白月光在枕边交界，形成冷暖温度对峙；中景正面略高俯视配合手持镜头的轻微晃动虚影，营造贴近窥视的私密感；色调以米白、暖橙、冷青蓝为主调，深绿缎带与白玫瑰点缀其间",
+            "en": ""
+          },
+          "entity_count": {
+            "cn": "",
+            "en": ""
+          },
+          "expression": {
+            "cn": "双颊泛着浅粉红晕，蓝紫色眼瞳半睁，视线斜斜向上望向画面上方，嘴角还留着一点没散尽的笑",
+            "en": ""
+          },
+          "franchise": {
+            "cn": "",
+            "en": ""
+          },
+          "lighting": {
+            "cn": "暖钨丝台灯置于床头柜，从画面左上方低角度打来橙黄光，光晕落在米色床单褶皱上，褶皱凸起处亮、凹陷处暗，层层叠出橙黄渐层；橙黄光在她颊侧、鼻梁与锁骨上勾出柔亮高光，发丝边缘镶一圈暖金轮廓光。窗缝透进一道冷白月光从右侧斜切过床面，在米色床单上拉出一条细长冷亮带，同时扫过她银发的下半截，暖橙与冷青蓝在枕边交界形成冷暖分界。台灯光源微微拉出拖影，手持镜头带出轻微晃动的边缘虚影。",
+            "en": ""
+          },
+          "object": {
+            "cn": "床头柜上一盏暖钨丝台灯，灯罩内钨丝发亮；深绿色缎带发箍歪斜戴在头上，右侧白色叶片状头饰与深蓝蝴蝶结侧倒在枕边；一只白色尖头细跟高跟鞋仍挂在脚尖，另一只掉在床尾地板上，鞋口朝上；白玫瑰捧花脱手落在地板上，绿色丝带散开，几朵花滚向床脚，几片花瓣粘在床单边缘。",
+            "en": ""
+          },
+          "other": {
+            "cn": "",
+            "en": ""
+          },
+          "pose": {
+            "cn": "她后背陷进米色床单，肩背在床单上压出一道浅坑，及腰银发散乱铺在枕头上、发梢的浅青绿渐变摊开在枕套布面；双腿并拢斜放，一只脚的脚尖还勾着白色尖头高跟鞋、鞋跟离地；白玫瑰捧花从她手中脱出落向地板，绿色丝带散开、几朵花滚向床脚；她的手指仍半握着悬在床单上方，掌心空着，停在捧花脱手的位置；头部落在画面右上方，双颊泛浅粉红晕，蓝紫色眼瞳半睁，视线斜斜向上望向画面上方，嘴角留着一点没散尽的笑。",
+            "en": ""
+          },
+          "quality": {
+            "cn": "",
+            "en": ""
+          },
+          "relationship": {
+            "cn": "左上方低角度暖钨丝台灯在颊侧、鼻梁、锁骨勾出柔亮高光并使发梢镶上暖金轮廓，使主体上半身向暖侧浮起；右侧窗缝冷白月光斜切床面、扫过银发下半截，在枕边与暖橙形成冷暖交界，将主体一分为二；肩背压陷米色床单形成浅坑、银发散铺枕面与堆叠裙摆相互呼应，使身体与床面融为一体；微歪的头部落在画面右上方，床沿与掉落捧花向左下延伸成对角线，空握掌心停在脱手位置，把尚未散尽的余笑与松脱的花束连成一条未完成的情绪线",
+            "en": ""
+          },
+          "scene": {
+            "cn": "婚房卧室室内场景，米色床单的床铺占据画面中下部，床头柜位于枕侧并放着一盏亮着的暖钨丝台灯；及腰银发散乱铺在枕头上，发梢浅青绿渐变摊开在枕套布面上；深绿色缎带发箍歪斜，右侧白色叶片状头饰与深蓝蝴蝶结侧倒在枕边；床尾地板上一只白色尖头细跟高跟鞋掉落，鞋口朝上。白玫瑰捧花从手中脱出落在地板上，绿色丝带散开，几朵花滚向床脚，几片花瓣粘在床单边缘。窗在右侧，窗缝透进一道冷白月光斜切过床面。",
+            "en": ""
+          },
+          "style": {
+            "cn": "赛璐珞平涂结合柔和渐变的混合上色方式，平涂色块边界清晰、内部过渡以柔缓渐层衔接；线条细而工整，统一以深棕色调勾线；整体色彩以米白、暖橙与冷青蓝构成主调，深绿缎带与白玫瑰为点缀色；手持镜头带来轻微晃动的边缘虚影，台灯光源微微拉出拖影，形成轻微运动模糊的质感表现",
+            "en": ""
+          }
+        },
+        "key_concepts": [
+          {
+            "concept_id": "kc_001",
+            "concept_layer": "hard_visual",
+            "dimension": "character",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "女性角色，仰卧在婚房卧室床铺上，后背陷进米色床单，肩背压出一道浅坑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_002",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "及腰银发散乱铺在枕头上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_003",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发梢浅青绿渐变摊开在枕套布面上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_004",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "双颊泛浅粉红晕",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_005",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "蓝紫色眼瞳半睁",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_006",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "黑色蕾丝领口歪向一边，露出一小截锁骨",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_007",
+            "concept_layer": "hard_visual",
+            "dimension": "body",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "黑色半透明丝袜包裹的双腿并拢斜放",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_008",
+            "concept_layer": "hard_visual",
+            "dimension": "expression",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "视线斜斜向上望向画面上方",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_009",
+            "concept_layer": "hard_visual",
+            "dimension": "expression",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "嘴角还留着一点没散尽的笑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_010",
+            "concept_layer": "soft_director",
+            "dimension": "expression",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "inferred",
+            "text_cn": "面部泛红晕、眼瞳半睁、嘴角含笑的神态，带出余韵未尽的气氛",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_011",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深棕色长袖洋装",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_012",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "洋装裙摆被推挤着向上堆叠到腿根",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_013",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "裙摆的绿与米黄多层荷叶边皱成一团",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_014",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "黑色蕾丝领口歪向一边，露出一小截锁骨",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_015",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "黑色半透明丝袜包裹双腿",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_016",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "白色尖头细跟高跟鞋一只挂在脚尖、鞋跟离地，另一只掉在床尾地板上鞋口朝上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_017",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深绿色缎带发箍被撞得微微歪斜",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_018",
+            "concept_layer": "hard_visual",
+            "dimension": "clothing",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发箍右侧的白色叶片状头饰与深蓝蝴蝶结侧倒在枕边",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_019",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "她后背陷进米色床单，肩背压出一道浅坑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_020",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "及腰银发散乱铺在枕头上，发梢浅青绿渐变摊开在枕套布面",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_021",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "双腿并拢斜放",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_022",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "脚尖勾着白色尖头高跟鞋、鞋跟离地",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_023",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "白玫瑰捧花从她手中脱出落向地板，绿色丝带散开，几朵花滚向床脚",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_024",
+            "concept_layer": "hard_visual",
+            "dimension": "pose",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "她的手指仍半握着悬在床单上方，掌心空着，停在捧花脱手的位置",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_025",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "中景正面略高俯视机位",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_026",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "头部位于画面右上方，米色床铺占据画面中下部",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_027",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "床沿与掉落捧花构成向左下延伸的对角线引导",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_028",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "画面边缘带轻微晃动虚影，光源边缘轻微拖影的手持感",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_029",
+            "concept_layer": "assembly_guidance",
+            "dimension": "composition",
+            "evidence": "",
+            "importance": "decorative",
+            "must_cover": false,
+            "notes": "",
+            "prompt_role": "",
+            "source": "inferred",
+            "text_cn": "焦点层级落在人物上半身与枕边，床尾物件为次要清晰度",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_030",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "床头柜上一盏暖钨丝台灯，钨丝发亮",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_031",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深绿色缎带发箍歪斜戴在头上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_032",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "白色叶片状头饰与深蓝蝴蝶结侧倒在枕边",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_033",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "一只白色尖头细跟高跟鞋挂在脚尖，鞋跟离地",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_034",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "另一只白色尖头细跟高跟鞋掉在床尾地板上，鞋口朝上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_035",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "白玫瑰捧花脱手落在地板上，绿色丝带散开",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_036",
+            "concept_layer": "hard_visual",
+            "dimension": "object",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "几朵白玫瑰滚向床脚，几片花瓣粘在床单边缘",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_037",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "婚房卧室室内空间",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_038",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "米色床单的床铺占据画面中下部",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_039",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "床头柜位于枕侧",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_040",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "床单褶皱凸起处亮、凹陷处暗，层层叠出橙黄渐层",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_041",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "她后背陷进米色床单，肩背处压出一道浅坑",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_042",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "及腰银发散乱铺在枕头上，发梢浅青绿渐变摊开在枕套布面上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_043",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "深绿色缎带发箍被撞得微微歪斜",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_044",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "右侧白色叶片状头饰与深蓝蝴蝶结侧倒在枕边",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_045",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "一只白色尖头细跟高跟鞋掉在床尾地板上，鞋口朝上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_046",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "白玫瑰捧花从她手中脱出落在地板上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_047",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "捧花绿色丝带散开在地板上",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_048",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "几朵白玫瑰滚向床脚",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_049",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "几片白色花瓣粘在床单边缘",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_050",
+            "concept_layer": "hard_visual",
+            "dimension": "scene",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "右侧窗缝透进一道冷白月光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_051",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "床头柜上的暖钨丝台灯，亮着暖橙光晕",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_052",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖橙光晕落在床单褶皱上，凸起处亮、凹陷处暗，层层叠出橙黄渐层",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_053",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖钨丝台灯从画面左上方低角度投射橙黄主光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_054",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "橙黄光在颊侧、鼻梁与锁骨上勾出柔亮高光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_055",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "发丝边缘镶一圈暖金色轮廓光",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_056",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "窗缝透进的一道冷白月光从右侧斜切过床面",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_057",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "米色床单上被月光拉出一条细长冷亮带",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_058",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "冷白月光扫过银发下半截，形成冷调边缘",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_059",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "暖橙与冷青蓝在枕边交界，形成冷暖光区分界",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_060",
+            "concept_layer": "hard_visual",
+            "dimension": "lighting",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "[imp:decorative→important]",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "台灯光源微微拉出拖影",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_061",
+            "concept_layer": "hard_visual",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "赛璐珞平涂结合柔和渐变的混合上色",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_062",
+            "concept_layer": "hard_visual",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "线条细而工整，统一以深棕色调勾线",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_063",
+            "concept_layer": "assembly_guidance",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "core",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "整体色调以米白、暖橙与冷青蓝为主调，深绿缎带与白玫瑰作为点缀色",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_064",
+            "concept_layer": "hard_visual",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "手持镜头带出轻微晃动的边缘虚影",
+            "text_en": ""
+          },
+          {
+            "concept_id": "kc_065",
+            "concept_layer": "hard_visual",
+            "dimension": "style",
+            "evidence": "",
+            "importance": "important",
+            "must_cover": true,
+            "notes": "",
+            "prompt_role": "",
+            "source": "user_stated",
+            "text_cn": "台灯光源微微拉出拖影",
+            "text_en": ""
+          }
+        ],
+        "meta": {
+          "created_at": "2026-10-23T14:29:12Z",
+          "language": "zh",
+          "producer_node": "intent_blueprint_node",
+          "source_type": "intent",
+          "task_mode": "general",
+          "version": "1.1.0"
+        }
+      }
     }
   ],
   "comics": {

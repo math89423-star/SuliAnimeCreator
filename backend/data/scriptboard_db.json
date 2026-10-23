@@ -286,13 +286,15 @@
       ],
       "image": "",
       "lport_video_prompts": {
-        "source": "lport:video_prompt",
-        "package_id": "PKG-EP-WEDDING-03-1792763683",
-        "at": "2026-10-23T13:59:33",
+        "source": "lport",
+        "package_id": "PKG-EP-WEDDING-03-1792766794",
+        "at": "2026-10-23T14:50:59",
         "engine": "pixai",
         "video_model": "tsubaki-video",
         "ref_mode": "startframe",
         "tier": "nsfw",
+        "gen_mode": "i2v-first",
+        "gen_mode_eff": "i2v-first",
         "prompt": "@image1 is the first frame and the identity anchor — keep Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes and the composition of @image1 unchanged at the start.\n\n[0-5s] She pulls him down with her as he tips her backward onto the mattress, her back sinking into the sheet and her silver hair fanning across the pillow; the white rose bouquet tumbles from her hand onto the floor, her hands stay hooked behind his neck and her knees part as his weight settles over her. Handheld camera with a slight shake. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. The shot stays at the edge of contact: clothing intact, motion limited to breathing, a held gaze and the shift of a fingertip.\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
         "refs": [
           {
@@ -302,7 +304,8 @@
           }
         ],
         "duration_s": 5.0
-      }
+      },
+      "gen_mode": "i2v-first"
     },
     "SHOT-WEDDING-03-M002": {
       "id": "SHOT-WEDDING-03-M002",
@@ -332,15 +335,16 @@
       ],
       "image": "",
       "lport_video_prompts": {
-        "source": "lport:video_prompt",
-        "package_id": "PKG-EP-WEDDING-03-1792763683",
-        "at": "2026-10-23T13:59:33",
+        "source": "lport",
+        "package_id": "PKG-EP-WEDDING-03-1792766794",
+        "at": "2026-10-23T14:50:59",
         "engine": "pixai",
         "video_model": "tsubaki-video",
         "ref_mode": "reference",
         "tier": "nsfw",
-        "prompt": "Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes as the subject of the clip.\n@image1 — character identity reference: Firefly identity anchor: silver hair with teal gradient tips, white flower hair ornament, dark brown frilled dress.\n\n[0-5s] He kneels between her legs and peels the black tights down over her hips and thighs, the fabric rolling as it goes and the dark brown dress pushed up to her waist; she lifts one ankle and then the other while he pulls them off and drops them onto the floor beside the bed. The camera slowly pushes in. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. Clothing is half-removed and held in place by one hand or the sheet; exposure stays controlled, skin showing one band at a time. Carry the character identity from @image1 into this shot.\n\nVoice — breathy, quiet, unsteady: 「轻一点…」\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
-        "ref_note": "无镜级首帧，按立绘/参考图走 Multi-Reference",
+        "gen_mode": "multi-ref",
+        "gen_mode_eff": "multi-ref",
+        "prompt": "@image1 is the character reference throughout this video, keeping Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes exactly as in the reference.\n\n[0-5s] He kneels between her legs and peels the black tights down over her hips and thighs, the fabric rolling as it goes and the dark brown dress pushed up to her waist; she lifts one ankle and then the other while he pulls them off and drops them onto the floor beside the bed. The camera slowly pushes in. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. Clothing is half-removed and held in place by one hand or the sheet; exposure stays controlled, skin showing one band at a time.\n\nVoice — breathy, quiet, unsteady: 「轻一点…」\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
         "refs": [
           {
             "tag": "@image1",
@@ -350,7 +354,8 @@
         ],
         "duration_s": 5.0
       },
-      "video_negative": ""
+      "video_negative": "",
+      "gen_mode": "multi-ref"
     },
     "SHOT-WEDDING-03-M003": {
       "id": "SHOT-WEDDING-03-M003",
@@ -380,15 +385,16 @@
       ],
       "image": "",
       "lport_video_prompts": {
-        "source": "lport:video_prompt",
-        "package_id": "PKG-EP-WEDDING-03-1792763683",
-        "at": "2026-10-23T13:59:33",
+        "source": "lport",
+        "package_id": "PKG-EP-WEDDING-03-1792766794",
+        "at": "2026-10-23T14:50:59",
         "engine": "pixai",
         "video_model": "tsubaki-video",
         "ref_mode": "reference",
         "tier": "nsfw",
-        "prompt": "Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes as the subject of the clip.\n@image1 — character identity reference: Firefly identity anchor: same silver hair with teal gradient tips, white flower hair ornament.\n\n[0-5s] The black tights are already off and the dark brown dress stays bunched at her waist; he settles over her in missionary position with her legs locked around his waist and one forearm braced beside her head; he pushes in once, slow and deep, skin compressing where their bodies meet, her fingers digging into his back as her breath catches and her hips tilt up to meet him. The camera orbits the subject in a slow motion. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. The sexual act is in progress and the point where their bodies meet stays visible in frame, motion limited to one slow rhythm. Carry the character identity from @image1 into this shot.\n\nVoice — breathy, quiet, unsteady: 「进来…」\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
-        "ref_note": "无镜级首帧，按立绘/参考图走 Multi-Reference",
+        "gen_mode": "multi-ref",
+        "gen_mode_eff": "multi-ref",
+        "prompt": "@image1 is the character reference throughout this video, keeping Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes exactly as in the reference.\n\n[0-5s] The black tights are already off and the dark brown dress stays bunched at her waist; he settles over her in missionary position with her legs locked around his waist and one forearm braced beside her head; he pushes in once, slow and deep, skin compressing where their bodies meet, her fingers digging into his back as her breath catches and her hips tilt up to meet him. The camera orbits the subject in a slow motion. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. The sexual act is in progress and the point where their bodies meet stays visible in frame, motion limited to one slow rhythm.\n\nVoice — breathy, quiet, unsteady: 「进来…」\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
         "refs": [
           {
             "tag": "@image1",
@@ -397,7 +403,8 @@
           }
         ],
         "duration_s": 5.0
-      }
+      },
+      "gen_mode": "multi-ref"
     },
     "SHOT-WEDDING-03-M004": {
       "id": "SHOT-WEDDING-03-M004",
@@ -418,16 +425,19 @@
       "water_level": "closeup",
       "draft": false,
       "lport_video_prompts": {
-        "source": "lport:video_prompt",
-        "package_id": "PKG-EP-WEDDING-03-1792763683",
-        "at": "2026-10-23T13:59:33",
+        "source": "lport",
+        "package_id": "PKG-EP-WEDDING-03-1792766794",
+        "at": "2026-10-23T14:50:59",
         "engine": "pixai",
         "video_model": "tsubaki-video",
         "ref_mode": "t2v",
         "tier": "nsfw",
+        "gen_mode": "t2v",
+        "gen_mode_eff": "t2v",
         "prompt": "Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes as the subject of the clip.\n\n[0-5s] The black tights are gone and her legs are bare, the dress bunched at her waist; the frame holds at hip level with both faces cropped out; his hips stay flush against hers and his palm presses down on her lower abdomen; he pushes up once and stays there, thick white cum spilling out around where they meet and dripping down her inner thigh. Fixed shot, the camera holds still. Both subjects are fully adult and mutually responsive; their bodies stay pressed flush in frame and the visible motion stays within a single slow rhythm. The frame holds tight on a single contact point with the rest of the body cropped out, one small movement carrying the shot.\n\nSFX: close breathing — fabric drag against the sheet — a faint creak from the bed frame\n\n2D anime illustration, anime image-to-video, adult, mature, fully adult and mutually responsive.",
         "duration_s": 5.0
-      }
+      },
+      "gen_mode": "t2v"
     }
   }
 }
