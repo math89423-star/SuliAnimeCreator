@@ -965,6 +965,226 @@
           "novelai"
         ]
       }
+    },
+    {
+      "id": "AP-20261023130955-2705",
+      "created_at": "2026-10-23T13:09:55+00:00",
+      "prompts": {
+        "novelai": {
+          "positive": "1girl, 1boy, adult, mature female, silver hair, long hair, gradient hair, teal hair tips, side braid, white flower hair ornament, green bow, dark brown lolita dress, green frills, black pantyhose, white high heels, white rose bouquet, hotel room, bed, sitting on bed, kneeling, boy between legs, pulling down pantyhose, pantyhose pull, hand on neck, blush, sweat, half-clothed, undressing, explicit",
+          "negative": "lowres, bad anatomy, bad hands, extra digits, watermark, text, child, loli, deformed",
+          "params": {
+            "base_prompt": "1girl, 1boy, adult, mature female, silver hair, long hair, gradient hair, teal hair tips, side braid, white flower hair ornament, green bow, dark brown lolita dress, green frills, black pantyhose, white high heels, white rose bouquet, hotel room, bed, sitting on bed, kneeling, boy between legs, pulling down pantyhose, pantyhose pull, hand on neck, blush, sweat, half-clothed, undressing, explicit",
+            "character_prompts": [],
+            "width": 832,
+            "height": 1216
+          },
+          "note": "L2 半褪前戏段，保留黑丝在膝上",
+          "source": "lport",
+          "package_id": "PKG-ART-20261023130955-4288",
+          "at": "2026-10-23T13:11:28+00:00"
+        }
+      },
+      "title": "白玫瑰之夜 · 婚房床沿（第1格）",
+      "intent_text": "白玫瑰之夜 · 第 1 格：婚房床沿，他单膝跪进她双腿之间，把她的黑色连裤袜从腰际褪到膝上。\n\n参考图1 是同一人物的外观锚：银白长发及腰、发梢青绿渐变、白色花形发饰＋墨绿蝴蝶结、深棕荷叶边洋装（墨绿滚边）、黑色连裤袜、白色高跟。\n\n画面：酒店婚房床沿，白玫瑰捧花歪在米色床单上。他跪在她腿间，双手勾住连裤袜腰头往下褪；她一只手撑在床单上，另一只手抠进他后颈。\n\n水位：explicit（半褪前戏段）——衣物档 L2 起，本格收到 L3（洋装堆在腰际、连裤袜落到膝上）。皮肤写汗光但不要油亮。\n\n取景：中近景，机位与参考图同侧偏低，浅景深压掉背景楼梯与灯。",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [
+        {
+          "name": "ref_405857da.png",
+          "path": "data/uploads/ref_405857da.png",
+          "url": "/api/images/ref_405857da.png"
+        }
+      ],
+      "tier": "explicit",
+      "clothing_level": "L2",
+      "page_mode": "panel",
+      "page": {
+        "episode_id": "EP-WEDDING-01",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "婚礼散场后的婚房，白玫瑰捧花歪在床单上，她把还穿在身上的黑色连裤袜留给新郎亲手褪下。",
+        "image": null
+      },
+      "prev": {
+        "title": "",
+        "intent_text": "",
+        "engines": [],
+        "ref_images": [],
+        "note": "",
+        "tier": "",
+        "clothing_level": "",
+        "page_mode": "panel"
+      },
+      "prev_at": "2026-10-23T13:09:55+00:00",
+      "updated_at": "2026-10-23T13:11:28+00:00",
+      "status": "returned",
+      "push": {
+        "package_id": "PKG-ART-20261023130955-4288",
+        "at": "2026-10-23T13:09:56+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261023130955-4288",
+        "engines": [
+          "novelai"
+        ]
+      },
+      "blueprint": {
+        "subject": "白川澪",
+        "scene": "婚房床沿",
+        "tier": "explicit",
+        "clothing_level": "L2"
+      }
+    },
+    {
+      "id": "AP-20261023131152-8830",
+      "created_at": "2026-10-23T13:11:52+00:00",
+      "updated_at": "2026-10-23T13:12:11+00:00",
+      "title": "EP-COMIC-NSFW-01 第1页 第1格",
+      "intent_text": "画面：婚房床沿：她坐着，白玫瑰捧花歪在床单上；他单膝跪进她腿间，勾住黑丝腰头往下褪\n景别/运镜：medium_close/推\n【本图水位】undress（半露）\n【衣物档】L2\n备注：L2→L3",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "undress",
+      "clothing_level": "L2",
+      "status": "pushed",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-NSFW-01",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "",
+        "image": {
+          "name": "77500fde2ba64a5c83b36142e6aa6c21.png",
+          "path": "data/uploads/77500fde2ba64a5c83b36142e6aa6c21.png",
+          "url": "/api/images/77500fde2ba64a5c83b36142e6aa6c21.png"
+        }
+      },
+      "push": {
+        "package_id": "PKG-ART-20261023131211-7461",
+        "at": "2026-10-23T13:12:11+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261023131211-7461",
+        "engines": [
+          "novelai"
+        ]
+      }
+    },
+    {
+      "id": "AP-20261023131152-7414",
+      "created_at": "2026-10-23T13:11:52+00:00",
+      "updated_at": "2026-10-23T13:12:11+00:00",
+      "title": "EP-COMIC-NSFW-01 第1页 第2格",
+      "intent_text": "画面：她跨坐他身上缓慢下沉一次，裙摆堆在腰际，他双手托臀\n台词：别看…\n景别/运镜：medium/环绕\n【本图水位】explicit（直白）\n【衣物档】L3\n备注：cowgirl_position",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "explicit",
+      "clothing_level": "L3",
+      "status": "pushed",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-NSFW-01",
+        "index": 1,
+        "panel_index": 2,
+        "prev_plan_id": "AP-20261023131152-8830",
+        "outline_text": "",
+        "image": null
+      },
+      "push": {
+        "package_id": "PKG-ART-20261023131211-7756",
+        "at": "2026-10-23T13:12:11+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261023131211-7756",
+        "engines": [
+          "novelai"
+        ]
+      }
+    },
+    {
+      "id": "AP-20261023131152-2181",
+      "created_at": "2026-10-23T13:11:52+00:00",
+      "updated_at": "2026-10-23T13:12:12+00:00",
+      "title": "EP-COMIC-NSFW-01 第1页 第3格",
+      "intent_text": "画面：交合处特写，他手掌压她小腹，深压一次后停住，湿痕沿腿根滑下\n台词：别停…\n景别/运镜：closeup/固定\n【本图水位】closeup（特写）\n【衣物档】L3\n备注：双人脸出框",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [],
+      "note": "",
+      "tier": "closeup",
+      "clothing_level": "L3",
+      "status": "draft",
+      "prompts": {},
+      "page": {
+        "episode_id": "EP-COMIC-NSFW-01",
+        "index": 1,
+        "panel_index": 3,
+        "prev_plan_id": "AP-20261023131152-7414",
+        "outline_text": "",
+        "image": null
+      }
+    },
+    {
+      "id": "AP-20261023132307-9503",
+      "created_at": "2026-10-23T13:23:07+00:00",
+      "prompts": {
+        "novelai": {
+          "positive": "1girl, adult, explicit",
+          "negative": "lowres",
+          "params": {},
+          "note": "",
+          "source": "lport",
+          "package_id": "PKG-ART-20261023132307-1090",
+          "at": "2026-10-23T13:23:07+00:00"
+        }
+      },
+      "title": "白玫瑰之夜 02 · 第1格",
+      "intent_text": "婚房床沿，她跪坐在他腿间替他解开衬衫扣子，白玫瑰放在床头。参考图1 是人格锚。",
+      "engines": [
+        "novelai"
+      ],
+      "ref_images": [
+        {
+          "name": "ref_405857da.png",
+          "path": "data/uploads/ref_405857da.png",
+          "url": "/api/images/ref_405857da.png"
+        }
+      ],
+      "tier": "explicit",
+      "clothing_level": "L2",
+      "page": {
+        "episode_id": "EP-WEDDING-02",
+        "index": 1,
+        "panel_index": 1,
+        "prev_plan_id": "",
+        "outline_text": "婚房灯灭之后，白玫瑰放回床头。",
+        "image": null
+      },
+      "prev": {
+        "title": "",
+        "intent_text": "",
+        "engines": [],
+        "ref_images": [],
+        "note": "",
+        "tier": "",
+        "clothing_level": "",
+        "page_mode": "panel"
+      },
+      "prev_at": "2026-10-23T13:23:07+00:00",
+      "updated_at": "2026-10-23T13:23:07+00:00",
+      "status": "returned",
+      "push": {
+        "package_id": "PKG-ART-20261023132307-1090",
+        "at": "2026-10-23T13:23:07+00:00",
+        "pkg_dir": "/lport-lib/suli_packages/PKG-ART-20261023132307-1090",
+        "engines": [
+          "novelai"
+        ]
+      }
     }
   ],
   "comics": {
@@ -1018,6 +1238,47 @@
         }
       ],
       "updated_at": "2026-10-22T10:13:12+00:00"
+    },
+    "EP-COMIC-NSFW-01": {
+      "episode_id": "EP-COMIC-NSFW-01",
+      "title": "白玫瑰之夜",
+      "premise": "婚礼散场后的婚房，白玫瑰捧花歪在床单上，她把还穿在身上的黑色连裤袜留给新郎亲手褪下。",
+      "characters": "白川澪（24，成年，银白长发发梢青绿渐变，白花发饰＋墨绿蝴蝶结，深棕荷叶边洋装，黑色连裤袜，白高跟）；新郎（26，成年，黑短发，白衬衫敞开）",
+      "style_hint": "日式厚涂，暖钨丝台灯＋窗缝冷光，皮肤高光克制",
+      "tier": "explicit",
+      "panels": [
+        {
+          "page": 1,
+          "panel": 1,
+          "text": "婚房床沿：她坐着，白玫瑰捧花歪在床单上；他单膝跪进她腿间，勾住黑丝腰头往下褪",
+          "dialogue": "",
+          "camera": "medium_close/推",
+          "note": "L2→L3",
+          "tier": "undress",
+          "clothing_level": "L2"
+        },
+        {
+          "page": 1,
+          "panel": 2,
+          "text": "她跨坐他身上缓慢下沉一次，裙摆堆在腰际，他双手托臀",
+          "dialogue": "别看…",
+          "camera": "medium/环绕",
+          "note": "cowgirl_position",
+          "tier": "explicit",
+          "clothing_level": "L3"
+        },
+        {
+          "page": 1,
+          "panel": 3,
+          "text": "交合处特写，他手掌压她小腹，深压一次后停住，湿痕沿腿根滑下",
+          "dialogue": "别停…",
+          "camera": "closeup/固定",
+          "note": "双人脸出框",
+          "tier": "closeup",
+          "clothing_level": "L3"
+        }
+      ],
+      "updated_at": "2026-10-23T13:11:52+00:00"
     }
   }
 }
