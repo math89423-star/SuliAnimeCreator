@@ -69,13 +69,16 @@
 ## 单图导演（用户从导演页发来一张图时）
 用户消息里形如 `@data/uploads/<name>` 的就是本次导演的首帧图（相对本目录的路径），
 先用自带读图工具看图。
-集号锁定：消息里 `集号：EP-xxx` 即本次唯一集号，会话 key 也是该集号；禁止从图片文件名截取推导集号（如 `81695f...jpg` 不得推成 `EP-81695F`）。存大纲 / 建镜 / 挂图必须用该集号；若消息无集号，先问集号再落盘。**默认只出方案大纲，不写分镜库**（本项目负责起草方案与敲定方向，
-成镜展开是 L-Port 的活；分镜库只在用户明确说"转草案/建镜"时才写）。
+集号锁定：消息里 `集号：EP-xxx` 即本次唯一集号，会话 key 也是该集号；禁止从图片文件名截取推导集号（如 `81695f...jpg` 不得推成 `EP-81695F`）。存大纲 / 建镜 / 挂图必须用该集号；若消息无集号，先问集号再落盘。**默认只出方案大纲，不写分镜库**（本项目负责起草方案与敲定方向，镜级方案也在这里定：
+镜数、每镜内容、时长、运镜、水位、衣物档、生成方式；分镜库只在用户明确说"转草案/建镜"时才写）。
+发散、翻译、精修、生成在 L-Port，它不替我们改方案。
 
 出大纲流程：
 1. 看图：确认人物（身份/发型/服装/关键道具）、构图（景别/视角）、场景锚点。
-2. 写方案大纲 markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/备注 / 合计时长），
+2. 写方案大纲 markdown（含：方向一句话 / 基调与档位 / 分镜大纲表：镜号/内容一句话/预计时长/运镜方向/**生成方式**/备注 / 合计时长），
    2-5 镜，单镜 3-8 秒；整段按消息里的总时长要求分配（没写就按 10-30 秒）。
+   生成方式只能填这四个之一（按这镜实际能拿到什么素材填，拿不到图就写 `t2v`）：
+   `t2v` 纯文本 / `i2v-first` 首帧锁构图 / `i2v-first-last` 首尾帧 / `multi-ref` 多图只锚身份。
 3. 存大纲：`curl -s -X PUT "http://127.0.0.1:5001/api/v1/scriptboard/outline/<集号>" \
    -H 'Content-Type: application/json' -d '{"outline_md":"<全文，注意转义>","outline_image":"<本图basename>"}'`。
 4. 回复：方向一句话 + 镜数 + 合计时长。不要调 prompts/assemble 接口。
@@ -87,7 +90,7 @@
 1. 定稿核对：大纲里的镜数/时长/档位即定稿，不擅自加镜改时长；缺服装查角色库，不要编锁面。
 2. 出镜：`curl -s -X POST http://127.0.0.1:5001/api/v1/scriptboard/shots \
    -H 'Content-Type: application/json' \
-   -d '{"episode_id":"<消息里给的集号>","draft":true,"duty":"<中文·看板用>","duty_en":"<英文·拼进H3正文>","duration_s":<秒>,"sound":"<谁：台词>","tier":"<nsfw 成人向 / sfw 普通，常规镜留空>","camera":{"crop":"medium","movement":"推"}}'`
+   -d '{"episode_id":"<消息里给的集号>","draft":true,"duty":"<中文·看板用>","duty_en":"<英文·拼进H3正文>","duration_s":<秒>,"sound":"<谁：台词>","tier":"<nsfw 成人向 / sfw 普通，常规镜留空>","water_level":"<tease/undress/explicit/closeup，常规镜留空>","gen_mode":"<大纲里那镜的生成方式>","camera":{"crop":"medium","movement":"推"}}'`
    - 镜数 2-5 镜；单镜 3-8 秒；整段按消息里的总时长要求分配（没写就按 10-30 秒）；台词镜 4-6 秒。
    - movement 只能用这 10 个：固定/推/拉/摇/移/跟/环绕/升降/手持/航拍；
      crop 只能用：extreme_close/closeup/close/medium_close/medium/medium_full/full/wide/extreme_wide。
@@ -97,15 +100,19 @@
    `curl -s -X POST "http://127.0.0.1:5001/api/v1/scriptboard/shots/<首镜id>/image/attach" \
    -H 'Content-Type: application/json' -d '{"name":"<上传文件名>","kind":"first"}'`
    （name 只给 basename；其余镜不主动挂图，I2VA 组装时缺图会自动回退 T2VA 并标红。）
-   多图参考（目标型号支持时才用：Tsubaki Video / v4 系列；v3.x/v2.7 只认首帧，别挂）：
-   有 2-3 张搭配图（服装/风格/脸/姿态/场景/道具）时，用 kind=ref 挂到同一镜，attach 时带 role 与 desc：
-   `curl -s -X POST "http://127.0.0.1:5001/api/v1/scriptboard/shots/<镜id>/image/attach" \
-   -H 'Content-Type: application/json' -d '{"name":"<basename>","kind":"ref","role":"outfit","desc":"<英文一句：这张图提供什么>"}'`
-   role 只能用 character/outfit/style/face/pose/scene/prop（last 帧默认 ending，不用填），
-   后补改用 `/image/meta`；desc 写英文可见特征。首帧只留一张；含首帧一镜最多 6 张，2-3 张效果最好。
-   beat 正文里用 @imageN 指代（@image1=首帧，@image2 起是参考图），如 "wearing the outfit from @image2"；
-   有额外参考时组装自动切 Multi-Reference（与 Keyframe 互斥），不用调 ref_mode。
-5. 回复清单：逐镜列 `镜id / 时长 / 运镜 / 内容一句话` + 合计时长 + 首帧已挂哪镜。
+   生成方式（`gen_mode`，本项目定，建镜时带上；组装只做能力校验，降级写进 `ref_note`）：
+   - `i2v-first` 首帧锁构图：只挂一张 kind=first，别挂额外参考（挂了会被组装按多图参考结算）
+   - `i2v-first-last` 首尾帧：kind=first 一张 + kind=last 一张（尾帧=收束状态，组装会写 ending + 收束句）
+   - `multi-ref` 多图只锚身份（目标型号支持时才用：Tsubaki Video / v4 系列；v3.x/v2.7 只认首帧）：
+     有 2-3 张搭配图（服装/风格/脸/姿态/场景/道具）时，用 kind=ref 挂到同一镜，attach 时带 role 与 desc：
+     `curl -s -X POST "http://127.0.0.1:5001/api/v1/scriptboard/shots/<镜id>/image/attach" \
+     -H 'Content-Type: application/json' -d '{"name":"<basename>","kind":"ref","role":"outfit","desc":"<英文一句：这张图提供什么>"}'`
+     role 只能用 character/outfit/style/face/pose/scene/prop（last 帧默认 ending，不用填），
+     后补改用 `/image/meta`；desc 写英文可见特征。首帧只留一张；含首帧一镜最多 6 张，2-3 张效果最好。
+   - `t2v` 纯文本：一张都不挂（挂了也会被组装丢掉）
+   beat 正文里用 @imageN 指代（@image1=首帧，@image2 起是参考图），如 "wearing the outfit from @image2"。
+   枚举与结算口径见 `docs/POSITIONING.md`（`gen_mode` 意图 / `gen_mode_eff` + `ref_mode` 结算）。
+5. 回复清单：逐镜列 `镜id / 时长 / 运镜 / 生成方式 / 内容一句话` + 合计时长 + 首帧已挂哪镜。
    组装 I2VA 是用户在导演页点的事，你只管把镜和时长定准，不要调 prompts/assemble 接口。
 
 ## 落盘标记（前端“接受并填充中央”按钮的唯一开关，由你自主判断）
@@ -238,6 +245,7 @@ L-Port 侧有专门的整页分格节点 `comic_page_diverge`：入参 `premise`
 
 - **PixAI 视频** → 读 `../skills/video/pixai-video-prompting/SKILL.md`（第 0.5 节有型号分叉表：参考图语义/时长上限/音频/运镜写法四项按型号改）（+ `references/model-lineup.md`、`references/v4-preview-field-guide.md`）
   - 参考图是**语义锚**（`@image1`），不是首帧；要锁构图才用 Start Frame（Keyframe），两者互斥
+    （对应镜级 `gen_mode`：`multi-ref` 走语义锚，`i2v-first`/`i2v-first-last` 走 Keyframe）
   - 单镜用 `[0-Xs]` beat 结构（多镜切镜才写 `[Scene 1: 0-3s]`，混用会变幻灯片）
   - 运镜写真动词（push in / tilt / orbit），不写 zoom in
   - 台词三段式 `Voice — 音色, 情绪: 「原生语言」`（**绝不罗马字**）；音效用破折号串 `SFX: a — b — c`
@@ -299,14 +307,18 @@ Tsubaki Video 只能人工在界面跑，本项目出稿后由人粘贴；图片
 
 **写镜流程**（比常规镜多四步）：
 
-1. **定档**：只两档 `sfw`（普通）/ `nsfw`（成人向）；消息给了档位就用它，没给就按图面水位判一档并在回复里说明；`nsfw` 出稿水位按 skill 的 `explicit` 档执行。
+1. **定档**：门档只两档 `sfw`（普通）/ `nsfw`（成人向）；消息给了档位就用它，没给就按图面水位判一档并在回复里说明。
+   水位另标 `water_level` 四档（tease/undress/explicit/closeup），逐镜写清"演到哪一步"——切镜对账靠它，
+   不要用门档代替水位（`tier=nsfw` + `water_level=explicit` 才是"直白"）。
 2. **挑体位**：从 positions 词表选，抄 canonical 英文名；换体位只许按转场矩阵（5 秒单镜不许换）。
 3. **锁位 + 事件**：duty_en 先写锁位句（谁在哪 / 哪只手撑 / 哪条腿钩），再写节奏；
    一镜一事件、呼吸级幅度、接触点写清（防肢体融合）。
 4. **记连续性**：每镜注明衣物 L 档（L0 完整 → L4 全裸）与道具状态（被单/枕头/丝带）；
    切镜时本镜开头必须复述上一镜末状态，不许默认继承。
 
-**字段要求**：`tier` 必填（create/update shot 都吃）；`duty` 中文照写（看板用）+ `duty_en` 英文可见层正文必填。
+**字段要求**：`tier` 只两档 `sfw`/`nsfw`（常规镜留空），**水位另存 `water_level` 四档**
+（`tease`/`undress`/`explicit`/`closeup`，空=未标）；只传门档时已存水位保留，不会被页面存盘洗掉。
+`duty` 中文照写（看板用）+ `duty_en` 英文可见层正文必填；生成方式走 `gen_mode`（四值见上）。
 句例（照这个密度写）：
 `he is positioned behind her as she kneels with both forearms braced on the mattress, his right hand holding her hip; they move together in a single slow rhythm, skin compressing where they meet, her fingers curling into the sheet as her back arches slightly`
 
