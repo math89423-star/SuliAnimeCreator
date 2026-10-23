@@ -87,9 +87,9 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 **远期互通目标**（未建）：方案包直传、成品与回执自动回流、媒体 sha 对账自动化。
 互通建成前，人工搬运只做复制：sha 对不上→停手上报，不猜不补。
 
-### 草案直投（去程自动、回程轮询）
+### 分镜直投（去程自动、回程轮询）
 
-导演草案页「直投 L-Port」调 `POST /v1/director/push-lport`
+导演页「提示词」页签的「直投 L-Port」调 `POST /v1/director/push-lport`
 （body：`episode_id` + 可选 `project_id/character_id/engine/pixai_model/tier/ref_mode/note`，
 与导出包同口径、归属冲突同样 409）：
 后端用同一份构建函数出包，写进 L-Port 收件箱 `suli_packages/<package_id>/`
@@ -97,7 +97,7 @@ POST /v1/receipts {"package_id": "..", "shot_id": "..", "task_id": "..",
 `package_id/episode/shots/locks`），推送记录落 `director_push_db.json`。
 收件箱与投流 `packages/` 隔离：导演 ZIP 不进投流包列表。
 前端拿到 `package_id` 后每 5s 轮询 `GET /v1/receipts?package_id=..`（10 分钟上限），
-回执一到即提示并可一键跳回执页（回执面板按 `refreshKey` 自动重刷）。
+回执一到即在投递行提示；回执内容走「提示词」页签与剧本分镜页，没有独立回执页。
 多包并行：投递记录是数组（`suli.director.pushes`），一个轮询同时跟所有包，
 本集只显示本集的行、他集记一行提示，互不覆盖；刷新/切页回来自动续等。
 L-Port 侧仍需人工一步：在 story_text 插件载入 `package.json` 跑完分镜后，
@@ -114,7 +114,7 @@ story_text 回写分镜之后，L-Port 文本工作区再点「写详细提示�
 
 规则：只写已存在的镜，缺镜回报 `missing` 不造镜（造镜归 `shots/import`）；空提示词条目不落
 （防假回执）；同一镜重传即覆盖（当前版本语义）。
-查看口：导演页「提示词」页签（逐镜复制 / 复制全部）+ 草案页分镜卡内嵌块。
+查看口：导演页「提示词」页签（逐镜复制/编辑/保存/解锁、复制全部；点镜缩略图切图像提示词）。
 
 ### 单图创作（art plan：方案在 Suli，发散翻译精修在 L-Port）
 

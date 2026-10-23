@@ -75,81 +75,6 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="草案" name="draft">
-    <!-- 组装工具条：动作在左，设置在右 -->
-    <div class="dir-bar">
-      <div class="bar-group">
-        <el-button type="primary" size="small" @click="downloadBundle" :loading="bundleLoading" :disabled="!store.episodeId" title="L-Port 上传草案包用的 ZIP（manifest+shots+prompts+图）">导出草案包ZIP</el-button>
-        <el-button size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId" title="人读版交接文档（.md，L-Port 上传请用左边 ZIP）">草案文档</el-button>
-        <el-button size="small" type="success" plain @click="pushToLport" :loading="pushing" :disabled="!store.episodeId" title="自动投递到 L-Port 收件箱 suli_packages，投完自动等回执">直投 L-Port</el-button>
-        <el-popconfirm title="清空本集全部草案分镜？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearShots">
-          <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
-        </el-popconfirm>
-      </div>
-      <span class="bar-spacer" />
-      <div class="bar-group">
-        <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
-          <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
-        </el-select>
-        <el-select v-model="engine" size="small" class="w-engine" placeholder="引擎">
-          <el-option v-for="e in engineOpts" :key="e.key" :label="e.label" :value="e.key" />
-        </el-select>
-        <el-select v-if="engine === 'pixai'" v-model="pixaiModel" size="small" class="w-model" placeholder="型号">
-          <el-option v-for="m in pixaiModels" :key="m.key" :label="m.label" :value="m.key" />
-        </el-select>
-        <el-select v-if="engine === 'pixai'" v-model="refMode" size="small" class="w-ref">
-          <el-option label="首尾帧" value="startframe" />
-          <el-option v-if="refSupportsMulti" label="参考图" value="reference" />
-        </el-select>
-      </div>
-    </div>
-    <div v-if="pushing" class="push-status">
-      <LoadingSpinner :size="14" />
-      <span class="suli-muted" style="font-size:12px">正在投递到 L-Port 收件箱…</span>
-    </div>
-    <div v-for="p in curPushes" :key="p.pkg" class="push-status">
-      <LoadingSpinner v-if="!p.done" :size="14" />
-      <span v-else class="push-dot ok" />
-      <span class="suli-muted tnum" style="font-size:12px">{{ pushLine(p) }}</span>
-      <el-button v-if="p.done" size="small" type="primary" link @click="dtab = 'receipt'">去回执页查看 →</el-button>
-      <el-button v-if="p.done" size="small" link @click="stopWait(p.pkg)">关闭</el-button>
-      <el-button v-else size="small" link @click="stopWait(p.pkg)">停止等待</el-button>
-    </div>
-    <div v-if="otherPushCount" class="push-status">
-      <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集投递在等回执</span>
-    </div>
-
-    <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
-      <div class="draft-guide">
-        <div class="guide-btns">
-          <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页 ② 生成草案</el-button>
-          <el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成大纲</el-button>
-        </div>
-      </div>
-    </el-empty>
-    <!-- 时间线：按秒数定宽，一眼看时长分布 -->
-    <template v-else>
-    <div class="timeline">
-      <div
-        v-for="(s, i) in store.shots" :key="'tl' + s.id"
-        class="tl-seg" :title="s.id + ' ' + s.duration_s + 's'"
-        :style="{ flexGrow: Number(s.duration_s) || 1 }"
-      >
-        <span class="tnum">{{ i + 1 }} · {{ s.duration_s }}s</span>
-      </div>
-      <span class="suli-muted tnum tl-total">{{ totalS }}s</span>
-    </div>
-
-    <!-- 逐镜卡 -->
-    <div class="dir-flow">
-      <ShotCard
-        v-for="(s, i) in store.shots" :key="s.id"
-        :shot="s" :index="i" :tier-label="tierLabel" :on-saved="reloadPrompts"
-      />
-    </div>
-    </template>
-    <!-- 8-block 静帧：折叠面板，默认收起，不占版面 -->
-      </el-tab-pane>
       <el-tab-pane label="提示词" name="prompts">
         <div class="prompt-head">
           <span class="suli-muted tnum" style="font-size:12px">已回传 {{ lpDoneCount }}/{{ store.shots.length }}</span>
@@ -157,6 +82,47 @@
           <el-button size="small" @click="reloadPrompts" :loading="promptRefreshing">刷新</el-button>
           <el-button size="small" type="primary" plain :disabled="!lpDoneCount" @click="copyAllPrompts">复制全部</el-button>
         </div>
+      <!-- 组装工具条：动作在左，设置在右 -->
+      <div class="dir-bar">
+        <div class="bar-group">
+          <el-button type="primary" size="small" @click="downloadBundle" :loading="bundleLoading" :disabled="!store.episodeId" title="L-Port 上传草案包用的 ZIP（manifest+shots+prompts+图）">导出草案包ZIP</el-button>
+          <el-button size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId" title="人读版交接文档（.md，L-Port 上传请用左边 ZIP）">草案文档</el-button>
+          <el-button size="small" type="success" plain @click="pushToLport" :loading="pushing" :disabled="!store.episodeId" title="自动投递到 L-Port 收件箱 suli_packages，投完自动等回执">直投 L-Port</el-button>
+          <el-popconfirm title="清空本集全部草案分镜？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearShots">
+            <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
+          </el-popconfirm>
+        </div>
+        <span class="bar-spacer" />
+        <div class="bar-group">
+          <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
+            <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
+          </el-select>
+          <el-select v-model="engine" size="small" class="w-engine" placeholder="引擎">
+            <el-option v-for="e in engineOpts" :key="e.key" :label="e.label" :value="e.key" />
+          </el-select>
+          <el-select v-if="engine === 'pixai'" v-model="pixaiModel" size="small" class="w-model" placeholder="型号">
+            <el-option v-for="m in pixaiModels" :key="m.key" :label="m.label" :value="m.key" />
+          </el-select>
+          <el-select v-if="engine === 'pixai'" v-model="refMode" size="small" class="w-ref">
+            <el-option label="首尾帧" value="startframe" />
+            <el-option v-if="refSupportsMulti" label="参考图" value="reference" />
+          </el-select>
+        </div>
+      </div>
+      <div v-if="pushing" class="push-status">
+        <LoadingSpinner :size="14" />
+        <span class="suli-muted" style="font-size:12px">正在投递到 L-Port 收件箱…</span>
+      </div>
+      <div v-for="p in curPushes" :key="p.pkg" class="push-status">
+        <LoadingSpinner v-if="!p.done" :size="14" />
+        <span v-else class="push-dot ok" />
+        <span class="suli-muted tnum" style="font-size:12px">{{ pushLine(p) }}</span>
+        <el-button v-if="p.done" size="small" link @click="stopWait(p.pkg)">关闭</el-button>
+        <el-button v-else size="small" link @click="stopWait(p.pkg)">停止等待</el-button>
+      </div>
+      <div v-if="otherPushCount" class="push-status">
+        <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集投递在等回执</span>
+      </div>
         <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
           <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页生成草案</el-button>
         </el-empty>
@@ -202,6 +168,20 @@
                 <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ genModeText(r) }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
                 <el-tag v-if="r.lpv.edited" size="small" type="warning">人工改</el-tag>
               </div>
+              <div v-if="(r.images || []).length" class="pr-line pr-refs-row">
+                <b class="pr-k">参考图</b>
+                <div class="pr-v pr-refs">
+                  <div v-for="im in r.images" :key="im.kind + im.name" class="pr-ref">
+                    <el-image :src="imgUrl(im.name)" class="pr-ref-thumb" fit="cover" :preview-src-list="[imgUrl(im.name)]" preview-teleported />
+                    <el-tag size="small" :type="im.kind === 'first' ? 'danger' : 'info'" effect="plain">{{ REF_KIND[im.kind] || im.kind }}</el-tag>
+                    <el-select v-if="im.kind !== 'first'" v-model="refDraft(r.id, im.name).role" size="small" class="pr-ref-role" placeholder="role">
+                      <el-option v-for="rk in REF_ROLE_KEYS" :key="rk" :label="REF_ROLE[rk]" :value="rk" />
+                    </el-select>
+                    <el-input v-model="refDraft(r.id, im.name).desc" size="small" class="pr-ref-desc" placeholder="desc" />
+                    <el-button size="small" text :disabled="!refDirty(r.id, im)" @click="saveRef(r.id, im)">保存</el-button>
+                  </div>
+                </div>
+              </div>
               <div v-if="(r.lpv.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv.applied || []).join('；') }}</span></div>
               <div v-if="r.lpv.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv.ref_note }}</span></div>
               <div class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}<template v-if="r.lpv.edited_at"> · 改于 {{ r.lpv.edited_at }}</template></div>
@@ -223,9 +203,6 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="回执" name="receipt">
-        <ReceiptPanel :episode-id="store.episodeId" :project-id="store.projectId" :project-name="currentProjectName" :refresh-key="receiptRefreshKey" />
-      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
@@ -237,8 +214,6 @@ import { directorApi } from '../api/director'
 import { useAppStore } from '../stores/app'
 import { useSettingsStore } from '../stores/settings'
 import { useAgentDirect } from '../composables/useAgentDirect'
-import ShotCard from '../components/director/ShotCard.vue'
-import ReceiptPanel from '../components/director/ReceiptPanel.vue'
 import { ArrowDown, Lightning, MagicStick } from '@element-plus/icons-vue'
 import MarkdownView from '../components/MarkdownView.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
@@ -246,7 +221,6 @@ import { castNames, loadCastInput } from '../utils/cast'
 
 const store = useAppStore()
 const settings = useSettingsStore()
-const currentProjectName = computed(() => (store.projects.find((p: any) => p.id === store.projectId) as any)?.name || '')
 
 // 分级四档（真源在后端 /director/tiers）：'' = 按镜设置
 const tierOpts = ref<{ key: string; label: string }[]>([{ key: '', label: '不分级' }])
@@ -375,6 +349,7 @@ const totalS = computed(() => Math.round((store.shots || []).reduce((a: number, 
 
 async function refresh() {
   try { const r = await api.listShots(store.episodeId); store.shots = (r as any).data } catch {}
+  syncRefDrafts()
 }
 
 // 提示词回传页：L-Port 逐镜详细提示词（scriptboard shots[].lport_prompts，seg_prompt 回传）
@@ -388,6 +363,48 @@ async function loadImgPlans() {
   catch { imgPlans.value = {} }
 }
 function toggleImg(r: any) { imgMode.value[r.id] = !imgMode.value[r.id] }
+// 参考图 role/desc：键用「镜id::图名」，脏了才亮保存
+const REF_KIND: Record<string, string> = { first: '首帧', ref: '参考', last: '尾帧' }
+const REF_ROLE: Record<string, string> = {
+  character: '角色', outfit: '服装', style: '风格', face: '脸', pose: '姿态', scene: '场景', prop: '道具', ending: '收尾',
+}
+const REF_ROLE_KEYS = ['character', 'outfit', 'style', 'face', 'pose', 'scene', 'prop']
+const refDrafts = ref<Record<string, { role: string; desc: string }>>({})
+function refKey(sid: string, name: string) { return `${sid}::${name}` }
+function syncRefDrafts() {
+  const next: Record<string, { role: string; desc: string }> = {}
+  for (const sh of (store.shots as any[])) {
+    for (const im of (sh.images || [])) {
+      const k = refKey(sh.id, im.name)
+      const base = { role: im.role || '', desc: im.desc || '' }
+      const cur = refDrafts.value[k]
+      // 没改过的跟服务端走；改过没存的保留，别被刷新冲掉
+      next[k] = cur && (cur.role !== base.role || cur.desc !== base.desc) ? cur : base
+    }
+  }
+  refDrafts.value = next
+}
+function refDraft(sid: string, name: string) {
+  const k = refKey(sid, name)
+  if (!refDrafts.value[k]) {
+    const im = ((store.shots as any[]).find((x: any) => x.id === sid)?.images || []).find((y: any) => y.name === name) || {}
+    refDrafts.value[k] = { role: im.role || '', desc: im.desc || '' }
+  }
+  return refDrafts.value[k]
+}
+function refDirty(sid: string, im: any) {
+  const d = refDrafts.value[refKey(sid, im.name)]
+  return !!d && (d.role !== (im.role || '') || d.desc !== (im.desc || ''))
+}
+async function saveRef(sid: string, im: any) {
+  const d = refDrafts.value[refKey(sid, im.name)]
+  if (!d) return
+  try {
+    await api.setShotImageMeta(sid, im.name, { role: d.role, desc: d.desc })
+    ElMessage.success('已保存')
+    await refresh()
+  } catch (e: any) { ElMessage.error('保存失败：' + (e?.message || e)) }
+}
 // 生成方式：镜上的是意图，回传里的是按型号结算后的结果，降级了就两个都显示
 const GEN_LABEL: Record<string, string> = { 't2v': '纯文本', 'i2v-first': '首帧', 'i2v-first-last': '首尾帧', 'multi-ref': '多图参考' }
 function genModeText(r: any) {
@@ -540,12 +557,11 @@ const PUSH_TTL = 10 * 60 * 1000
 interface PendingPush { pkg: string; at: number; eid: string; shots: number; done: boolean; count: number }
 const pushing = ref(false)
 const pushes = ref<PendingPush[]>([])
-const receiptRefreshKey = ref(0)
 let waitTimer: any = null
 const curPushes = computed(() => pushes.value.filter(p => p.eid === store.episodeId))
 const otherPushCount = computed(() => pushes.value.filter(p => p.eid !== store.episodeId && !p.done).length)
 function pushLine(p: PendingPush) {
-  if (p.done) return `L-Port 回执已到 ${p.pkg}（${p.count}条），点右边去回执页查看`
+  if (p.done) return `L-Port 回执已到 ${p.pkg}（${p.count}条）`
   return `已投递 ${p.pkg}（${p.shots}镜）→ L-Port 收件箱，等待回执中…`
 }
 function savePushes() {
@@ -604,7 +620,6 @@ function ensurePoller(immediate = false) {
         if (n > 0) {
           p.done = true
           p.count = n
-          if (p.eid === store.episodeId) receiptRefreshKey.value++
           ElMessage.success(`L-Port 回执已到 ${p.pkg}（${n}条）`)
         }
       } catch {}
@@ -637,7 +652,7 @@ function resumePush() {
   clearPushStorageIfEmpty()
   ensurePoller(true)
 }
-watch(dtab, v => { if (v === 'receipt') receiptRefreshKey.value++; if (v === 'prompts') refresh() })
+watch(dtab, v => { if (v === 'prompts') refresh() })
 watch(() => store.episodeId, () => { resumePush() })
 
 // 单图Agent导演域（抽到 composable，大纲 brief 留在视图）
@@ -720,7 +735,7 @@ async function buildDraftShots() {
     `首镜挂大纲配图为首帧（attach kind=first，大纲配图：${outline.value.image || '无'}）；`,
     '最后回复镜清单（镜id/时长/运镜/内容一句话）+合计时长。只建草案，不要改大纲。',
   ].join('\n')
-  await runBrief(brief, 'Agent按大纲建草案分镜中…', '草案已写库，下方分镜已刷新，逐镜检查后点组装', refresh)
+  await runBrief(brief, 'Agent按大纲建草案分镜中…', '分镜已写库，去「提示词」页查看', async () => { await refresh(); dtab.value = 'prompts' })
 }
 const draftLiteLoading = ref(false)
 async function buildDraftShotsLite() {
@@ -735,7 +750,8 @@ async function buildDraftShotsLite() {
     })
     const created = (r as any)?.data?.created || (r as any)?.created || []
     await refresh()
-    ElMessage.success(`草案已写库（轻）：${created.length}镜，逐镜检查后点组装`)
+    dtab.value = 'prompts'
+    ElMessage.success(`分镜已写库：${created.length}镜`)
   } catch (e: any) {
     ElMessage.error((e?.response?.data?.msg || '轻转草案失败').slice(0, 120))
   } finally {
@@ -836,11 +852,6 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
 </script>
 <style scoped>
 .director.kun-page { max-width: none; margin: 0; }
-.timeline { display: flex; gap: 4px; align-items: stretch; margin-top: 10px; }
-.tl-seg { min-width: 54px; padding: 6px 8px; border-radius: 8px; background: var(--suli-bg-2); border: 1px solid var(--suli-border); font-size: 11px; text-align: center; white-space: nowrap; overflow: hidden; }
-.tl-total { align-self: center; font-size: 12px; margin-left: 4px; }
-.draft-guide { margin-top: 8px; display: flex; flex-direction: column; gap: 8px; align-items: center; }
-.guide-btns { display: flex; gap: 8px; }
 .director { padding: 12px !important; min-height: 100%; display: flex; flex-direction: column; }
 .dir-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .dir-tabs { margin-top: 8px; flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -852,7 +863,6 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
 .w-engine { width: 240px; }
 .w-model { width: 210px; }
 .w-ref { width: 190px; }
-.dir-flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(620px, 100%), 1fr)); gap: 10px; margin-top: 8px; align-items: start; }
 .push-status { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; padding: 8px 10px; border: 1px dashed var(--suli-border); border-radius: 8px; background: var(--suli-surface); }
 .push-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .push-dot.ok { background: var(--el-color-success); }
@@ -909,6 +919,11 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
 .pr-thumb-empty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--suli-text-3); background: var(--suli-surface-2, #fafafa); }
 .pr-thumb-tag { position: absolute; left: 4px; bottom: 4px; font-size: 11px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; }
 .pr-eng { display: flex; flex-direction: column; gap: 2px; padding-top: 4px; border-top: 1px dashed var(--suli-border); }
+.pr-refs { display: flex; flex-wrap: wrap; gap: 6px; }
+.pr-ref { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--suli-border); border-radius: 8px; }
+.pr-ref-thumb { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; }
+.pr-ref-role { width: 92px; }
+.pr-ref-desc { width: 220px; }
 @media (max-width: 900px) {
   .outline-thumb { width: 170px; }
   .outline-text { max-height: 340px; }
