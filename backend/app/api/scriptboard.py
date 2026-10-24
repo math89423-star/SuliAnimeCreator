@@ -1,7 +1,10 @@
 """scriptboard 蓝图：剧本存管 + 自动拆分镜(LLM优先，规则回退) + 结构门。落盘 backend/data/scriptboard_db.json。"""
 import re as _re
+from pathlib import Path as _Path
 from flask import Blueprint, request, jsonify
 from ..services.disk_store import load, save
+
+_UPLOADS_DIR = _Path(__file__).resolve().parents[2] / "data" / "uploads"
 
 bp = Blueprint("scriptboard", __name__, url_prefix="/api/v1/scriptboard")
 
@@ -572,7 +575,24 @@ def list_shots():
     if dirty:
         _persist()
     rows.sort(key=lambda x: (x.get("ord", 0), x.get("id", "")))
-    return ok(rows)
+    return ok([_with_image_state(s) for s in rows])
+
+
+def _with_image_state(s):
+    """读时投影：给每张图标 exists（文件真在不在盘上）。
+
+    参考图可能是「计划要生成、还没落盘」的：这种不能当有图显示，前端据此出感叹号。
+    不写回库——文件会被清理/后补，状态只在读取时算。
+    """
+    imgs = s.get("images") or []
+    if not imgs:
+        return s
+    out = dict(s)
+    out["images"] = [
+        {**x, "exists": bool(x.get("name")) and (_UPLOADS_DIR / _Path(str(x["name"])).name).is_file()}
+        for x in imgs
+    ]
+    return out
 
 @bp.get("/gen-modes")
 def gen_modes():

@@ -134,8 +134,15 @@
               <span class="tnum pr-dur">{{ r.duration_s }}s</span>
               <el-tag size="small" :type="r.lp ? 'success' : 'info'">{{ r.lp ? '已回传' : '未回传' }}</el-tag>
               <div class="pr-thumb" :class="{ on: imgMode[r.id] }" @click="toggleImg(r)">
-                <el-image v-if="thumbOf(r)" :src="imgUrl(thumbOf(r).name)" fit="cover" />
-                <div v-else class="pr-thumb-empty">无图</div>
+                <el-image
+                  v-if="thumbOf(r) && thumbOf(r).exists !== false"
+                  :src="imgUrl(thumbOf(r).name)" fit="cover"
+                  @error="thumbOf(r).exists = false"
+                />
+                <div v-else class="pr-thumb-empty">
+                  <el-icon v-if="thumbOf(r)"><WarningFilled /></el-icon>
+                  <span>{{ thumbOf(r) ? '待生成' : '无图' }}</span>
+                </div>
                 <span class="pr-thumb-tag">{{ imgMode[r.id] ? '图像' : '视频' }}</span>
               </div>
             </div>
@@ -172,8 +179,17 @@
                 <b class="pr-k">参考图</b>
                 <div class="pr-v pr-refs">
                   <div v-for="im in r.images" :key="im.kind + im.name" class="pr-ref">
-                    <el-image :src="imgUrl(im.name)" class="pr-ref-thumb" fit="cover" :preview-src-list="[imgUrl(im.name)]" preview-teleported />
+                    <el-image
+                      v-if="im.exists !== false"
+                      :src="imgUrl(im.name)" class="pr-ref-thumb" fit="cover"
+                      :preview-src-list="[imgUrl(im.name)]" preview-teleported
+                      @error="im.exists = false"
+                    />
+                    <div v-else class="pr-ref-thumb pr-ref-thumb-warn" :title="im.name + '：还没生成'">
+                      <el-icon><WarningFilled /></el-icon>
+                    </div>
                     <el-tag size="small" :type="im.kind === 'first' ? 'danger' : 'info'" effect="plain">{{ REF_KIND[im.kind] || im.kind }}</el-tag>
+                    <el-tag v-if="im.exists === false" size="small" type="warning">待生成</el-tag>
                     <el-select v-if="im.kind !== 'first'" v-model="refDraft(r.id, im.name).role" size="small" class="pr-ref-role" placeholder="role">
                       <el-option v-for="rk in REF_ROLE_KEYS" :key="rk" :label="REF_ROLE[rk]" :value="rk" />
                     </el-select>
@@ -214,7 +230,7 @@ import { directorApi } from '../api/director'
 import { useAppStore } from '../stores/app'
 import { useSettingsStore } from '../stores/settings'
 import { useAgentDirect } from '../composables/useAgentDirect'
-import { ArrowDown, Lightning, MagicStick } from '@element-plus/icons-vue'
+import { ArrowDown, Lightning, MagicStick, WarningFilled } from '@element-plus/icons-vue'
 import MarkdownView from '../components/MarkdownView.vue'
 import LoadingSpinner from '../components/LoadingSpinner.vue'
 import { castNames, loadCastInput } from '../utils/cast'
@@ -916,12 +932,15 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
 .pr-thumb { position: relative; width: 116px; height: 84px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid var(--suli-border); margin-top: 2px; }
 .pr-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; }
 .pr-thumb.on { border-color: var(--suli-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--suli-primary) 30%, transparent); }
-.pr-thumb-empty { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--suli-text-3); background: var(--suli-surface-2, #fafafa); }
+.pr-thumb-empty { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; font-size: 12px; color: var(--suli-text-3); background: var(--suli-surface-2, #fafafa); }
+.pr-thumb-empty .el-icon { font-size: 18px; color: var(--el-color-warning); }
 .pr-thumb-tag { position: absolute; left: 4px; bottom: 4px; font-size: 11px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; }
 .pr-eng { display: flex; flex-direction: column; gap: 2px; padding-top: 4px; border-top: 1px dashed var(--suli-border); }
 .pr-refs { display: flex; flex-wrap: wrap; gap: 6px; }
 .pr-ref { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--suli-border); border-radius: 8px; }
 .pr-ref-thumb { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; }
+.pr-ref-thumb-warn { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--el-color-warning); color: var(--el-color-warning); background: var(--suli-surface-2, #fafafa); }
+.pr-ref-thumb-warn .el-icon { font-size: 20px; }
 .pr-ref-role { width: 92px; }
 .pr-ref-desc { width: 220px; }
 @media (max-width: 900px) {

@@ -62,7 +62,16 @@
         </div>
         <div class="c-clip">
           <div v-if="uploading[r.id]" class="clip-loading">转码中…</div>
-          <el-image v-else-if="shotByKind(r, 'first')" :src="imgUrl(shotByKind(r, 'first').name)" :preview-src-list="[imgUrl(shotByKind(r, 'first').name)]" fit="cover" class="clip-thumb" preview-teleported />
+          <el-image
+            v-else-if="shotByKind(r, 'first') && shotByKind(r, 'first').exists !== false"
+            :src="imgUrl(shotByKind(r, 'first').name)"
+            :preview-src-list="[imgUrl(shotByKind(r, 'first').name)]"
+            fit="cover" class="clip-thumb" preview-teleported
+            @error="shotByKind(r, 'first').exists = false"
+          />
+          <div v-else-if="shotByKind(r, 'first')" class="clip-missing">
+            <el-icon><WarningFilled /></el-icon><span>待生成</span>
+          </div>
           <button v-else class="clip-add" @click="pickShotFile(r, 'first')"><span class="clip-plus">+</span><span>添加拍摄片段</span></button>
           <el-button v-if="shotByKind(r, 'first') && !uploading[r.id]" link type="danger" size="small" @click="delShotImg(r, shotByKind(r, 'first').name)">删</el-button>
         </div>
@@ -85,6 +94,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { WarningFilled } from '@element-plus/icons-vue'
 import { api } from '../api/client'
 import { useAppStore } from '../stores/app'
 import { useSettingsStore } from '../stores/settings'
@@ -402,6 +412,8 @@ onMounted(async () => {
 .clip-add:hover { border-color: var(--suli-primary); color: var(--suli-primary); }
 .clip-plus { font-size: 18px; line-height: 1; }
 .clip-loading { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; background: #2b2b2b; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.clip-missing { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; border: 1px dashed var(--el-color-warning); color: var(--el-color-warning); display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; font-size: 12px; }
+.clip-missing .el-icon { font-size: 20px; }
 .seg-foot { display: flex; justify-content: center; gap: 10px; align-items: center; margin: 14px 0 4px; }
 .seg-add { background: #14b8a6; border: none; }
 </style>
