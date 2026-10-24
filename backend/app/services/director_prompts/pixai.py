@@ -210,7 +210,12 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     if pre:
         lines.append(duty)
         if first and "@image" not in duty.lower():
-            lines.insert(0, "@image1 (from the attached first frame) is the identity and composition anchor.")
+            if first.get("kind") == "first":
+                lines.insert(0, "@image1 (from the attached first frame) is the identity and composition anchor.")
+            else:
+                # 参考图不是首帧：按多图参考口径锚身份，不谎称首帧。
+                lines.insert(0, "@image1 is the character reference throughout this video, "
+                                "keeping the character exactly as in the reference.")
         tail = f"{style}, anime image-to-video"
         if tcfg and "adult" not in duty.lower():
             tail = tail + (f", {tcfg['anchor']}" if tcfg.get("anchor") else "")
