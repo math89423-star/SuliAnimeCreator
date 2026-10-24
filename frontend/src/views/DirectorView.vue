@@ -245,11 +245,14 @@
                     </div>
                     <el-tag size="small" effect="plain">{{ REF_KIND[im.kind] || im.kind }}</el-tag>
                     <el-tag v-if="im.exists === false" size="small" type="warning">待生成</el-tag>
-                    <el-select v-model="refDraft(dlgRow.id, im.name).role" size="small" class="pr-ref-role" placeholder="role">
-                      <el-option v-for="rk in REF_ROLE_KEYS" :key="rk" :label="REF_ROLE[rk]" :value="rk" />
-                    </el-select>
-                    <el-input v-model="refDraft(dlgRow.id, im.name).desc" size="small" class="pr-ref-desc" placeholder="desc" />
-                    <el-button size="small" text :disabled="!refDirty(dlgRow.id, im)" @click="saveRef(dlgRow.id, im)">保存</el-button>
+                    <template v-if="im.name">
+                      <el-select v-model="refDraft(dlgRow.id, im.name).role" size="small" class="pr-ref-role" placeholder="role">
+                        <el-option v-for="rk in REF_ROLE_KEYS" :key="rk" :label="REF_ROLE[rk]" :value="rk" />
+                      </el-select>
+                      <el-input v-model="refDraft(dlgRow.id, im.name).desc" size="small" class="pr-ref-desc" placeholder="desc" />
+                      <el-button size="small" text :disabled="!refDirty(dlgRow.id, im)" @click="saveRef(dlgRow.id, im)">保存</el-button>
+                    </template>
+                    <span v-else class="pr-v tnum">{{ im._tag }}</span>
                   </div>
                 </div>
                 <span v-else class="pr-v">—</span>
@@ -543,8 +546,15 @@ const dlgTitle = computed(() => dlgRow.value && dlgSlot.value
 const segOpen = ref<Record<string, boolean>>({})
 function slotEditRefs(r: any, sl: any) {
   const imgs = r.images || []
-  if (sl.kind === 'first' || sl.kind === 'last') {
+  if (sl.kind === 'first') {
     return imgs.filter((x: any) => (x.kind || 'ref') !== 'first' && (x.kind || 'ref') !== 'last')
+  }
+  if (sl.kind === 'last') {
+    const refs = imgs.filter((x: any) => (x.kind || 'ref') !== 'first' && (x.kind || 'ref') !== 'last')
+    const firstImg = imgs.find((x: any) => x.kind === 'first') || null
+    if (firstImg) return [firstImg].concat(refs)
+    const firstSlot = slotsOf(r).find((s: any) => s.kind === 'first') || null
+    return [{ name: '', kind: 'first', exists: false, _tag: (firstSlot && firstSlot.tag) || '@image1' }].concat(refs)
   }
   return sl.planned ? [sl.planned] : []
 }

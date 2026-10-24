@@ -49,6 +49,33 @@
           "name": "对手"
         }
       ]
+    },
+    "EP-ROOFTOP-01": {
+      "id": "EP-ROOFTOP-01",
+      "screenplay_md": "# EP-ROOFTOP-01 天台下的浪漫告白：流萤，30秒：隐喻替换版\n\n## EP-ROOFTOP-01-SC001 内·主场景·夜\n\n流萤：天台下的浪漫告白：流萤，第1拍推进——起。\n[SFX] 铁门低鸣\n对手：收到，这条接住了。\n\n流萤：天台下的浪漫告白：流萤，第2拍推进——转。\n[SFX] 环境底声停一拍\n对手：别松，钩子还在推进。\n\n流萤：天台下的浪漫告白：流萤，第3拍推进——落。\n[SFX] 脚步逼近\n对手：顶上去，一句定生死。\n\n[连续性] 关键道具状态已交代；人物关系推进。\n[转场] 硬切下场。\n\n<!-- beats:起 / 转 / 落 -->\n<!-- generated:2026-10-24T05:32:16 template:p pick_to_screenplay cast:流萤/对手 -->\n",
+      "segs": [],
+      "verdict": "draft",
+      "ref_images": [
+        {
+          "name": "be8ffe70915f49b0aae07f7f3c8c8c8d.png",
+          "role": "",
+          "desc": ""
+        }
+      ],
+      "cast": [
+        {
+          "id": "",
+          "name": "流萤"
+        },
+        {
+          "id": "",
+          "name": "对手"
+        }
+      ],
+      "outline_md": "## 方向一句话\n夜景天台温柔告白短片：流萤独白起，对手回应转，星空下告白落。\n\n## 基调与档位\n温柔、克制、浪漫夜景；引擎 pixai，档位常规。\n\n## 分镜大纲表\n| 镜号 | 内容一句话 | 预计时长 | 运镜方向 | 生成方式 | 备注 |\n|---|---|---|---|---|---|\n| 1 | 流萤站在天台边缘独白起，夜风轻拂，城市灯海铺底。 | 6秒 | 缓慢前推，中近景转近景 | t2v | 无首帧/参考图，纯文本生成；锁定夜景天台氛围 |\n| 2 | 对手从侧后方回应，情绪由静转近，目光落向流萤。 | 6秒 | 低角度轻摇，侧后转侧前 | t2v | 无参考图，纯文本生成；保持对手身份描述一致 |\n| 3 | 流萤与对手对视停顿，告白前奏在两人之间升温。 | 6秒 | 中近景轻环绕，双人构图 | t2v | 无参考图，纯文本生成；控制双人站位与视线关系 |\n| 4 | 星空下告白落点，流萤与对手在夜色中完成情绪回应。 | 6秒 | 仰拍缓推，星空入画 | t2v | 无参考图，纯文本生成；强化星空与温柔光比 |\n| 5 | 两人并肩仰望星空收束，浪漫余韵停留。 | 6秒 | 高位缓慢拉远，双人背影收尾 | t2v | 无参考图，纯文本生成；保留夜景天台空间感 |\n\n## 合计时长\n约30秒（5镜×6秒）",
+      "outline_image": "be8ffe70915f49b0aae07f7f3c8c8c8d.png",
+      "project_id": "PRJ-A9E47A",
+      "title": "天台下的浪漫告白"
     }
   },
   "shots": {
@@ -444,6 +471,303 @@
         "duration_s": 5.0
       },
       "gen_mode": "t2v"
+    },
+    "SHOT-ROOFTOP-01-M001": {
+      "id": "SHOT-ROOFTOP-01-M001",
+      "episode_id": "EP-ROOFTOP-01",
+      "ord": 0,
+      "duty": "流萤站在天台边缘独白起，夜风轻拂，城市灯海铺底。",
+      "duty_en": "Under the night sky, Firefly begins her quiet monologue.",
+      "duration_s": 6,
+      "camera": {
+        "crop": "close",
+        "height": "eye",
+        "movement": "推"
+      },
+      "sound": "夜风轻拂、远处城市低噪、温柔钢琴铺底。",
+      "key_text_en": "Under the night sky, Firefly begins her quiet monologue.",
+      "gen_mode": "i2v-first-last",
+      "tier": "",
+      "water_level": "",
+      "draft": true,
+      "images": [
+        {
+          "name": "be8ffe70915f49b0aae07f7f3c8c8c8d.png",
+          "kind": "ref",
+          "role": "character",
+          "desc": "character identity reference"
+        }
+      ],
+      "image": "",
+      "lport_prompts": {
+        "source": "lport:seg_prompt",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T05:50:32",
+        "seg_id": "SEG-01",
+        "director_cn": "特写，流萤独自站在天台边缘，夜风拂过她的发与衣角。她开口独白，声音压低。身后城市灯海虚成一片光斑。声音：夜风轻拂、远处城市低噪、温柔钢琴铺底。",
+        "camera_note": "固定机位：特写锁住流萤面部，不做任何运动，让独白压在虚焦灯海之上。",
+        "key_text_en": "Under the night sky, Firefly begins her quiet monologue.",
+        "dialogue_cn": "夜风轻拂、远处城市低噪、温柔钢琴铺底。",
+        "crop": "close",
+        "ref_status": "待补",
+        "ref_missing": [
+          "起始帧画面"
+        ],
+        "duration_s": 6.0
+      },
+      "lport_video_prompts": {
+        "source": "lport:video_prompt:intent",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T06:12:57",
+        "engine": "pixai",
+        "video_model": "tsubaki-video",
+        "ref_mode": "startframe",
+        "tier": "sfw",
+        "gen_mode": "i2v-first-last",
+        "gen_mode_eff": "i2v-first-last",
+        "prompt": "@image1 is the first frame and the identity anchor — keep Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes and the composition of @image1 unchanged at the start.\n@image2 — ending state reference (see attached image).\n\n[0-6s] Under the night sky, Firefly begins her quiet monologue. The camera slowly pushes in. Keep the content non-explicit and suitable for all audiences: clothing remains in place, no sexual content. Carry the ending state from @image2 into this shot. The clip must end exactly on @image2.\n\nSFX: 夜风轻拂、远处城市低噪、温柔钢琴铺底。\n\n2D anime illustration, anime image-to-video.",
+        "ref_note": "首帧待生成、尾帧待生成",
+        "refs": [
+          {
+            "tag": "@image1",
+            "name": "",
+            "role": ""
+          },
+          {
+            "tag": "@image2",
+            "name": "",
+            "role": "ending"
+          }
+        ],
+        "duration_s": 6.0
+      }
+    },
+    "SHOT-ROOFTOP-01-M002": {
+      "id": "SHOT-ROOFTOP-01-M002",
+      "episode_id": "EP-ROOFTOP-01",
+      "ord": 1,
+      "duty": "对手从侧后方回应，情绪由静转近，目光落向流萤。",
+      "duty_en": "The opponent answers softly, eyes turning toward Firefly.",
+      "duration_s": 6,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "摇"
+      },
+      "sound": "风声延续，钢琴渐入，轻微衣料与呼吸声。",
+      "key_text_en": "The opponent answers softly, eyes turning toward Firefly.",
+      "gen_mode": "i2v-first",
+      "tier": "",
+      "water_level": "",
+      "draft": true,
+      "lport_prompts": {
+        "source": "lport:seg_prompt",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T05:50:32",
+        "seg_id": "SEG-02",
+        "director_cn": "中景，对手从侧后方入画，轻声回应，目光转向流萤。两人之间留出一段夜色。声音：风声延续，钢琴渐入，轻微衣料与呼吸声。",
+        "camera_note": "横移：镜头自流萤一侧缓慢横移，把对手带进同一画面，完成注意力的交接。",
+        "key_text_en": "The opponent answers softly, eyes turning toward Firefly.",
+        "dialogue_cn": "风声延续，钢琴渐入，轻微衣料与呼吸声。",
+        "crop": "medium",
+        "ref_status": "待补",
+        "ref_missing": [
+          "起始帧画面"
+        ],
+        "duration_s": 6.0
+      },
+      "lport_video_prompts": {
+        "source": "lport:video_prompt:intent",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T06:12:57",
+        "engine": "pixai",
+        "video_model": "tsubaki-video",
+        "ref_mode": "startframe",
+        "tier": "sfw",
+        "gen_mode": "i2v-first",
+        "gen_mode_eff": "i2v-first",
+        "prompt": "@image1 is the first frame and the identity anchor — keep Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes and the composition of @image1 unchanged at the start.\n\n[0-6s] The opponent answers softly, eyes turning toward Firefly. The camera pans smoothly across the scene. Keep the content non-explicit and suitable for all audiences: clothing remains in place, no sexual content.\n\nSFX: 风声延续，钢琴渐入，轻微衣料与呼吸声。\n\n2D anime illustration, anime image-to-video.",
+        "ref_note": "首帧待生成",
+        "refs": [
+          {
+            "tag": "@image1",
+            "name": "",
+            "role": ""
+          }
+        ],
+        "duration_s": 6.0
+      }
+    },
+    "SHOT-ROOFTOP-01-M003": {
+      "id": "SHOT-ROOFTOP-01-M003",
+      "episode_id": "EP-ROOFTOP-01",
+      "ord": 2,
+      "duty": "流萤与对手对视停顿，告白前奏在两人之间升温。",
+      "duty_en": "Their eyes meet; the moment before confession grows warm.",
+      "duration_s": 6,
+      "camera": {
+        "crop": "close",
+        "height": "eye",
+        "movement": "环绕"
+      },
+      "sound": "环境声压低，弦乐轻推，保留夜晚空旷感。",
+      "key_text_en": "Their eyes meet; the moment before confession grows warm.",
+      "gen_mode": "multi-ref",
+      "tier": "",
+      "water_level": "",
+      "draft": true,
+      "images": [
+        {
+          "name": "be8ffe70915f49b0aae07f7f3c8c8c8d.png",
+          "kind": "ref",
+          "role": "character",
+          "desc": "character identity reference"
+        }
+      ],
+      "image": "",
+      "lport_prompts": {
+        "source": "lport:seg_prompt",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T05:50:32",
+        "seg_id": "SEG-03",
+        "director_cn": "特写，流萤与对手对视，两人都停住不动，只有呼吸在动。声音：环境声压低，弦乐轻推，保留夜晚空旷感。",
+        "camera_note": "推镜：极缓推近两人之间的空隙，把停顿压成张力。",
+        "key_text_en": "Their eyes meet; the moment before confession grows warm.",
+        "dialogue_cn": "环境声压低，弦乐轻推，保留夜晚空旷感。",
+        "crop": "close",
+        "ref_status": "待补",
+        "ref_missing": [
+          "起始帧画面"
+        ],
+        "duration_s": 6.0
+      },
+      "lport_video_prompts": {
+        "source": "lport:video_prompt:intent",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T06:12:57",
+        "engine": "pixai",
+        "video_model": "tsubaki-video",
+        "ref_mode": "reference",
+        "tier": "sfw",
+        "gen_mode": "multi-ref",
+        "gen_mode_eff": "multi-ref",
+        "prompt": "@image1 is the character reference throughout this video, keeping Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes exactly as in the reference.\n\n[0-6s] Their eyes meet; the moment before confession grows warm. The camera orbits the subject in a slow motion. Keep the content non-explicit and suitable for all audiences: clothing remains in place, no sexual content.\n\nSFX: 环境声压低，弦乐轻推，保留夜晚空旷感。\n\n2D anime illustration, anime image-to-video.",
+        "refs": [
+          {
+            "tag": "@image1",
+            "name": "be8ffe70915f49b0aae07f7f3c8c8c8d.png",
+            "role": "character"
+          }
+        ],
+        "duration_s": 6.0
+      }
+    },
+    "SHOT-ROOFTOP-01-M004": {
+      "id": "SHOT-ROOFTOP-01-M004",
+      "episode_id": "EP-ROOFTOP-01",
+      "ord": 3,
+      "duty": "星空下告白落点，流萤与对手在夜色中完成情绪回应。",
+      "duty_en": "Beneath the stars, the confession lands and is answered.",
+      "duration_s": 6,
+      "camera": {
+        "crop": "close",
+        "height": "eye",
+        "movement": "推"
+      },
+      "sound": "钢琴与弦乐柔和上扬，夜风轻响，城市远处低鸣。",
+      "key_text_en": "Beneath the stars, the confession lands and is answered.",
+      "gen_mode": "i2v-first-last",
+      "tier": "",
+      "water_level": "",
+      "draft": true,
+      "lport_prompts": {
+        "source": "lport:seg_prompt",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T05:50:32",
+        "seg_id": "SEG-04",
+        "director_cn": "特写，星空压在两人头顶，流萤的告白落下，对手给出回应，眼神先动。声音：钢琴与弦乐柔和上扬，夜风轻响，城市远处低鸣。",
+        "camera_note": "固定机位：特写稳住不动，把情绪落点交给两张脸。",
+        "key_text_en": "Beneath the stars, the confession lands and is answered.",
+        "dialogue_cn": "钢琴与弦乐柔和上扬，夜风轻响，城市远处低鸣。",
+        "crop": "close",
+        "ref_status": "待补",
+        "ref_missing": [
+          "起始帧画面"
+        ],
+        "duration_s": 6.0
+      },
+      "lport_video_prompts": {
+        "source": "lport:video_prompt:intent",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T06:12:57",
+        "engine": "pixai",
+        "video_model": "tsubaki-video",
+        "ref_mode": "startframe",
+        "tier": "sfw",
+        "gen_mode": "i2v-first-last",
+        "gen_mode_eff": "i2v-first-last",
+        "prompt": "@image1 is the first frame and the identity anchor — keep Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes and the composition of @image1 unchanged at the start.\n@image2 — ending state reference (see attached image).\n\n[0-6s] Beneath the stars, the confession lands and is answered. The camera slowly pushes in. Keep the content non-explicit and suitable for all audiences: clothing remains in place, no sexual content. Carry the ending state from @image2 into this shot. The clip must end exactly on @image2.\n\nSFX: 钢琴与弦乐柔和上扬，夜风轻响，城市远处低鸣。\n\n2D anime illustration, anime image-to-video.",
+        "ref_note": "首帧待生成、尾帧待生成",
+        "refs": [
+          {
+            "tag": "@image1",
+            "name": "",
+            "role": ""
+          },
+          {
+            "tag": "@image2",
+            "name": "",
+            "role": "ending"
+          }
+        ],
+        "duration_s": 6.0
+      }
+    },
+    "SHOT-ROOFTOP-01-M005": {
+      "id": "SHOT-ROOFTOP-01-M005",
+      "episode_id": "EP-ROOFTOP-01",
+      "ord": 4,
+      "duty": "两人并肩仰望星空收束，浪漫余韵停留。",
+      "duty_en": "",
+      "duration_s": 6,
+      "camera": {
+        "crop": "medium",
+        "height": "eye",
+        "movement": "拉"
+      },
+      "sound": "",
+      "key_text_en": "",
+      "gen_mode": "t2v",
+      "tier": "",
+      "water_level": "",
+      "draft": true,
+      "lport_prompts": {
+        "source": "lport:seg_prompt",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T05:50:32",
+        "seg_id": "SEG-05",
+        "director_cn": "中景，流萤与对手并肩站在天台边沿，一同抬头望向星空，衣角被风轻轻带起。",
+        "camera_note": "拉镜：从中景缓缓拉开，把星空纳入画面上方，收住余韵。",
+        "crop": "medium",
+        "ref_status": "待补",
+        "ref_missing": [
+          "起始帧画面"
+        ],
+        "duration_s": 6.0
+      },
+      "lport_video_prompts": {
+        "source": "lport:video_prompt:intent",
+        "package_id": "PKG-EP-ROOFTOP-01-1792820072",
+        "at": "2026-10-24T06:12:57",
+        "engine": "pixai",
+        "video_model": "tsubaki-video",
+        "ref_mode": "t2v",
+        "tier": "sfw",
+        "gen_mode": "t2v",
+        "gen_mode_eff": "t2v",
+        "prompt": "Firefly, adult woman, long silver hair with teal gradient tips, side braid, white flower hair ornament with dark green ribbon, amber-to-teal eyes as the subject of the clip.\n\n[0-6s] 两人并肩仰望星空收束，浪漫余韵停留。. The camera pulls back to reveal the composition. Keep the content non-explicit and suitable for all audiences: clothing remains in place, no sexual content.\n\nSFX: quiet room tone — a slow breath — soft fabric shift\n\n2D anime illustration, anime image-to-video.",
+        "duration_s": 6.0
+      }
     }
   }
 }
