@@ -39,7 +39,9 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
     style = (style_bible or "").strip() or "2D-animated"
     tier = normalize_tier(tier or shot.get("tier") or "")
     tcfg = TIERS.get(tier)
-    raw = strip_prefix(shot.get("duty_en") or shot.get("duty"))
+    raw = strip_prefix(shot.get("duty_en") or shot.get("key_text_en") or "")
+    if raw and CJK.search(raw):
+        raw = ""
     pre_dlg = ""
     pre_fmt = pixai_preformatted(raw)
     if pre_fmt:
@@ -56,9 +58,14 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
         duration = 5.0
     duration = min(max(duration, 0.5), 30.0)
 
-    identity = character.get("identity", "young woman") or "young woman"
-    appearance = f"{character.get('hairstyle', '')} {character.get('face', '')}".strip()
-    outfit = (character.get("outfits_text") or "").strip()[:120]
+    def _en_only(v):
+        v = (v or "").strip()
+        return "" if CJK.search(v) else v
+    identity = (_en_only(character.get("anchor_en") or "")
+                or _en_only(character.get("identity") or "")
+                or "young woman")
+    appearance = _en_only(f"{character.get('hairstyle', '')} {character.get('face', '')}".strip())
+    outfit = _en_only((character.get("outfits_text") or "").strip()[:120])
     lock_txt = ", ".join([l.get("surface_en", "") for l in locks if l.get("surface_en")])[:200]
 
     anchor_bits = [identity, appearance, outfit, lock_txt]
@@ -97,15 +104,19 @@ def build_i2va(shot, character=None, locks=None, style_bible="", music="", tier=
             if who in PRONOUN_EN:
                 speaker = PRONOUN_EN[who][0].upper() + PRONOUN_EN[who][1:]
             elif CJK.search(who):
-                speaker = f"the speaker {who}"
+                speaker = "the speaker"
             else:
                 speaker = f"The {who}"
             dlg_clause = (f" {speaker} with a clear voice (S1) says: "
                           f"<d>[{lang}] {line}</d>")
             snd_hint = ""
+        elif CJK.search(sound):
+            sound = ""
         else:
             snd_hint = f"{sound} is heard over soft ambient tone with faint fabric movement."
     key_en = (shot.get("key_text_en") or "").strip()
+    if key_en and CJK.search(key_en):
+        key_en = ""
     key_clause = f" {key_en}." if key_en and key_en not in duty else ""
 
     duty_l = duty.lower()

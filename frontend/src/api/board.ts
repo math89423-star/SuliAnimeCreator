@@ -23,7 +23,7 @@ export const boardApi = {
   createShot: (p: any) => http.post('/v1/scriptboard/shots', p).then(r => r.data),
   uploadShotImage: (sid: string, f: File, kind = 'ref', extra: any = {}) => { const fd = new FormData(); fd.append('file', f); fd.append('kind', kind); if (extra.role) fd.append('role', extra.role); if (extra.desc) fd.append('desc', extra.desc); return http.post(`/v1/scriptboard/shots/${sid}/image`, fd).then(r => r.data) },
   setShotImageMeta: (sid: string, name: string, meta: any) => http.post(`/v1/scriptboard/shots/${sid}/image/meta`, { name, ...meta }).then(r => r.data),
-  attachShotImage: (sid: string, name: string, kind = 'first') => http.post(`/v1/scriptboard/shots/${sid}/image/attach`, { name, kind }).then(r => r.data),
+  attachShotImage: (sid: string, name: string, kind = 'ref') => http.post(`/v1/scriptboard/shots/${sid}/image/attach`, { name, kind }).then(r => r.data),
   deleteShotImage: (sid: string, name: string) => http.delete(`/v1/scriptboard/shots/${sid}/image/${name}`).then(r => r.data),
   reviewStat: (eid: string) => http.get(`/v1/scriptboard/review/${eid}`).then(r => r.data),
   reviewRun: (eid: string) => http.post(`/v1/scriptboard/review/run/${eid}`).then(r => r.data),

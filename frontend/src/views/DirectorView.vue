@@ -50,7 +50,7 @@
         </el-empty>
         <div v-if="outline.md" class="suli-card outline-card">
           <div class="outline-head"><b>方案大纲</b><el-button size="small" text @click="outlineFileEl?.click()" title="上传参考图（与「剧本」页签同一清单，可作大纲/手帧参考）">+参考图</el-button><el-button size="small" text @click="outlineFolded = !outlineFolded">{{ outlineFolded ? '▶ 展开' : '▼ 收起' }}</el-button><el-button size="small" text @click="toggleOutlineEdit">{{ outlineEditing ? '预览' : '编辑' }}</el-button><el-button v-if="outlineEditing" size="small" type="primary" @click="saveOutlineEdit" :loading="outlineSaving">保存</el-button><span style="flex:1" /><el-button size="small" text @click="zoomOutline(-0.1)">A-</el-button><el-button size="small" text @click="resetOutlineZoom" title="重置缩放">{{ Math.round(outlineZoom * 100) }}%</el-button><el-button size="small" text @click="zoomOutline(0.1)">A+</el-button><el-button v-if="agentLoading" size="small" @click="stopAgent">停止</el-button><el-button size="small" @click="regenOutline" :loading="agentLoading">重新生成</el-button><el-dropdown trigger="click" @command="onDraftMode">
-            <el-button size="small" type="primary" :loading="agentLoading || draftLiteLoading">② 生成草案<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
+            <el-button size="small" type="primary" :loading="agentLoading || draftLiteLoading">② 投递 L-Port<el-icon style="margin-left:4px"><ArrowDown /></el-icon></el-button>
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item command="lite"><el-icon style="margin-right:4px"><Lightning /></el-icon><b>快速模式</b></el-dropdown-item>
@@ -85,8 +85,6 @@
       <div class="dir-bar">
         <div class="bar-group">
           <el-button type="primary" size="small" @click="downloadBundle" :loading="bundleLoading" :disabled="!store.episodeId" title="L-Port 上传草案包用的 ZIP（manifest+shots+prompts+图）">导出草案包ZIP</el-button>
-          <el-button size="small" @click="downloadDraft" :loading="docLoading" :disabled="!store.episodeId" title="人读版交接文档（.md，L-Port 上传请用左边 ZIP）">草案文档</el-button>
-          <el-button size="small" type="success" plain @click="pushToLport" :loading="pushing" :disabled="!store.episodeId" title="自动投递到 L-Port 收件箱 suli_packages，投完自动等回执">直投 L-Port</el-button>
           <el-popconfirm title="清空本集全部草案分镜？此操作不可恢复" confirm-button-text="清空" cancel-button-text="留着" @confirm="clearShots">
             <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
           </el-popconfirm>
@@ -97,7 +95,7 @@
         <LoadingSpinner :size="14" />
         <span class="suli-muted" style="font-size:12px">正在投递到 L-Port 收件箱…</span>
       </div>
-      <div v-for="p in curPushes" :key="p.pkg" class="push-status">
+      <div v-for="p in curPushes.filter(p => p.done || !waitingPage)" :key="p.pkg" class="push-status">
         <LoadingSpinner v-if="!p.done" :size="14" />
         <span v-else class="push-dot ok" />
         <span class="suli-muted tnum" style="font-size:12px">{{ pushLine(p) }}</span>
@@ -108,8 +106,18 @@
         <span class="suli-muted" style="font-size:12px">另有 {{ otherPushCount }} 个其他集投递在等回执</span>
       </div>
         <el-empty v-if="!store.shots.length" description="暂无分镜" :image-size="64">
-          <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页生成草案</el-button>
+          <el-button size="small" type="primary" @click="dtab = 'outline'">去大纲页投递</el-button>
         </el-empty>
+        <div v-else-if="waitingPage" class="wait-page" style="padding:6px 2px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <LoadingSpinner :size="16" />
+            <span class="suli-muted tnum" style="font-size:12px">{{ waitLine }}</span>
+            <span style="flex:1" />
+            <el-button v-if="waitPkg" size="small" link @click="stopWait(waitPkg.pkg)">停止等待</el-button>
+          </div>
+          <el-progress :percentage="waitPct" :show-text="false" style="margin:8px 0 12px" />
+          <el-skeleton :rows="6" animated />
+        </div>
         <div v-else class="prompt-list">
           <div v-for="(r, i) in promptRows" :key="r.id" class="prompt-row">
             <div class="pr-left">
@@ -169,24 +177,7 @@
               <div v-else-if="r.asm?.prompt" class="pr-line">
                 <b class="pr-k">视频提示词</b><span class="pr-v pr-video">{{ r.asm.prompt }}</span>
               </div>
-              <div v-if="r.lpv" class="pr-line">
-                <b class="pr-k">参数</b>
-                <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ genModeText(r) }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
-                <el-tag v-if="r.lpv.edited" size="small" type="warning">人工改</el-tag>
-              </div>
-              <div v-else-if="r.asm" class="pr-line">
-                <b class="pr-k">参数</b>
-                <span class="pr-v">{{ r.asm.video_model || r.asm.engine || '—' }} · {{ r.asm.duration_s }}s · {{ r.asm.tier || '—' }}</span>
-              </div>
-              <div v-if="(r.lpv?.applied || r.asm?.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv?.applied || r.asm?.applied || []).join('；') }}</span></div>
-              <div v-if="r.lpv?.ref_note || r.asm?.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv?.ref_note || r.asm?.ref_note }}</span></div>
-              <div v-if="r.lpv" class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}<template v-if="r.lpv.edited_at"> · 改于 {{ r.lpv.edited_at }}</template></div>
-              <div v-if="r.lp" class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
-              <div v-if="r.lp?.camera_note" class="pr-line"><b class="pr-k">镜头</b><span class="pr-v">{{ r.lp.camera_note }}</span></div>
-              <div v-if="r.lp?.key_text_en" class="pr-line"><b class="pr-k">英文关键帧</b><span class="pr-v">{{ r.lp.key_text_en }}</span></div>
-              <div v-if="(r.lp?.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
-              <div v-if="r.lp" class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
-              <div v-if="!r.lp && !r.lpv && !r.asm" class="pr-empty">—</div>
+                            <div v-if="!r.lp && !r.lpv && !r.asm" class="pr-empty">—</div>
               </template>
             </div>
             <div class="pr-right">
@@ -215,18 +206,17 @@
             <div class="dlg-right">
               <div class="pr-line"><b class="pr-k">生成提示词</b>
                 <div class="pr-v" style="flex:1;min-width:0">
-                  <template v-if="dlgRow.img">
-                    <div class="pr-v">{{ dlgRow.img.title || dlgRow.img.plan_id }} · {{ dlgRow.img.status }}</div>
-                    <div v-for="(eng, k) in dlgRow.img.prompts" :key="k" class="pr-eng">
+                  <template v-if="stillFor(dlgRow, dlgSlot)">
+                    <div class="pr-v">{{ stillFor(dlgRow, dlgSlot).label }}</div>
+                    <div v-for="(eng, k) in stillFor(dlgRow, dlgSlot).prompts" :key="k" class="pr-eng">
                       <div class="pr-line"><b class="pr-k">{{ k }}</b><span class="pr-v pr-video">{{ eng.positive || '—' }}</span></div>
                       <div v-if="eng.negative" class="pr-line"><b class="pr-k">负向</b><span class="pr-v">{{ eng.negative }}</span></div>
                       <div><el-button size="small" @click="copyStill(eng)">复制</el-button></div>
                     </div>
-                    <div v-if="!Object.keys(dlgRow.img.prompts || {}).length" class="pr-empty">—</div>
                   </template>
-                  <template v-else-if="stillByShot[dlgRow.id]">
-                    <span class="pr-v pr-video">{{ stillByShot[dlgRow.id] }}</span>
-                    <div><el-button size="small" @click="copyStillText(stillByShot[dlgRow.id])">复制</el-button></div>
+                  <template v-else-if="stillLocal(dlgRow, dlgSlot)">
+                    <span class="pr-v pr-video">{{ stillLocal(dlgRow, dlgSlot) }}</span>
+                    <div><el-button size="small" @click="copyStillText(stillLocal(dlgRow, dlgSlot))">复制</el-button></div>
                   </template>
                   <span v-else class="pr-v">—</span>
                 </div>
@@ -442,7 +432,13 @@ async function loadStill() {
     const rows = (b as any)?.data?.prompts || (b as any)?.prompts || []
     const m: Record<string, string> = {}
     for (const p of (Array.isArray(rows) ? rows : [])) {
-      if (p?.shot_id) m[p.shot_id] = p.assembled_en || ''
+      if (p?.shot_id) {
+        m[p.shot_id] = p.assembled_en || ''
+        for (const k of ['first', 'last']) {
+          const a = (p as any)?.frames?.[k]?.assembled_en
+          if (a) m[p.shot_id + '::' + k] = a
+        }
+      }
     }
     stillByShot.value = m
   } catch { stillByShot.value = {} }
@@ -593,6 +589,22 @@ async function copyStill(eng: any) {
   try { await navigator.clipboard.writeText(text); ElMessage.success('已复制') }
   catch { ElMessage.warning('复制失败，手动选中吧') }
 }
+function stillLocal(r: any, sl: any): string {
+  if (!r || !sl) return ''
+  return stillByShot.value?.[r.id + '::' + sl.kind] || stillByShot.value?.[r.id] || ''
+}
+function stillFor(r: any, sl: any): any {
+  // L-Port 按槽 > L-Port 按镜 > 本地组装（模板里再兜 stillByShot）
+  const sp = (r.img && r.img.slots && r.img.slots[sl.kind]) || null
+  if (sp && Object.keys(sp.prompts || {}).length) {
+    return { label: ((sp.title || sp.plan_id) || '') + ' · ' + (sp.status || ''), prompts: sp.prompts }
+  }
+  const pr = (r.img && r.img.prompts) || {}
+  if (Object.keys(pr).length) {
+    return { label: ((r.img.title || r.img.plan_id) || '') + ' · ' + (r.img.status || ''), prompts: pr }
+  }
+  return null
+}
 async function copyStillText(text: string) {
   if (!text) return
   try { await navigator.clipboard.writeText(text); ElMessage.success('已复制') }
@@ -691,7 +703,6 @@ async function downloadBundle() {
   finally { bundleLoading.value = false }
 }
 // 草案文档：方向草案交接件（大纲全文 + 草案表 + 逐镜提示词），落一个 .md（人读版，不进 L-Port）
-const docLoading = ref(false)
 const clearing = ref(false)
 const clearingScript = ref(false)
 async function clearScript() {
@@ -720,20 +731,6 @@ async function clearShots() {
   } catch { ElMessage.error('清空失败，后端未起？') }
   finally { clearing.value = false }
 }
-async function downloadDraft() {
-  docLoading.value = true
-  try {
-    const blob = await api.draftDoc({ episode_id: store.episodeId, engine: engine.value, pixai_model: pixaiModel.value, tier: globalTier.value, ref_mode: refMode.value })
-    const url = URL.createObjectURL(new Blob([blob as any], { type: 'text/markdown' }))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `DRAFT-${store.episodeId}.md`
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 5000)
-    ElMessage.success('草案文档已下载（人读版；L-Port 上传请用草案包ZIP）')
-  } catch { ElMessage.error('下载失败，后端未起？') }
-  finally { docLoading.value = false }
-}
 
 // 草案直投 L-Port：投进收件箱 suli_packages/<pkg>/，拿 package_id 轮询回执，等 L-Port 登记即亮
 // 多包并行：localStorage 记数组 [{pkg, at, eid, shots}]，一个全局轮询同时跟所有包，互不覆盖
@@ -745,6 +742,34 @@ const pushes = ref<PendingPush[]>([])
 let waitTimer: any = null
 const curPushes = computed(() => pushes.value.filter(p => p.eid === store.episodeId))
 const otherPushCount = computed(() => pushes.value.filter(p => p.eid !== store.episodeId && !p.done).length)
+// 回执等待流式信息：1s 心跳只在有包在等时推进
+const waitNow = ref(0)
+setInterval(() => { if (pushing.value || curPushes.value.some(p => !p.done)) waitNow.value = Date.now() }, 1000)
+const waitPkg = computed(() => curPushes.value.find(p => !p.done) || null)
+const waitElapsed = computed(() => {
+  const at = waitPkg.value?.at || 0
+  if (!at || !waitNow.value) return 0
+  return Math.max(0, Math.floor((waitNow.value - at) / 1000))
+})
+const waitLine = computed(() => {
+  const p = waitPkg.value
+  if (!p) return '正在投递到 L-Port 收件箱…'
+  const tot = p.shots || store.shots.length || 0
+  const got = p.count || 0
+  return `已投递 ${p.pkg}（${tot}镜）→ 等待 L-Port 回执… 已回 ${got}/${tot} · ${waitElapsed.value}s`
+})
+const waitPct = computed(() => {
+  const p = waitPkg.value
+  const tot = p?.shots || store.shots.length || 0
+  if (!p || !tot) return 0
+  return Math.min(100, Math.round(((p.count || 0) / tot) * 100))
+})
+// 整页 loading 只在"有包在等且全集零回执"时出现；没投递过/已有部分回执走正常列表
+const waitingPage = computed(() => {
+  if (!store.shots.length) return false
+  if (promptRows.value.some((r: any) => r.lp || r.lpv)) return false
+  return pushing.value || !!waitPkg.value
+})
 function pushLine(p: PendingPush) {
   if (p.done) return `L-Port 回执已到 ${p.pkg}（${p.count}条）`
   return `已投递 ${p.pkg}（${p.shots}镜）→ L-Port 收件箱，等待回执中…`
@@ -796,19 +821,22 @@ function ensurePoller(immediate = false) {
   const tick = async () => {
     const pend = pushes.value.filter(p => !p.done)
     if (!pend.length) return
+    let newDone = false
     await Promise.all(pend.map(async (p) => {
       if (Date.now() - p.at > PUSH_TTL) return
       try {
         const r: any = await api.receipts({ package_id: p.pkg })
         const rows = (r as any)?.data ?? r ?? []
         const n = Array.isArray(rows) ? rows.length : 0
-        if (n > 0) {
+        p.count = n
+        if (n > 0 && !p.done) {
           p.done = true
-          p.count = n
+          newDone = true
           ElMessage.success(`L-Port 回执已到 ${p.pkg}（${n}条）`)
         }
       } catch {}
     }))
+    if (newDone) { try { await reloadPrompts() } catch {} }
     // 过期的静默清掉（界面不再显示），其余没到的继续等
     pushes.value = pushes.value.filter(p => p.done || Date.now() - p.at < PUSH_TTL)
     savePushes()
@@ -868,7 +896,7 @@ async function runOutlineBrief(imgName: string) {
     `目标引擎：${(engineOpts.value.find(e => e.key === engine.value) || {}).label || engine.value}${engine.value === 'pixai' ? '（提示词按 PixAI 视频格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行，见 skills/video/pixai-video-prompting）' : '（提示词按 MiniMax H3 字段格式，见 skills/video/h3-prompt-writing）'}。`,
     agentTier.value ? `分级档位：${tierLabel(agentTier.value)}（${agentTier.value}）。按 skills/video/nsfw-directing 的该档水位出镜：成年虚构角色锚定、微动作预算（一镜一事件、呼吸级幅度）、遮挡结构、锚点carry；duty_en 用英文写可见层动作。` : '',
   ].filter(Boolean).join('\n')
-  await runBrief(brief, 'Agent看图出大纲中…', '大纲已存，确认后点 ② 转草案', loadOutline)
+  await runBrief(brief, 'Agent看图出大纲中…', '大纲已存，确认后点 ② 投递', loadOutline)
 }
 async function genOutline() {
   if (settings.settings.outlineMode === 'expert') return genOutlineHere()
@@ -896,7 +924,7 @@ async function genOutlineLite() {
       cast: castNames(loadCastInput()),  // 故事页点名；空数组=没点名，后端按「本集已记 → 正文说话人 → 角色库」取角
     })
     await loadOutline()
-    ElMessage.success('大纲已存（轻），确认后点 ② 生成草案')
+    ElMessage.success('大纲已存（轻），确认后点 ② 投递')
   } catch { ElMessage.error('轻大纲失败，后端未起？') }
 }
 async function regenOutline() {
@@ -910,23 +938,28 @@ async function regenOutline() {
   await runOutlineBrief(img)
 }
 
-function onDraftMode(cmd: string) { if (cmd === 'expert') buildDraftShots(); else buildDraftShotsLite() }
-async function buildDraftShots() {
-  if (agentLoading.value || !outline.value.md) return
+async function onDraftMode(cmd: string) {
+  // 投递 = 先按模式生成草案分镜，成功后自动直投 L-Port
+  const ok = cmd === 'expert' ? await buildDraftShots() : await buildDraftShotsLite()
+  if (ok) await pushToLport()
+}
+async function buildDraftShots(): Promise<boolean> {
+  if (agentLoading.value || !outline.value.md) return false
   const brief = [
     `集号：${store.episodeId}`,
     '读取本集已存方案大纲（GET /api/v1/scriptboard/outline/<集号>），按大纲建草案分镜写入分镜库：',
     '每镜 create 时带 draft:true；字段照单图导演规范（duty 中文看板 / duty_en 英文可见层动作 / duration_s / sound / tier / camera）；',
-    `首镜挂大纲配图为首帧（attach kind=first，大纲配图：${outline.value.image || '无'}）；`,
+    `首镜挂大纲配图为首帧（attach kind=first，大纲配图：${outline.value.image || '无'}）；只有场景成图才能挂首帧，人物立绘/设计图一律挂参考（attach kind=ref role=character），绝不挂首帧；`,
     '最后回复镜清单（镜id/时长/运镜/内容一句话）+合计时长。只建草案，不要改大纲。',
   ].join('\n')
-  await runBrief(brief, 'Agent按大纲建草案分镜中…', '分镜已写库，去「提示词」页查看', async () => { await refresh(); dtab.value = 'prompts' })
+  const ok = await runBrief(brief, 'Agent按大纲建草案分镜中…', '分镜已写库，自动直投 L-Port', async () => { await refresh(); dtab.value = 'prompts' })
+  return ok && store.shots.length > 0
 }
 const draftLiteLoading = ref(false)
-async function buildDraftShotsLite() {
+async function buildDraftShotsLite(): Promise<boolean> {
   // 轻转草案：不走 dsh，直接调 draft/from-outline 落盘
-  if (draftLiteLoading.value || agentLoading.value) return
-  if (!outline.value.md) return ElMessage.warning('先有大纲再转草案')
+  if (draftLiteLoading.value || agentLoading.value) return false
+  if (!outline.value.md) { ElMessage.warning('先有大纲再转草案'); return false }
   draftLiteLoading.value = true
   try {
     const r = await api.draftFromOutline(store.episodeId, {
@@ -936,9 +969,11 @@ async function buildDraftShotsLite() {
     const created = (r as any)?.data?.created || (r as any)?.created || []
     await refresh()
     dtab.value = 'prompts'
-    ElMessage.success(`分镜已写库：${created.length}镜`)
+    ElMessage.success(`分镜已写库：${created.length}镜，自动直投 L-Port`)
+    return created.length > 0
   } catch (e: any) {
     ElMessage.error((e?.response?.data?.msg || '轻转草案失败').slice(0, 120))
+    return false
   } finally {
     draftLiteLoading.value = false
   }

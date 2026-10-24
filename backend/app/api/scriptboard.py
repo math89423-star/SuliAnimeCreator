@@ -1083,6 +1083,7 @@ def upload_shot_image(sid):
 def attach_shot_image(sid):
     """把已上传的图片挂到分镜上（不重新传文件，供 Agent 单图导演用）。
     body {name, kind=first|last|ref, role?, desc?}，name 只取 basename，防目录穿越。
+    kind 缺省为 ref（不传 kind 就当参考图；首帧必须显式声明，防立绘误挂成首帧）。
     role 限 character/outfit/style/face/pose/scene/prop；desc 为英文可见特征（≤200字）。"""
     from pathlib import Path
     s = _SHOTS.get(sid)
@@ -1095,7 +1096,7 @@ def attach_shot_image(sid):
     root = Path(__file__).resolve().parents[2] / "data" / "uploads"
     if not (root / name).is_file():
         return jsonify({"code": 4001, "msg": "uploads 里没有这个文件"}), 400
-    kind = (b.get("kind") or "first").strip()
+    kind = (b.get("kind") or "ref").strip()
     if kind not in ("ref", "first", "last"):
         kind = "ref"
     role = _norm_ref_role(b.get("role"))

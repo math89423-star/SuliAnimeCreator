@@ -35,13 +35,13 @@ export function useAgentDirect(getEpisodeId: () => string, afterShots: () => Pro
   }
   function stopAgent() { agentAborter.value?.abort() }
 
-  async function runBrief(brief: string, progressing: string, doneHint: string, after?: () => Promise<void>) {
+  async function runBrief(brief: string, progressing: string, doneHint: string, after?: () => Promise<void>): Promise<boolean> {
     agentLoading.value = true
     agentProgress.value = '建会话…'
     agentAnswer.value = ''
     try {
       await api.dshEnsure('episode', getEpisodeId())
-    } catch { ElMessage.error('Agent会话建失败，后端未起？'); agentLoading.value = false; return }
+    } catch { ElMessage.error('Agent会话建失败，后端未起？'); agentLoading.value = false; return false }
     agentProgress.value = progressing
     const ac = new AbortController()
     agentAborter.value = ac
@@ -62,9 +62,11 @@ export function useAgentDirect(getEpisodeId: () => string, afterShots: () => Pro
         agentAnswer.value = done.answer || '(空回包)'
         agentProgress.value = doneHint
         if (after) await after()
+        return true
       } else {
         agentAnswer.value = '[失败] ' + (errMsg || '流中断')
         agentProgress.value = ''
+        return false
       }
     } finally {
       agentLoading.value = false

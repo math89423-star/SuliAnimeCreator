@@ -218,7 +218,11 @@ def assemble_episode(eid):
     out = []
     for shot in sorted(rows, key=lambda x: x.get("id", "")):
         r = build_prompt(shot, character, locks, style)
-        out.append({"shot_id": shot.get("id"), **r, "unresolved_refs": []})
+        # 首尾帧分流：读同侧 boundary 英文（为空时与本镜同文，等链路补齐自然分流）
+        rf = build_prompt(shot, character, locks, style, frame="first")
+        rl = build_prompt(shot, character, locks, style, frame="last")
+        out.append({"shot_id": shot.get("id"), **r, "unresolved_refs": [],
+                    "frames": {"first": rf, "last": rl}})
     return ok({"episode_id": eid, "count": len(out), "prompts": out})
 
 

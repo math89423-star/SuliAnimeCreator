@@ -63,7 +63,7 @@
         <el-radio-button label="create">新建集号</el-radio-button>
         <el-radio-button label="attach">加入已有集号</el-radio-button>
       </el-radio-group>
-      <el-form label-width="80px">
+      <el-form label-width="100px">
         <el-form-item :label="episodeMode === 'create' ? '集号（可选）' : '集号'">
           <el-input v-model="episodeForm.episode_id" :placeholder="episodeMode === 'create' ? '留空自动生成 EP-XXXXXX' : '输入已有的集号，例如 EP-81695F'" />
         </el-form-item>

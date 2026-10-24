@@ -1,95 +1,15 @@
 {
   "items": [
     {
-      "id": "PRJ-041A84",
-      "name": "直投链路验证",
+      "id": "PRJ-E3CC5D",
+      "name": "流萤的玫瑰之夜",
       "episode_ids": [
-        "EP-VERIFY"
+        "EP-5BE686"
       ],
-      "episode_titles": {
-        "EP-VERIFY": "雨夜便利店"
-      },
-      "current_episode_id": "EP-VERIFY",
-      "created_at": 1792662927883,
-      "updated_at": 1792662927891
-    },
-    {
-      "id": "PRJ-E44D43",
-      "name": "漫画档位演示",
-      "episode_ids": [
-        "EP-COMIC-TIER"
-      ],
-      "episode_titles": {
-        "EP-COMIC-TIER": "档位演示集"
-      },
-      "current_episode_id": "EP-COMIC-TIER",
-      "created_at": 1792664613973,
-      "updated_at": 1792664613989
-    },
-    {
-      "id": "PRJ-764170",
-      "name": "白玫瑰之夜",
-      "episode_ids": [
-        "EP-WEDDING-01"
-      ],
-      "episode_titles": {
-        "EP-WEDDING-01": "白玫瑰之夜"
-      },
-      "current_episode_id": "EP-WEDDING-01",
-      "created_at": 1792760936515,
-      "updated_at": 1792760936515
-    },
-    {
-      "id": "PRJ-8C9ACC",
-      "name": "白玫瑰之夜·漫画",
-      "episode_ids": [
-        "EP-COMIC-NSFW-01"
-      ],
-      "episode_titles": {
-        "EP-COMIC-NSFW-01": "白玫瑰之夜 漫画"
-      },
-      "current_episode_id": "EP-COMIC-NSFW-01",
-      "created_at": 1792761112153,
-      "updated_at": 1792761112153
-    },
-    {
-      "id": "PRJ-C8759B",
-      "name": "白玫瑰之夜·重跑",
-      "episode_ids": [
-        "EP-WEDDING-02"
-      ],
-      "episode_titles": {
-        "EP-WEDDING-02": "白玫瑰之夜 02"
-      },
-      "current_episode_id": "EP-WEDDING-02",
-      "created_at": 1792761787212,
-      "updated_at": 1792761787212
-    },
-    {
-      "id": "PRJ-8AD8A4",
-      "name": "白玫瑰之夜 · 20s",
-      "episode_ids": [
-        "EP-WEDDING-03"
-      ],
-      "episode_titles": {
-        "EP-WEDDING-03": "推倒到内射（20 秒）"
-      },
-      "current_episode_id": "EP-WEDDING-03",
-      "created_at": 1792763446746,
-      "updated_at": 1792763446746
-    },
-    {
-      "id": "PRJ-A9E47A",
-      "name": "天台告白",
-      "episode_ids": [
-        "EP-ROOFTOP-01"
-      ],
-      "episode_titles": {
-        "EP-ROOFTOP-01": "天台下的浪漫告白"
-      },
-      "current_episode_id": "EP-ROOFTOP-01",
-      "created_at": 1792824219943,
-      "updated_at": 1792824227871
+      "episode_titles": {},
+      "current_episode_id": "EP-5BE686",
+      "created_at": 1792831981864,
+      "updated_at": 1792832120571
     }
   ]
 }

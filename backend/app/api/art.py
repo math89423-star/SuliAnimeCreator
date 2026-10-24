@@ -278,6 +278,12 @@ def _trim(v):
     return str(v or "")[:_ENGINE_CAP]
 
 
+def _norm_slot(v):
+    """分镜槽位：""=整镜方案（兼容老数据），first=首帧，last=尾帧，ref=参考图。"""
+    s = str(v or "").strip().lower()
+    return s if s in ("first", "last", "ref") else ""
+
+
 def _plan_snapshot(p):
     """方案状态快照（变更 diff 的对照基准）：可改字段的归一化值。"""
     return {
@@ -293,6 +299,7 @@ def _plan_snapshot(p):
         "tier": p.get("tier") or "",
         "clothing_level": p.get("clothing_level") or "",
         "page_mode": p.get("page_mode") or "panel",
+        "slot": p.get("slot") or "",
     }
 
 
@@ -309,6 +316,7 @@ def _plan_projection(p):
         "clothing_level": p.get("clothing_level") or "",
         "page_mode": p.get("page_mode") or "panel",
         "shot_id": p.get("shot_id") or "",
+        "slot": p.get("slot") or "",
         "status": p.get("status") or "draft",
         "push": p.get("push") or None,
         "page": p.get("page") or None,
@@ -354,10 +362,32 @@ def plans_by_shot():
             sid = ordered[pi - 1].get("id")
         if not sid:
             continue
+        slot = _norm_slot(p.get("slot"))
+        if slot:
+            box = out.setdefault(sid, {"_u": "", "slots": {}})
+            cur = (box.get("slots") or {}).get(slot) or {}
+            if (p.get("updated_at") or "") > (cur.get("_u") or ""):
+                pr = p.get("prompts") or {}
+                box.setdefault("slots", {})[slot] = {
+                    "plan_id": p.get("id"), "title": p.get("title") or "",
+                    "slot": slot,
+                    "engines": p.get("engines") or [], "tier": p.get("tier") or "",
+                    "clothing_level": p.get("clothing_level") or "",
+                    "status": p.get("status") or "draft",
+                    "prompts": {k: {"positive": (v or {}).get("positive") or "",
+                                    "negative": (v or {}).get("negative") or "",
+                                    "note": (v or {}).get("note") or ""}
+                                for k, v in pr.items()},
+                    "_u": p.get("updated_at") or "",
+                }
+                box["_u"] = max(box.get("_u") or "", p.get("updated_at") or "")
+            continue
         if sid in out and (p.get("updated_at") or "") <= (out[sid].get("_u") or ""):
             continue
         pr = p.get("prompts") or {}
+        keep_slots = (out.get(sid) or {}).get("slots") or {}
         out[sid] = {
+            "slots": keep_slots,
             "plan_id": p.get("id"), "title": p.get("title") or "",
             "engines": p.get("engines") or [], "tier": p.get("tier") or "",
             "clothing_level": p.get("clothing_level") or "",
@@ -370,6 +400,9 @@ def plans_by_shot():
         }
     for v in out.values():
         v.pop("_u", None)
+        for s in (v.get("slots") or {}).values():
+            if isinstance(s, dict):
+                s.pop("_u", None)
     return ok(out)
 
 
@@ -442,6 +475,8 @@ def upsert_plan():
         p["page"] = _norm_page(b.get("page"))
     if "shot_id" in b:
         p["shot_id"] = str(b.get("shot_id") or "").strip()[:64]
+    if "slot" in b:
+        p["slot"] = _norm_slot(b.get("slot"))
     # 变更留痕：改盘方不是页面自己时留一份改前快照（前端据此出 diff 卡片）。
     # source=ui 是主人在页面上自己改的——人已经看过了，清掉待审快照。
     if str(b.get("source") or "").strip().lower() == "ui":
@@ -1032,6 +1067,8 @@ def push_lport():
     art_plan = {
         "package_id": pkg_id, "kind": "art_plan",
         "plan_id": pid, "title": p.get("title") or "",
+        "shot_id": p.get("shot_id") or "",
+        "slot": p.get("slot") or "",
         "intent_text": intent,
         "engines": engines,
         "reference_images": [r.get("name") for r in refs],
@@ -1121,6 +1158,12 @@ def prompts_import():
 
     source = (str(b.get("source") or "lport").strip()[:80]) or "lport"
     now = _anow()
+    slot = _norm_slot(b.get("slot"))
+    if slot and not p.get("slot"):
+        p["slot"] = slot
+    if slot and p.get("slot") and p.get("slot") != slot:
+        return jsonify({"code": 4009,
+                        "msg": "槽位不匹配：方案 %s 是 %s，回传是 %s" % (p.get("id"), p.get("slot"), slot)}), 409
     updated, skipped = [], []
     prompts = p.setdefault("prompts", {})
     for eng, val in raw.items():

@@ -1,7 +1,7 @@
 """PixAI 视频（v4.0 系列）组装：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行。纯函数。"""
 import re
 from .images import first_image, img_url, collect_refs, collect_refs_fell_back, REF_ROLE_PHRASE, MAX_REFS
-from .text import DIALOG, strip_prefix, pixai_preformatted
+from .text import CJK, DIALOG, strip_prefix, pixai_preformatted
 from .tiers import TIERS, normalize_tier, water_clause
 from .genmode import normalize_gen_mode, infer_gen_mode, resolve_gen_mode, GEN_MODE_REF
 
@@ -32,10 +32,10 @@ PIXAI_TONE = {
 # PixAI 视频各型号差异（官方口径）：同一套提示词框架，但这几项按型号分叉
 PIXAI_MODELS = {
     "tsubaki-video": {"label": "Tsubaki Video", "max_s": 15, "audio": True, "ref": "multi", "last": True,
-                      "cam_in_prompt": True,
+                      "cam_in_prompt": True, "durations": [5, 10, 15],
                       "note": "新旗舰视频模型；多图参考 + 音频；官方文档未收录，按 v4.0 家族口径（时长档位以界面为准）"},
     "tsubaki-video-flash": {"label": "Tsubaki Video Flash", "max_s": 15, "audio": True, "ref": "multi",
-                            "last": True, "cam_in_prompt": True,
+                            "last": True, "cam_in_prompt": True, "durations": [5, 10, 15],
                             "note": "Tsubaki Video 的快速档；多图参考 + 音频；同上按 v4.0 家族口径"},
     "v4": {"label": "V4.0 Preview / Lite", "max_s": 15, "audio": True, "ref": "multi", "last": True,
            "cam_in_prompt": True,
@@ -51,6 +51,24 @@ PIXAI_MODELS = {
 }
 
 
+def _snap_duration(raw, vcfg):
+    """时长归位：有档位的型号贴最近档（并列取小），否则按上限夹。返回 (秒数, 说明或None)。"""
+    try:
+        raw = float(raw)
+    except (TypeError, ValueError):
+        raw = 5.0
+    tiers = sorted(t for t in (vcfg.get("durations") or []) if t > 0)
+    if tiers:
+        new = min(tiers, key=lambda x: (abs(x - raw), x))
+        if abs(new - raw) < 1e-6:
+            return float(new), None
+        return float(new), "%gs → %gs（%s档位 %s）" % (raw, new, vcfg["label"], "/".join(str(x) for x in tiers))
+    new = min(max(raw, 0.5), float(vcfg["max_s"]))
+    if abs(new - raw) < 1e-6:
+        return new, None
+    return new, "时长按 %s 上限夹到 %ss" % (vcfg["label"], vcfg["max_s"])
+
+
 def apply_pixai_model_deltas(prompt_out, vcfg, duration):
     """预格式化正文也要按目标型号校准：时长上限 / 有无音频 / 运镜是否写进提示词。
     返回 (新正文, 已应用的调整清单)——清单给前端显示，便于核对。"""
@@ -62,9 +80,12 @@ def apply_pixai_model_deltas(prompt_out, vcfg, duration):
             cur = float(m.group(1))
         except (TypeError, ValueError):
             return m.group(0)
-        new = min(cur, float(vcfg["max_s"]))
+        new = min(cur, duration)
         if abs(new - cur) > 1e-6:
-            applied.append(f"时长 {cur:g}s → {new:g}s（{vcfg['label']} 上限 {vcfg['max_s']}s）")
+            if vcfg.get("durations"):
+                applied.append(f"时长 {cur:g}s → {new:g}s（{vcfg['label']}档位 {'/'.join(str(x) for x in sorted(vcfg['durations']))}）")
+            else:
+                applied.append(f"时长 {cur:g}s → {new:g}s（{vcfg['label']} 上限 {vcfg['max_s']}s）")
         return f"[0-{new:g}s]"
     out = re.sub(r"\[0-(\d+(?:\.\d+)?)s\]", _clamp, out)
     if not vcfg["audio"]:
@@ -95,7 +116,13 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     style = (style_bible or "").strip() or "2D anime illustration"
     tier = normalize_tier(tier or shot.get("tier") or "")
     tcfg = TIERS.get(tier)
-    raw_duty = strip_prefix(shot.get("duty_en") or shot.get("duty")) or "holds position"
+    raw_en = strip_prefix(shot.get("duty_en") or shot.get("key_text_en") or "")
+    warnings = []
+    if raw_en and CJK.search(raw_en):
+        raw_en = ""
+    if not raw_en:
+        warnings.append("缺可用英文动作（duty_en/key_text_en），beat 用 holds position 站位")
+    raw_duty = raw_en or "holds position"
     pre = pixai_preformatted(raw_duty)
     duty = raw_duty if (pre or raw_duty.endswith((".", "!", "?"))) else raw_duty + "."
     if duty and not pre:
@@ -109,7 +136,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
         duration = 5.0
     vcfg = PIXAI_MODELS.get((video_model or "tsubaki-video").strip(), PIXAI_MODELS["tsubaki-video"])
     vkey = (video_model or "tsubaki-video").strip() if (video_model or "tsubaki-video").strip() in PIXAI_MODELS else "tsubaki-video"
-    duration = min(max(duration, 0.5), float(vcfg["max_s"]))
+    duration, _snap_note = _snap_duration(duration, vcfg)
     multi_ok = vcfg["ref"] == "multi"
     want = normalize_gen_mode(shot.get("gen_mode"))
     if assume_complete:
@@ -204,7 +231,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
                 "missing_image": (eff_gen != "t2v" and not bool(first and first.get("name"))),
                 "first_image": first.get("name") if first else "",
                 "first_image_url": img_url(first.get("name")) if first else "",
-                "duration_s": duration, "prompt": prompt_out[:2000], "locks_hit": locks_hit}
+                "duration_s": duration, "prompt": prompt_out[:2000], "locks_hit": locks_hit, "warnings": warnings}
     if first:
         if eff_mode == "reference":
             lines.append(f"@image1 is the character reference throughout this video, keeping {anchors} "
@@ -222,6 +249,9 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             if not role and x.get("kind") == "last":
                 role = "ending"
             desc = (x.get("desc") or "").strip()
+            if desc and CJK.search(desc):
+                warnings.append(f"{tag} 描述含中文已丢弃，只留角色位")
+                desc = ""
             phrase = REF_ROLE_PHRASE.get(role, "reference")
             if desc:
                 lines.append(f"{tag} — {phrase} reference: {desc}.")
@@ -266,6 +296,9 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
                 lines.append(f"Voice — {tone}: 「{line}」")
             else:
                 lines.append(f"Her lips move in a quiet, breathy whisper: 「{line}」")
+        elif CJK.search(sound):
+            warnings.append("中文 SFX 已丢弃，走默认英文 SFX")
+            sound = ""
         else:
             lines.append("")
             lines.append(f"SFX: {sound}")
@@ -282,7 +315,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     prompt = "\n".join(lines).strip()
     prompt = re.sub(r"\n{3,}", "\n\n", prompt)[:2000]
     locks_hit = [l.get("id") for l in locks if l.get("surface_en") and l["surface_en"].lower() in prompt.lower()]
-    applied_deltas = []
+    applied_deltas = [_snap_note] if _snap_note else []
     if vcfg["max_s"] < duration:
         applied_deltas.append(f"时长按 {vcfg['label']} 上限夹到 {vcfg['max_s']}s")
     if not vcfg["audio"] and sound and DIALOG.match(sound):
@@ -301,7 +334,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             "missing_image": (eff_gen != "t2v" and not bool(first and first.get("name"))),
             "first_image": first.get("name") if first else "",
             "first_image_url": img_url(first.get("name")) if first else "",
-            "duration_s": duration, "prompt": prompt, "locks_hit": locks_hit}
+            "duration_s": duration, "prompt": prompt, "locks_hit": locks_hit, "warnings": warnings}
 
 
 # 兼容旧名

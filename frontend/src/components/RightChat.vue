@@ -4,15 +4,6 @@
     <div class="agent-sub">
       <span class="suli-muted" style="font-size:12px">{{ pageKindLabel }} {{ pageKey || '未选' }} · skill {{ skills.length ? `${skills.length}已载` : '载入中…' }}</span>
       <span style="flex:1" />
-      <el-select v-model="model" size="small" style="width:178px" title="Agent 运行模型（每次发送按当前选择生效）">
-        <el-option v-for="m in MODEL_OPTIONS" :key="m.value" :label="m.label" :value="m.value" />
-      </el-select>
-      <el-button size="small" text @click="backToPageSession">{{ pageSessionLabel }}</el-button>
-    </div>
-    <!-- 当前会话卡：点击打开会话历史（照参考：标题行 + 会话名） -->
-    <div class="suli-card cur-card" @click="histOpen = true" :title="`打开${pageKindLabel}会话历史`">
-      <div class="cur-title"><el-icon class="cur-ico"><Clock /></el-icon><span>当前会话即{{ pageKindLabel }}</span><span class="cur-count tnum">{{ pageSessions.length }}个</span></div>
-      <div class="cur-key">{{ pageKey || '未选' }}</div>
     </div>
     <div v-if="loadingList" style="margin-top:8px"><div class="skeleton" style="height:32px" /></div>
 
@@ -87,10 +78,6 @@
             <span class="run-label">{{ a.label }}</span>
             <span class="run-time tnum">{{ secAgo(a.t) }}</span>
           </div>
-          <div v-if="!acts.length" class="suli-muted" style="font-size:12px">等 dsh 冷启动首帧…（首 token 常见 10–30s）</div>
-        </div>
-        <div class="run-foot suli-muted">
-          单步静默 1–3 分钟属正常（模型在写长文），整轮常见 3–6 分钟；任务跑在后端，切页/刷新都不中断。
         </div>
       </div>
     </div>
@@ -242,15 +229,6 @@ const pageContext = computed(() => {
   return ''
 })
 // Agent 运行模型（2026-10-17）：白名单与后端 _RUN_MODELS 对齐；每次发送按当前选择生效
-const MODEL_OPTIONS = [
-  { label: '跟随设置页', value: '' },
-  { label: 'DeepSeek V4.1 Flash', value: 'deepseek-v4.1-flash' },
-  { label: 'LongCat 2.5 Preview Free', value: 'longcat-2.5-preview-free' },
-]
-const model = ref('')
-try { const m = localStorage.getItem('suli.agent.model'); if (m && MODEL_OPTIONS.some(x => x.value === m)) model.value = m } catch {}
-// 选择持久化：watch 实现（不依赖组件事件绑定，刷新后保持选择）
-watch(model, v => { try { localStorage.setItem('suli.agent.model', v) } catch {} })
 
 function findSession(scope: string, key: string) {
   return sessions.value.find(s => s.scope === scope && s.key === key)
@@ -812,7 +790,7 @@ async function send() {
   let runId = ''
   try {
     // 起 run：任务由后端线程持有，切页/刷新只会断"跟随"，不再杀掉这一轮
-    const st: any = await api.dshRunStart({ scope: curScope.value, key: curKey.value, message: q, session_id: curSid.value || undefined, model: model.value || undefined })
+    const st: any = await api.dshRunStart({ scope: curScope.value, key: curKey.value, message: q, session_id: curSid.value || undefined })
     runId = st?.data?.run_id || ''
     if (!runId) throw new Error('起任务失败：' + JSON.stringify(st).slice(0, 140))
     rememberRun(runId)
@@ -869,14 +847,10 @@ async function followRun(runId: string, from: number, idx: number, ac: AbortCont
     const s = Math.floor((Date.now() - t0) / 1000)
     if (idx >= 0 && turns.value[idx]?.a) return
     if (!evCount) {
-      if (s >= 8) progress.value = `运行中…${tag}${s}s（dsh 冷启动 + 首 token 较慢；长剧本单步可能要几分钟，进度看事件计数）`
+      if (s >= 8) progress.value = `运行中…${tag}${s}s`
       return
     }
-    const gap = Math.floor((Date.now() - evAt) / 1000)
-    const tail = evCount > 200 ? '（事件过多，疑似空转，可点停止）'
-      : gap >= 60 ? `（已 ${gap}s 无新事件：模型在写长文/长思考，正常，别点停止）`
-      : gap >= 20 ? `（${gap}s 无新事件）` : ''
-    progress.value = `运行中…${tag} 事件 ${evCount} · ${s}s ${tail}`
+    progress.value = `运行中…${tag} 事件 ${evCount} · ${s}s`
   }, 1000)
   loading.value = true
   progress.value = `运行中…${tag}`
