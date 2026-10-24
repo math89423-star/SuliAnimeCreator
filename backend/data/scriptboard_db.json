@@ -279,6 +279,12 @@
       "images": [
         {
           "name": "ref_405857da.png",
+          "kind": "ref",
+          "role": "character",
+          "desc": "character identity reference"
+        },
+        {
+          "name": "f701b4b6d9c64de2be5a1533f4f9ba89.jpg",
           "kind": "first",
           "role": "",
           "desc": ""

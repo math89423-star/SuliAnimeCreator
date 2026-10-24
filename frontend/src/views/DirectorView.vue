@@ -77,7 +77,6 @@
       </el-tab-pane>
       <el-tab-pane label="提示词" name="prompts">
         <div class="prompt-head">
-          <span class="suli-muted tnum" style="font-size:12px">已回传 {{ lpDoneCount }}/{{ store.shots.length }}</span>
           <span style="flex:1" />
           <el-button size="small" @click="reloadPrompts" :loading="promptRefreshing">刷新</el-button>
           <el-button size="small" type="primary" plain :disabled="!lpDoneCount" @click="copyAllPrompts">复制全部</el-button>
@@ -92,22 +91,7 @@
             <template #reference><el-button size="small" type="danger" :loading="clearing" :disabled="!store.shots.length">清空</el-button></template>
           </el-popconfirm>
         </div>
-        <span class="bar-spacer" />
-        <div class="bar-group">
-          <el-select v-model="globalTier" size="small" class="w-tier" placeholder="分级" title="不选则按内容自动推导：分镜分级栏 → 大纲档位行">
-            <el-option v-for="t in tierOpts" :key="t.key" :label="t.label" :value="t.key" />
-          </el-select>
-          <el-select v-model="engine" size="small" class="w-engine" placeholder="引擎">
-            <el-option v-for="e in engineOpts" :key="e.key" :label="e.label" :value="e.key" />
-          </el-select>
-          <el-select v-if="engine === 'pixai'" v-model="pixaiModel" size="small" class="w-model" placeholder="型号">
-            <el-option v-for="m in pixaiModels" :key="m.key" :label="m.label" :value="m.key" />
-          </el-select>
-          <el-select v-if="engine === 'pixai'" v-model="refMode" size="small" class="w-ref">
-            <el-option label="首尾帧" value="startframe" />
-            <el-option v-if="refSupportsMulti" label="参考图" value="reference" />
-          </el-select>
-        </div>
+        
       </div>
       <div v-if="pushing" class="push-status">
         <LoadingSpinner :size="14" />
@@ -131,51 +115,29 @@
             <div class="pr-left">
               <span class="pr-no tnum">{{ String(i + 1).padStart(2, '0') }}</span>
               <span class="pr-sid">{{ r.id }}</span>
-              <span class="tnum pr-dur">{{ r.duration_s }}s</span>
-              <el-tag size="small" :type="r.lp ? 'success' : 'info'">{{ r.lp ? '已回传' : '未回传' }}</el-tag>
-              <div class="pr-thumb" :class="{ on: imgMode[r.id] }" @click="toggleImg(r)">
-                <el-image
-                  v-if="thumbOf(r) && thumbOf(r).exists !== false"
-                  :src="imgUrl(thumbOf(r).name)" fit="cover"
-                  @error="thumbOf(r).exists = false"
-                />
-                <div v-else class="pr-thumb-empty">
-                  <el-icon v-if="thumbOf(r)"><WarningFilled /></el-icon>
-                  <span>{{ thumbOf(r) ? '待生成' : '无图' }}</span>
-                </div>
-                <span class="pr-thumb-tag">{{ imgMode[r.id] ? '图像' : '视频' }}</span>
-              </div>
             </div>
-            <template v-if="imgMode[r.id]">
-              <div class="pr-body">
-                <div v-if="!r.img" class="pr-empty">该镜还没有出图方案</div>
-                <template v-else>
-                  <div class="pr-line">
-                    <b class="pr-k">方案</b>
-                    <span class="pr-v">{{ r.img.title || r.img.plan_id }} · {{ r.img.status }}<template v-if="r.img.tier"> · {{ r.img.tier }}</template><template v-if="r.img.clothing_level"> · {{ r.img.clothing_level }}</template></span>
+            <div class="pr-body">
+              <div class="pr-line"><b class="pr-k">生成方式</b><span class="pr-v">{{ effGenLabel(r) }}</span></div>
+              <template v-if="segOpen[r.id] !== false">
+              <div v-if="slotsOf(r).length" class="pr-line">
+                <b class="pr-k">关键分镜图</b>
+                <div class="pr-v pr-slots">
+                  <div v-for="sl in slotsOf(r)" :key="sl.key" class="pr-slot" @click="openDlg(r, sl)">
+                    <el-image
+                      v-if="sl.planned && sl.planned.exists !== false"
+                      :src="imgUrl(sl.planned.name)" class="pr-slot-thumb" fit="cover"
+                      @error="sl.planned.exists = false"
+                    />
+                    <div v-else class="pr-slot-thumb pr-slot-miss">
+                      <el-icon><WarningFilled /></el-icon>
+                      <span>待生成</span>
+                    </div>
+                    <span class="pr-slot-name tnum">{{ sl.tag || '—' }}</span>
+                    <el-tag size="small" :type="sl.kind === 'first' ? 'danger' : 'info'" effect="plain">{{ REF_KIND[sl.kind] || sl.kind }}</el-tag>
                   </div>
-                  <div v-for="(eng, k) in r.img.prompts" :key="k" class="pr-eng">
-                    <div class="pr-line"><b class="pr-k">{{ k }}</b><span class="pr-v pr-video">{{ eng.positive || '—' }}</span></div>
-                    <div v-if="eng.negative" class="pr-line"><b class="pr-k">负向</b><span class="pr-v">{{ eng.negative }}</span></div>
-                  </div>
-                  <div v-if="!Object.keys(r.img.prompts || {}).length" class="pr-empty">方案还没回传提示词</div>
-                </template>
-              </div>
-            </template>
-            <template v-else>
-            <div v-if="r.lpv" class="pr-body">
-              <div class="pr-line">
-                <b class="pr-k">视频提示词</b>
-                <div class="pr-v" style="flex:1;min-width:0">
-                  <el-input v-model="vpDrafts[r.id]" type="textarea" :autosize="{ minRows: 4, maxRows: 18 }" resize="vertical" />
                 </div>
               </div>
-              <div class="pr-line">
-                <b class="pr-k">参数</b>
-                <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ genModeText(r) }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
-                <el-tag v-if="r.lpv.edited" size="small" type="warning">人工改</el-tag>
-              </div>
-              <div v-if="(r.images || []).length" class="pr-line pr-refs-row">
+              <div v-if="!slotsOf(r).length && (r.images || []).length" class="pr-line">
                 <b class="pr-k">参考图</b>
                 <div class="pr-v pr-refs">
                   <div v-for="im in r.images" :key="im.kind + im.name" class="pr-ref">
@@ -198,26 +160,104 @@
                   </div>
                 </div>
               </div>
-              <div v-if="(r.lpv.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv.applied || []).join('；') }}</span></div>
-              <div v-if="r.lpv.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv.ref_note }}</span></div>
-              <div class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}<template v-if="r.lpv.edited_at"> · 改于 {{ r.lpv.edited_at }}</template></div>
+              <div v-if="r.lpv" class="pr-line">
+                <b class="pr-k">视频提示词</b>
+                <div class="pr-v" style="flex:1;min-width:0">
+                  <el-input v-model="vpDrafts[r.id]" type="textarea" :autosize="{ minRows: 4, maxRows: 18 }" resize="vertical" />
+                </div>
+              </div>
+              <div v-else-if="r.asm?.prompt" class="pr-line">
+                <b class="pr-k">视频提示词</b><span class="pr-v pr-video">{{ r.asm.prompt }}</span>
+              </div>
+              <div v-if="r.lpv" class="pr-line">
+                <b class="pr-k">参数</b>
+                <span class="pr-v">{{ r.lpv.engine || '—' }}<template v-if="r.lpv.video_model"> · {{ r.lpv.video_model }}</template> · {{ genModeText(r) }} · {{ r.lpv.duration_s }}s<template v-if="r.lpv.tier"> · {{ r.lpv.tier }}</template></span>
+                <el-tag v-if="r.lpv.edited" size="small" type="warning">人工改</el-tag>
+              </div>
+              <div v-else-if="r.asm" class="pr-line">
+                <b class="pr-k">参数</b>
+                <span class="pr-v">{{ r.asm.video_model || r.asm.engine || '—' }} · {{ r.asm.duration_s }}s · {{ r.asm.tier || '—' }}</span>
+              </div>
+              <div v-if="(r.lpv?.applied || r.asm?.applied || []).length" class="pr-line"><b class="pr-k">调整</b><span class="pr-v">{{ (r.lpv?.applied || r.asm?.applied || []).join('；') }}</span></div>
+              <div v-if="r.lpv?.ref_note || r.asm?.ref_note" class="pr-line"><b class="pr-k">参考</b><span class="pr-v">{{ r.lpv?.ref_note || r.asm?.ref_note }}</span></div>
+              <div v-if="r.lpv" class="pr-meta">L-Port 定稿 · {{ r.lpv.source }}<template v-if="r.lpv.package_id"> · {{ r.lpv.package_id }}</template> · {{ r.lpv.at }}<template v-if="r.lpv.edited_at"> · 改于 {{ r.lpv.edited_at }}</template></div>
+              <div v-if="r.lp" class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
+              <div v-if="r.lp?.camera_note" class="pr-line"><b class="pr-k">镜头</b><span class="pr-v">{{ r.lp.camera_note }}</span></div>
+              <div v-if="r.lp?.key_text_en" class="pr-line"><b class="pr-k">英文关键帧</b><span class="pr-v">{{ r.lp.key_text_en }}</span></div>
+              <div v-if="(r.lp?.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
+              <div v-if="r.lp" class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
+              <div v-if="!r.lp && !r.lpv && !r.asm" class="pr-empty">—</div>
+              </template>
             </div>
-            <div v-if="r.lp" class="pr-body">
-              <div class="pr-line"><b class="pr-k">导演提示词</b><span class="pr-v">{{ r.lp.director_cn || '—' }}</span></div>
-              <div v-if="r.lp.camera_note" class="pr-line"><b class="pr-k">镜头</b><span class="pr-v">{{ r.lp.camera_note }}</span></div>
-              <div v-if="r.lp.key_text_en" class="pr-line"><b class="pr-k">英文关键帧</b><span class="pr-v">{{ r.lp.key_text_en }}</span></div>
-              <div v-if="(r.lp.ref_missing || []).length" class="pr-line"><b class="pr-k">参考待补</b><span class="pr-v">{{ (r.lp.ref_missing || []).join('、') }}</span></div>
-              <div class="pr-meta">来源 {{ r.lp.source }}<template v-if="r.lp.package_id"> · {{ r.lp.package_id }}</template> · {{ r.lp.at }}</div>
-            </div>
-            <div v-if="!r.lp && !r.lpv" class="pr-body pr-empty">—</div>
-            </template>
             <div class="pr-right">
-              <el-button v-if="r.lp || r.lpv" size="small" @click="copyPrompt(r)">复制</el-button>
+              <span class="tnum pr-dur">{{ r.duration_s }}s</span>
+              <el-button size="small" @click="segOpen[r.id] = segOpen[r.id] === false">{{ segOpen[r.id] === false ? '展开' : '收起' }}</el-button>
               <el-button v-if="r.lpv" size="small" type="primary" :disabled="!vpDirty(r)" @click="saveVp(r)">保存</el-button>
               <el-button v-if="r.lpv?.edited" size="small" @click="unlockVp(r)">解锁</el-button>
             </div>
           </div>
         </div>
+        <el-dialog v-model="dlgVisible" :title="dlgTitle" width="1080px" destroy-on-close>
+          <div v-if="dlgRow && dlgSlot" class="dlg-frame">
+            <div class="dlg-left">
+              <el-image
+                v-if="dlgSlot.planned && dlgSlot.planned.exists !== false"
+                :src="imgUrl(dlgSlot.planned.name)" class="dlg-img" fit="contain"
+              />
+              <div v-else class="dlg-img dlg-blank">
+                <el-icon><WarningFilled /></el-icon>
+                <span>待生成</span>
+              </div>
+              <div class="dlg-cap"><span class="tnum">{{ dlgSlot.tag }}</span><span>{{ REF_KIND[dlgSlot.kind] || dlgSlot.kind }}</span></div>
+              <div><el-button size="small" type="primary" @click="dlgFileEl?.click()" :loading="dlgUploading">上传成品图</el-button></div>
+              <input ref="dlgFileEl" type="file" accept="image/*" hidden @change="onDlgFile" />
+            </div>
+            <div class="dlg-right">
+              <div class="pr-line"><b class="pr-k">生成提示词</b>
+                <div class="pr-v" style="flex:1;min-width:0">
+                  <template v-if="dlgRow.img">
+                    <div class="pr-v">{{ dlgRow.img.title || dlgRow.img.plan_id }} · {{ dlgRow.img.status }}</div>
+                    <div v-for="(eng, k) in dlgRow.img.prompts" :key="k" class="pr-eng">
+                      <div class="pr-line"><b class="pr-k">{{ k }}</b><span class="pr-v pr-video">{{ eng.positive || '—' }}</span></div>
+                      <div v-if="eng.negative" class="pr-line"><b class="pr-k">负向</b><span class="pr-v">{{ eng.negative }}</span></div>
+                      <div><el-button size="small" @click="copyStill(eng)">复制</el-button></div>
+                    </div>
+                    <div v-if="!Object.keys(dlgRow.img.prompts || {}).length" class="pr-empty">—</div>
+                  </template>
+                  <template v-else-if="stillByShot[dlgRow.id]">
+                    <span class="pr-v pr-video">{{ stillByShot[dlgRow.id] }}</span>
+                    <div><el-button size="small" @click="copyStillText(stillByShot[dlgRow.id])">复制</el-button></div>
+                  </template>
+                  <span v-else class="pr-v">—</span>
+                </div>
+              </div>
+              <div class="pr-line"><b class="pr-k">ref_image</b>
+                <div v-if="slotEditRefs(dlgRow, dlgSlot).length" class="pr-v pr-refs">
+                  <div v-for="im in slotEditRefs(dlgRow, dlgSlot)" :key="im.kind + im.name" class="pr-ref">
+                    <el-image
+                      v-if="im.exists !== false"
+                      :src="imgUrl(im.name)" class="pr-ref-thumb" fit="cover"
+                      :preview-src-list="[imgUrl(im.name)]" preview-teleported
+                      @error="im.exists = false"
+                    />
+                    <div v-else class="pr-ref-thumb pr-ref-thumb-warn" :title="im.name + '：还没生成'">
+                      <el-icon><WarningFilled /></el-icon>
+                    </div>
+                    <el-tag size="small" effect="plain">{{ REF_KIND[im.kind] || im.kind }}</el-tag>
+                    <el-tag v-if="im.exists === false" size="small" type="warning">待生成</el-tag>
+                    <el-select v-model="refDraft(dlgRow.id, im.name).role" size="small" class="pr-ref-role" placeholder="role">
+                      <el-option v-for="rk in REF_ROLE_KEYS" :key="rk" :label="REF_ROLE[rk]" :value="rk" />
+                    </el-select>
+                    <el-input v-model="refDraft(dlgRow.id, im.name).desc" size="small" class="pr-ref-desc" placeholder="desc" />
+                    <el-button size="small" text :disabled="!refDirty(dlgRow.id, im)" @click="saveRef(dlgRow.id, im)">保存</el-button>
+                  </div>
+                </div>
+                <span v-else class="pr-v">—</span>
+              </div>
+              <div class="pr-line"><b class="pr-k">edit_image</b><span class="pr-v">{{ dlgSlot.suggested_edit || '—' }}</span></div>
+            </div>
+          </div>
+        </el-dialog>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -370,15 +410,40 @@ async function refresh() {
 
 // 提示词回传页：L-Port 逐镜详细提示词（scriptboard shots[].lport_prompts，seg_prompt 回传）
 const promptRefreshing = ref(false)
-// 图/影两态：收起=视频提示词，点图展开=图像提示词（按引擎分栏）
+// 出图方案（L-Port 回传，按镜）+ 实时组装（按当前引擎/型号结算的 gen_mode_eff/refs/垫图）
 const imgPlans = ref<Record<string, any>>({})
-const imgMode = ref<Record<string, boolean>>({})
 async function loadImgPlans() {
   if (!store.episodeId) { imgPlans.value = {}; return }
   try { imgPlans.value = (await api.plansByShot(store.episodeId)) || {} }
   catch { imgPlans.value = {} }
 }
-function toggleImg(r: any) { imgMode.value[r.id] = !imgMode.value[r.id] }
+const asmByShot = ref<Record<string, any>>({})
+async function loadAsm() {
+  if (!store.episodeId) { asmByShot.value = {}; return }
+  try {
+    const b: any = await directorApi.assembleI2VAEpisode(store.episodeId, { ...assembleParams(), intent: true })
+    const rows = (b as any)?.data?.prompts || (b as any)?.prompts || []
+    const m: Record<string, any> = {}
+    for (const p of (Array.isArray(rows) ? rows : [])) {
+      if (p?.shot_id) m[p.shot_id] = p
+    }
+    asmByShot.value = m
+  } catch { asmByShot.value = {} }
+}
+// 静帧组装预览（L-Port 出图方案回传前的本地版，按镜 duty 出 assembled_en）
+const stillByShot = ref<Record<string, string>>({})
+async function loadStill() {
+  if (!store.episodeId) { stillByShot.value = {}; return }
+  try {
+    const b: any = await directorApi.assembleEpisode(store.episodeId, {})
+    const rows = (b as any)?.data?.prompts || (b as any)?.prompts || []
+    const m: Record<string, string> = {}
+    for (const p of (Array.isArray(rows) ? rows : [])) {
+      if (p?.shot_id) m[p.shot_id] = p.assembled_en || ''
+    }
+    stillByShot.value = m
+  } catch { stillByShot.value = {} }
+}
 // 参考图 role/desc：键用「镜id::图名」，脏了才亮保存
 const REF_KIND: Record<string, string> = { first: '首帧', ref: '参考', last: '尾帧' }
 const REF_ROLE: Record<string, string> = {
@@ -422,22 +487,113 @@ async function saveRef(sid: string, im: any) {
   } catch (e: any) { ElMessage.error('保存失败：' + (e?.message || e)) }
 }
 // 生成方式：镜上的是意图，回传里的是按型号结算后的结果，降级了就两个都显示
-const GEN_LABEL: Record<string, string> = { 't2v': '纯文本', 'i2v-first': '首帧', 'i2v-first-last': '首尾帧', 'multi-ref': '多图参考' }
+const GEN_LABEL: Record<string, string> = { 't2v': '文本生成', 'i2v-first': '首帧', 'i2v-first-last': '首尾帧', 'multi-ref': '多图参考' }
 function genModeText(r: any) {
   const want = GEN_LABEL[r.gen_mode] || ''
   const eff = GEN_LABEL[r.lpv?.gen_mode_eff] || ''
   if (want && eff && want !== eff) return `${want}→${eff}`
   return eff || want || (r.lpv?.ref_mode || '—')
 }
-function thumbOf(r: any) {
+function inferEff(r: any) {
   const imgs = r.images || []
-  return imgs.find((x: any) => x.kind === 'first') || imgs[0] || null
+  const first = imgs.some((x: any) => x.kind === 'first')
+  const last = imgs.some((x: any) => x.kind === 'last')
+  if (first && last) return 'i2v-first-last'
+  if (first && imgs.length > 1) return 'multi-ref'
+  if (first) return 'i2v-first'
+  if (imgs.length) return 'multi-ref'
+  return 't2v'
+}
+function effGen(r: any) {
+  // 槽位只认大纲敲定的镜上意图（没写按素材推），工具栏/回传结算都不改槽位
+  return r.gen_mode || inferEff(r)
+}
+function effGenLabel(r: any) {
+  return GEN_LABEL[effGen(r)] || '—'
+}
+// 缺图槽：只按镜上意图出槽（首尾帧=首帧位+尾帧位，多图=参考图位，纯文本=无槽位）
+// 缺条目也出槽（待生成）；组装只用来补 exists 与 edit_image，不改槽位
+const dlgVisible = ref(false)
+const dlgSid = ref('')
+const dlgKey = ref('')
+const dlgFileEl = ref<HTMLInputElement | null>(null)
+const dlgUploading = ref(false)
+async function onDlgFile(e: any) {
+  const f = e.target.files?.[0]
+  e.target.value = ''
+  if (!f || !dlgRow.value || !dlgSlot.value) return
+  const k = dlgSlot.value.kind
+  const kind = k === 'first' ? 'first' : k === 'last' ? 'last' : 'ref'
+  dlgUploading.value = true
+  try {
+    await api.uploadShotImage(dlgRow.value.id, f, kind)
+    ElMessage.success('成品图已上传')
+    await reloadPrompts()
+  } catch { ElMessage.error('上传失败，后端未起？') }
+  finally { dlgUploading.value = false }
+}
+function openDlg(r: any, sl: any) { dlgSid.value = r.id; dlgKey.value = sl.key; dlgVisible.value = true }
+const dlgRow = computed(() => promptRows.value.find((x: any) => x.id === dlgSid.value) || null)
+const dlgSlot = computed(() => {
+  if (!dlgRow.value) return null
+  return slotsOf(dlgRow.value).find((s: any) => s.key === dlgKey.value) || null
+})
+const dlgTitle = computed(() => dlgRow.value && dlgSlot.value
+  ? `${dlgRow.value.id} · ${REF_KIND[dlgSlot.value.kind] || dlgSlot.value.kind} ${dlgSlot.value.tag || ''}` : '')
+const segOpen = ref<Record<string, boolean>>({})
+function slotEditRefs(r: any, sl: any) {
+  const imgs = r.images || []
+  if (sl.kind === 'first' || sl.kind === 'last') {
+    return imgs.filter((x: any) => (x.kind || 'ref') !== 'first' && (x.kind || 'ref') !== 'last')
+  }
+  return sl.planned ? [sl.planned] : []
+}
+function slotsOf(r: any) {
+  const want = effGen(r)
+  const imgs = r.images || []
+  const asmSlots = r.asm?.slots || []
+  const enrich = (kind: string, planned: any) => {
+    const hit = (s: any) => s.kind === kind && (s.name || '') === ((planned && planned.name) || '')
+    const a = asmSlots.find(hit) || asmSlots.find((s: any) => s.kind === kind) || null
+    return {
+      has: a ? !!a.exists : (!!planned && planned.exists !== false),
+      suggested_edit: (a && a.suggested_edit) || '',
+      tag: (a && a.tag) || '',
+    }
+  }
+  const mk = (kind: string, idx: number) => {
+    const planned = imgs.find((x: any) => x.kind === kind) || null
+    const e = enrich(kind, planned)
+    return { key: (r.id + '::' + kind + '::' + idx), kind, planned, has: e.has, suggested_edit: e.suggested_edit, tag: e.tag || (kind === 'first' ? '@image1' : '@image2') }
+  }
+  if (want === 't2v') return []
+  if (want === 'i2v-first') return [mk('first', 0)]
+  if (want === 'i2v-first-last') return [mk('first', 0), mk('last', 1)]
+  if (imgs.length) return imgs.map((im: any, i: number) => {
+    const e = enrich(im.kind || 'ref', im)
+    return { key: (r.id + '::' + (im.kind || 'ref') + '::' + i), kind: im.kind || 'ref',
+             planned: im, has: e.has, suggested_edit: e.suggested_edit, tag: e.tag || ('@image' + (i + 1)) }
+  })
+  return asmSlots.map((s: any, i: number) => ({ key: (r.id + '::' + s.kind + '::' + i), kind: s.kind,
+    planned: null, has: !!s.exists, suggested_edit: s.suggested_edit || '', tag: s.tag || ('@image' + (i + 1)) }))
+}
+async function copyStill(eng: any) {
+  const text = eng?.positive || ''
+  if (!text) return
+  try { await navigator.clipboard.writeText(text); ElMessage.success('已复制') }
+  catch { ElMessage.warning('复制失败，手动选中吧') }
+}
+async function copyStillText(text: string) {
+  if (!text) return
+  try { await navigator.clipboard.writeText(text); ElMessage.success('已复制') }
+  catch { ElMessage.warning('复制失败，手动选中吧') }
 }
 const promptRows = computed(() => (store.shots as any[]).map((s: any) => ({
   ...s,
   lp: s.lport_prompts || null,
   lpv: s.lport_video_prompts || null,
   img: imgPlans.value[s.id] || null,
+  asm: asmByShot.value[s.id] || null,
 })))
 // 视频提示词人工编辑缓冲：draft 存在且与库值不同才算脏；保存后 reload 会把 draft 归位
 const vpDrafts = ref<Record<string, string>>({})
@@ -476,11 +632,14 @@ async function unlockVp(r: any) {
 const lpDoneCount = computed(() => promptRows.value.filter((r: any) => r.lp || r.lpv).length)
 async function reloadPrompts() {
   promptRefreshing.value = true
-  try { await Promise.all([refresh(), loadImgPlans()]) } catch {} finally { promptRefreshing.value = false }
+  try { await Promise.all([refresh(), loadImgPlans(), loadAsm(), loadStill()]) } catch {} finally { promptRefreshing.value = false }
 }
 function promptText(r: any): string {
   if (r.lpv?.prompt) {
     return `【${r.id}】${r.lpv.video_model || r.lpv.engine || ''} · ${r.lpv.ref_mode || ''} · ${r.lpv.duration_s || r.duration_s}秒\n${r.lpv.prompt}`
+  }
+  if (r.asm?.prompt) {
+    return `【${r.id}】${r.asm.video_model || r.asm.engine || ''} · ${r.asm.ref_mode || ''} · ${r.asm.duration_s || r.duration_s}秒\n${r.asm.prompt}`
   }
   const lp = r.lp
   if (!lp) return ''
@@ -497,7 +656,7 @@ async function copyPrompt(r: any) {
   catch { ElMessage.warning('复制失败，手动选中吧') }
 }
 async function copyAllPrompts() {
-  const chunks = promptRows.value.filter((r: any) => r.lp || r.lpv).map(promptText).filter(Boolean)
+  const chunks = promptRows.value.filter((r: any) => r.lp || r.lpv || r.asm?.prompt).map(promptText).filter(Boolean)
   if (!chunks.length) return
   try { await navigator.clipboard.writeText(chunks.join('\n\n')); ElMessage.success(`已复制 ${chunks.length} 镜提示词`) }
   catch { ElMessage.warning('复制失败，手动选中吧') }
@@ -668,7 +827,7 @@ function resumePush() {
   clearPushStorageIfEmpty()
   ensurePoller(true)
 }
-watch(dtab, v => { if (v === 'prompts') refresh() })
+watch(dtab, v => { if (v === 'prompts') reloadPrompts() })
 watch(() => store.episodeId, () => { resumePush() })
 
 // 单图Agent导演域（抽到 composable，大纲 brief 留在视图）
@@ -861,10 +1020,13 @@ onMounted(async () => {
   await loadScript()
   await refresh()
   await loadImgPlans()
+  await loadAsm()
+  await loadStill()
   await loadOutline()
   resumePush()
 })
-watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
+watch(() => store.episodeId, () => { loadImgPlans(); loadAsm(); loadStill() })
+watch([engine, pixaiModel, refMode, globalTier], () => { loadAsm() })
 </script>
 <style scoped>
 .director.kun-page { max-width: none; margin: 0; }
@@ -929,12 +1091,13 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
 .pr-v { min-width: 0; white-space: pre-wrap; word-break: break-word; }
 .pr-meta { font-size: 11px; color: var(--suli-text-3); }
 .pr-right { flex-shrink: 0; }
-.pr-thumb { position: relative; width: 116px; height: 84px; border-radius: 8px; overflow: hidden; cursor: pointer; border: 1px solid var(--suli-border); margin-top: 2px; }
-.pr-thumb :deep(img) { width: 100%; height: 100%; object-fit: cover; }
-.pr-thumb.on { border-color: var(--suli-primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--suli-primary) 30%, transparent); }
-.pr-thumb-empty { width: 100%; height: 100%; display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; font-size: 12px; color: var(--suli-text-3); background: var(--suli-surface-2, #fafafa); }
-.pr-thumb-empty .el-icon { font-size: 18px; color: var(--el-color-warning); }
-.pr-thumb-tag { position: absolute; left: 4px; bottom: 4px; font-size: 11px; padding: 0 6px; border-radius: 999px; background: rgba(0,0,0,.55); color: #fff; }
+.pr-slots { display: flex; flex-wrap: wrap; gap: 6px; }
+.pr-slot { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--suli-border); border-radius: 8px; cursor: pointer; }
+.pr-slot.open { border-color: var(--suli-primary); }
+.pr-slot-thumb { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; }
+.pr-slot-miss { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--el-color-warning); color: var(--el-color-warning); background: var(--suli-surface-2, #fafafa); }
+.pr-slot-miss .el-icon { font-size: 20px; }
+.pr-slot-detail { display: flex; flex-direction: column; gap: 4px; padding: 8px 10px; border: 1px dashed var(--suli-border); border-radius: 8px; background: var(--suli-surface); }
 .pr-eng { display: flex; flex-direction: column; gap: 2px; padding-top: 4px; border-top: 1px dashed var(--suli-border); }
 .pr-refs { display: flex; flex-wrap: wrap; gap: 6px; }
 .pr-ref { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border: 1px solid var(--suli-border); border-radius: 8px; }
@@ -947,4 +1110,31 @@ watch(() => store.episodeId, () => { imgMode.value = {}; loadImgPlans() })
   .outline-thumb { width: 170px; }
   .outline-text { max-height: 340px; }
 }
+.pr-left { cursor: pointer; }
+.pr-slot { flex-direction: column; }
+.pr-slot-name { font-family: var(--suli-mono); font-size: 11px; color: var(--suli-text-2); }
+.pr-slot { flex-direction: column; }
+.pr-slot-thumb { width: 120px; height: 90px; border-radius: 8px; overflow: hidden; }
+.pr-slot-miss { display: flex; flex-direction: column; gap: 2px; align-items: center; justify-content: center; border: 1px dashed var(--el-color-warning); color: var(--el-color-warning); background: var(--suli-surface-2, #fafafa); font-size: 12px; }
+.pr-slot-miss .el-icon { font-size: 22px; }
+.dlg-frame { display: flex; gap: 16px; }
+.dlg-left { flex: 0 0 42%; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.dlg-img { width: 100%; aspect-ratio: 4 / 3; border-radius: 10px; background: var(--suli-surface-2, #fafafa); }
+.dlg-blank { display: flex; flex-direction: column; gap: 6px; align-items: center; justify-content: center; border: 1px dashed var(--el-color-warning); color: var(--el-color-warning); font-size: 13px; }
+.dlg-blank .el-icon { font-size: 28px; }
+.dlg-cap { display: flex; gap: 8px; font-size: 12px; color: var(--suli-text-2); }
+.dlg-right { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.dlg-frame { gap: 20px; align-items: flex-start; }
+.dlg-left { flex: 0 0 36%; }
+.dlg-img { border: 1px solid var(--suli-border); }
+.dlg-right { gap: 12px; }
+.dlg-right .pr-refs { gap: 8px; }
+.dlg-right .pr-ref { flex-wrap: wrap; row-gap: 8px; padding: 8px 10px; }
+.dlg-right .pr-ref-thumb { width: 56px; height: 56px; }
+.dlg-right .pr-ref-desc { flex: 1 1 220px; width: auto; }
+.dlg-right .pr-video { line-height: 1.7; }
+.pr-fold { font-size: 14px; color: var(--suli-text-3); transition: transform .2s; }
+.pr-fold.closed { transform: rotate(-90deg); }
+.pr-left { align-self: center; }
+.pr-right { display: flex; gap: 6px; align-items: center; }
 </style>

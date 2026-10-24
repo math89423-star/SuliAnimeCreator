@@ -3,6 +3,7 @@
 跨蓝图读取一律走 services/repo.py。本文件只剩路由 + 导出包 ZIP。
 """
 from flask import Blueprint, request, jsonify, send_file, Response
+from pathlib import Path as _Path
 
 from ..services.director_prompts import (
     TIERS, tier_list, build_prompt, build_i2va, build_pixai,
@@ -71,6 +72,51 @@ def _episode_fallback_refs(ep, character, limit=6):
     return out
 
 
+_UPLOADS_DIR = _Path(__file__).resolve().parents[2] / "data" / "uploads"
+
+
+def _upload_exists(name):
+    """uploads 落盘检查（只认 basename，防路径穿越）。"""
+    n = str(name or "").strip()
+    if not n:
+        return False
+    return (_UPLOADS_DIR / _Path(n).name).is_file()
+
+
+def _annotate_intent_slots(p, shot, fallback_refs):
+    """意图口径后处理：给 refs 逐个标 exists，并算 slots 缺图槽。
+
+    slots 每项 {kind, name, exists, suggested_edit}：首帧垫图建议走兜底链首个落盘文件
+    （角色立绘/本集参考图），尾帧优先用首帧文件（落盘才算），参考槽不设 edit 基底。
+    只读判断，不写库。
+    """
+    refs = p.get("refs") or []
+    for r in refs:
+        r["exists"] = _upload_exists(r.get("name"))
+    first_name = next((r.get("name") for r in refs if r.get("kind") == "first" and r.get("name")), "")
+    first_ok = bool(first_name) and _upload_exists(first_name)
+    pad = ""
+    for f in fallback_refs or []:
+        if _upload_exists(f.get("name")):
+            pad = f.get("name")
+            break
+    slots = []
+    for r in refs:
+        k = r.get("kind") or "ref"
+        if k == "first":
+            sugg = pad
+        elif k == "last":
+            sugg = first_name if first_ok else pad
+        else:
+            sugg = ""
+        slots.append({"kind": k, "name": r.get("name") or "",
+                      "exists": bool(r.get("exists")), "suggested_edit": sugg,
+                      "tag": r.get("tag") or ""})
+    p["refs"] = refs
+    p["slots"] = slots
+    p["intent"] = True
+
+
 @bp.post("/prompts/assemble")
 def assemble():
     b = request.get_json(force=True) or {}
@@ -129,7 +175,9 @@ def assemble_i2va():
 
 @bp.post("/prompts/assemble-i2va-episode/<eid>")
 def assemble_i2va_episode(eid):
-    """按集批量单图组装：取 scriptboard 实镜（含首帧），逐镜一段视频。"""
+    """按集批量单图组装：取 scriptboard 实镜（含首帧），逐镜一段视频。
+    intent=true 按意图组装（缺图不降级，提示词假设关键图已存在，缺失只记状态，
+    并给每镜算 slots 缺图槽 + edit_image 垫图建议）：给导演页预览用。"""
     b = request.get_json(force=True) or {}
     style = b.get("style_bible", "")
     music = b.get("music", "")
@@ -137,6 +185,7 @@ def assemble_i2va_episode(eid):
     engine = (b.get("engine") or "h3").strip()
     ref_mode = (b.get("ref_mode") or "startframe").strip()
     video_model = (b.get("pixai_model") or b.get("video_model") or "tsubaki-video").strip()
+    intent = bool(b.get("intent"))
     locks = b.get("locks") or []
     chars = list(_repo.chars_map().values())
     character = b.get("character") or (chars[0] if chars else {})
@@ -144,9 +193,14 @@ def assemble_i2va_episode(eid):
     ep = _repo.get_episode(eid)
     fallback_refs = _episode_fallback_refs(ep, character)
     if engine == "pixai":
-        out = [build_pixai(s, character, locks, style, tier, ref_mode, video_model, fallback_refs) for s in rows]
+        out = [build_pixai(s, character, locks, style, tier, ref_mode, video_model,
+                           fallback_refs, assume_complete=intent) for s in rows]
     else:
         out = [build_i2va(s, character, locks, style, music, tier) for s in rows]
+    if intent and engine == "pixai":
+        by_id = {s.get("id"): s for s in rows}
+        for p in out:
+            _annotate_intent_slots(p, by_id.get(p.get("shot_id")) or {}, fallback_refs)
     total = round(sum(float(p["duration_s"]) for p in out), 1)
     return ok({"episode_id": eid, "count": len(out), "total_s": total, "tier": tier,
                "engine": engine, "ref_mode": ref_mode, "prompts": out})

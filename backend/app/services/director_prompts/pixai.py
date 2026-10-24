@@ -3,7 +3,7 @@ import re
 from .images import first_image, img_url, collect_refs, collect_refs_fell_back, REF_ROLE_PHRASE, MAX_REFS
 from .text import DIALOG, strip_prefix, pixai_preformatted
 from .tiers import TIERS, normalize_tier, water_clause
-from .genmode import normalize_gen_mode, infer_gen_mode, resolve_gen_mode
+from .genmode import normalize_gen_mode, infer_gen_mode, resolve_gen_mode, GEN_MODE_REF
 
 PIXAI_CAM = {
     "固定": "fixed shot, the camera holds still",
@@ -80,7 +80,13 @@ def apply_pixai_model_deltas(prompt_out, vcfg, duration):
     return " ".join(out.split()), applied
 
 
-def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode="startframe", video_model="tsubaki-video", fallback_refs=None):
+def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode="startframe", video_model="tsubaki-video", fallback_refs=None, assume_complete=False):
+    """PixAI v4.0 系列格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行。
+    mode='startframe' 走 Keyframe（锁首帧构图）；'reference' 走 Multi-Reference（只锚身份，动作自由）。
+    fallback_refs：镜级一张图都没有时的兜底（角色立绘 / 本集参考图），按 Multi-Reference 用。
+    assume_complete=True 按意图组装（缺图不降级）：提示词假设关键图已存在，
+    缺的槽位留占位并记进 ref_note（首帧待生成/尾帧待生成），只给导演页预览用；
+    实际投产（导出包/直投）仍走默认结算口径。"""
     """PixAI v4.0 系列格式：@image1 参考行 + [0-Xs] beat + 相机动词 + Voice/SFX 行。
     mode='startframe' 走 Keyframe（锁首帧构图）；'reference' 走 Multi-Reference（只锚身份，动作自由）。
     fallback_refs：镜级一张图都没有时的兜底（角色立绘 / 本集参考图），按 Multi-Reference 用。"""
@@ -105,15 +111,43 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
     vkey = (video_model or "tsubaki-video").strip() if (video_model or "tsubaki-video").strip() in PIXAI_MODELS else "tsubaki-video"
     duration = min(max(duration, 0.5), float(vcfg["max_s"]))
     multi_ok = vcfg["ref"] == "multi"
-    ordered, truncated = collect_refs(shot, fallback_refs)
-    fell_back = collect_refs_fell_back(shot, fallback_refs)
-    # 生成方式：镜上写的 gen_mode 是 Suli 定的意图；没写时按素材推，
-    # 页面默认值（mode）只在完全没有素材线索时兜底。结算再按型号能力降级。
     want = normalize_gen_mode(shot.get("gen_mode"))
-    if not want:
-        want = "multi-ref" if (mode == "reference" and ordered) else ""
-    eff_gen, eff_mode, gen_notes = resolve_gen_mode(
-        want, shot, multi_ok=multi_ok, last_ok=bool(vcfg.get("last")), fallback_used=fell_back)
+    if assume_complete:
+        # 意图口径：只认镜上意图（没写按素材推），不做缺图降级、不吃兜底；
+        # 缺的槽位留占位（name 为空），提示词照全量写，缺失只记状态。
+        ordered = collect_refs(shot, None)[0]
+        truncated = len(ordered) > MAX_REFS
+        ordered = ordered[:MAX_REFS]
+        if not want:
+            want = infer_gen_mode(shot)
+        eff_gen, eff_mode = want, GEN_MODE_REF.get(want, "t2v")
+        missing_kinds = []
+        if eff_gen in ("i2v-first", "i2v-first-last"):
+            if not any(x.get("kind") == "first" for x in ordered):
+                ordered.insert(0, {"name": "", "kind": "first", "role": "", "desc": ""})
+                missing_kinds.append("first")
+        if eff_gen == "i2v-first-last":
+            if not any(x.get("kind") == "last" for x in ordered):
+                ordered.append({"name": "", "kind": "last", "role": "ending", "desc": ""})
+                missing_kinds.append("last")
+        fell_back = False
+        gen_notes = []
+        if eff_gen == "t2v":
+            ordered = []
+        elif eff_gen == "multi-ref" and not ordered:
+            missing_kinds.append("ref")
+        if missing_kinds:
+            _miss_label = {"first": "首帧待生成", "last": "尾帧待生成"}
+            gen_notes.append("、".join(_miss_label.get(k, "参考图待生成") for k in missing_kinds))
+    else:
+        ordered, truncated = collect_refs(shot, fallback_refs)
+        fell_back = collect_refs_fell_back(shot, fallback_refs)
+        # 生成方式：镜上写的 gen_mode 是 Suli 定的意图；没写时按素材推，
+        # 页面默认值（mode）只在完全没有素材线索时兜底。结算再按型号能力降级。
+        if not want:
+            want = "multi-ref" if (mode == "reference" and ordered) else ""
+        eff_gen, eff_mode, gen_notes = resolve_gen_mode(
+            want, shot, multi_ok=multi_ok, last_ok=bool(vcfg.get("last")), fallback_used=fell_back)
     if eff_gen == "i2v-first-last":
         # 首尾帧只吃两张：首帧起点、尾帧收束
         ordered = [x for x in ordered if x.get("kind") in ("first", "last")][:2]
@@ -167,7 +201,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
                 "fallback_used": fell_back, "applied": applied_deltas,
                 "refs": ref_entries, "ref_note": ref_note,
                 "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
-                "missing_image": (eff_gen != "t2v" and not bool(first)),
+                "missing_image": (eff_gen != "t2v" and not bool(first and first.get("name"))),
                 "first_image": first.get("name") if first else "",
                 "first_image_url": img_url(first.get("name")) if first else "",
                 "duration_s": duration, "prompt": prompt_out[:2000], "locks_hit": locks_hit}
@@ -264,7 +298,7 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             "gen_mode_eff": eff_gen,
             "fallback_used": fell_back,
             "tier": tier, "tier_label": (tcfg or {}).get("label", ""),
-            "missing_image": (eff_gen != "t2v" and not bool(first)),
+            "missing_image": (eff_gen != "t2v" and not bool(first and first.get("name"))),
             "first_image": first.get("name") if first else "",
             "first_image_url": img_url(first.get("name")) if first else "",
             "duration_s": duration, "prompt": prompt, "locks_hit": locks_hit}
