@@ -375,7 +375,7 @@ let waitT0 = 0
 let waitBaseCount = 0
 let waitBaseAt = ''
 
-/** 后端时间戳统一按 UTC 解析：容器跑 UTC 且老数据没有时区后缀，浏览器会当本地时间 → 差 8 小时。 */
+/** 后端时间戳统一按 UTC 解析：容器跑 UTC，部分数据没有时区后缀，浏览器会当本地时间 → 差 8 小时。 */
 function tsMs(s: string): number {
   if (!s) return NaN
   return Date.parse(/[zZ]|[+-]\d{2}:?\d{2}$/.test(s) ? s : s + 'Z')

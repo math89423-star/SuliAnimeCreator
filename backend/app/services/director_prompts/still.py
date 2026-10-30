@@ -60,7 +60,3 @@ def build_prompt(shot, character=None, locks=None, style_bible="", frame=None):
     en = clean(", ".join([p for p in parts if p]))[:900]
     locks_hit = [l.get("id") for l in locks if l.get("surface_en") and l["surface_en"].lower() in en.lower()]
     return {"assembled_en": en, "locks_hit": locks_hit, "frame": frame or ""}
-
-
-# 兼容旧名
-_clean = clean

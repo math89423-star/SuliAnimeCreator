@@ -176,7 +176,7 @@ def _probe_video(p):
 
 _IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".gif"}
 
-# 产物目录标记：相对路径里出现即整支跳过（2026-10-16 裁定：CH01 分段合成不进素材库）。
+# 产物目录标记：相对路径里出现即整支跳过。
 PRODUCT_MARKERS = ("CH01_act1",)
 
 # 库 → 子目录 → 素材种类：视频资源 vs 广告素材（动态/静止图）
@@ -232,7 +232,7 @@ def _rescan_assets(force=False):
             seen.add(key)
             old = assets.get(key) if isinstance(assets.get(key), dict) else None
             if old is None:
-                # 兼容旧索引（key 无 lib 前缀）：按文件名找回用量
+                # 索引（key 无 lib 前缀）：按文件名找回用量
                 for ok_, ov in assets.items():
                     if isinstance(ov, dict) and ov.get("name") == f.name:
                         old = ov
@@ -258,7 +258,7 @@ def _rescan_assets(force=False):
     removed = [k for k in assets if k not in seen]
     for k in removed:
         assets.pop(k, None)
-    # 旧索引（无 kind/file 前缀）迁移：file 补前缀并标 kind
+    # 索引（无 kind/file 前缀）迁移：file 补前缀并标 kind
     _ASTORE["assets"] = assets
     _ASTORE["updated_at"] = int(_t.time() * 1000)
     _apersist()
@@ -279,9 +279,8 @@ def _index_rows():
 
 
 # ── 索引自动失效 ────────────────────────────────────────────────
-# 真源是目录：目录变了，索引必须跟着变。否则"删文件/加文件"要等到有人手点
-# 「重扫」才生效 —— 2026-10-15 的事故形态：covers 被删，索引停在旧快照，
-# L-Port 行表还留着 42 条空壳行，两侧计数各说各话。
+# 真源是目录：目录变了，索引必须跟着变。否则删文件/加文件要等到有人手点
+# 重扫才生效。
 # 做法：节流 + 目录摘要（mtime_ns + 条目数）比对，变了才增量重扫；
 # 深层目录内新增/改名不改变上层目录 mtime，所以「重扫」按钮保留为强刷手段。
 _SCAN_CACHE: dict = {"t": 0.0, "sig": None}
@@ -427,7 +426,7 @@ def _resolve_library(b, mother_id, tasks):
     return list(LIB_POOL), "builtin"
 
 
-# 高光窗口规则（2026-10-16）：素材够长就跳过片头/取中段，成片别永远从第 0 秒开始。
+# 高光窗口规则：素材够长就跳过片头/取中段，成片别永远从第 0 秒开始。
 # 判断依据只有索引里的时长（不看画面内容）；素材比计划短时起点回 0，交给执行侧循环补帧。
 HL_PLAN_S = 15.0        # 计划成片时长（与剪辑单 duration_s 同口径）
 HL_SKIP_HEAD_S = 1.2    # 片头常是静帧/黑场，跳过
@@ -978,7 +977,7 @@ def export_bundle():
                      download_name="%s.zip" % pid)
 
 
-# ---- 直投 L-Port：包不用手工搬（2026-10-16）----
+# ---- 直投 L-Port：包不用手工搬 ----
 # ① 写共享挂载 /lport-lib/packages/（不依赖网络，最稳）；② 调 L-Port API 触发出片。
 LPORT_API_BASE = _os.environ.get("LPORT_API_BASE", "http://host.docker.internal:8080")
 

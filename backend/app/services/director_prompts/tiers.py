@@ -40,18 +40,18 @@ def water_clause(v):
     return WATER_CLAUSES.get(normalize_water(v), "")
 
 
-# 旧四档 -> 两档归一（库里老数据照读不炸）
-LEGACY_TIERS = {"tease": "nsfw", "undress": "nsfw", "explicit": "nsfw", "closeup": "nsfw"}
+# 水位四档 -> 门档归一（库里已存数据照读不炸）
+TIER_ALIAS = {"tease": "nsfw", "undress": "nsfw", "explicit": "nsfw", "closeup": "nsfw"}
 
 def normalize_tier(v):
     v = (v or "").strip()
     if v in TIERS:
         return v
-    return LEGACY_TIERS.get(v, "")
+    return TIER_ALIAS.get(v, "")
 
 
 def tier_list():
     return [{"key": k, "label": v["label"]} for k, v in TIERS.items()]
 
-__all__ = ["TIERS", "LEGACY_TIERS", "normalize_tier", "tier_list",
+__all__ = ["TIERS", "TIER_ALIAS", "normalize_tier", "tier_list",
            "WATER_CLAUSES", "WATER_LABELS", "normalize_water", "water_clause"]

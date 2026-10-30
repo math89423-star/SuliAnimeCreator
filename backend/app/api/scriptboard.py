@@ -70,7 +70,7 @@ def _resolve_tier_water(body, cur_tier="", cur_water=""):
 def _ep_slug(eid):
     """集号 → 镜号前缀：全段去符号、掐 18 字。
 
-    旧写法取 eid[-4:]，EP-WEDDING-01 会出 SHOT-G-01-M001 这种半截号段，两个不同集撞前缀。
+    取 eid[-4:] 会出 SHOT-G-01-M001 这种半截号段，两个不同集撞前缀。
     """
     s = _re.sub(r"[^0-9A-Za-z_-]", "", (eid or "").upper())
     if s.startswith("EP-"):
@@ -128,7 +128,7 @@ def ok(data):
 
 def _save_cast(eid, raw_cast, text=""):
     """记本集出镜角色（点名或正文说话人）。返回解析结果；占位不落盘。
-    显式点名会覆盖旧记忆；正文自动取角只在没有记忆时补。"""
+    显式点名会覆盖已存记忆；正文自动取角只在没有记忆时补。"""
     from ..services import cast as _cast
     ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
     C = _cast.resolve_cast(raw_cast or ep.get("cast"), text, eid)
@@ -175,7 +175,7 @@ def save_screenplay(eid):
     ep = _EPS.setdefault(eid, {"id": eid, "screenplay_md": "", "segs": [], "verdict": "draft"})
     md = b.get("screenplay_md", "")
     old = ep.get("screenplay_md", "") or ""
-    # 空内容覆盖非空剧本 = 静默清库（2026-10-16 事故：切集/切页时 debounce 的自动保存把 2187 字稿冲空）。
+    # 空内容覆盖非空剧本 = 静默清库。
     # 要真清空必须显式带 force:true，前端手动清空会走二次确认 + force。
     if not str(md).strip() and str(old).strip() and not b.get("force"):
         return ok({"episode_id": eid, "chars": len(old), "kept": True,
@@ -415,7 +415,7 @@ def save_outline(eid):
     if "outline_md" in b:
         new_md = b.get("outline_md", "")
         old_md = ep.get("outline_md", "") or ""
-        # 同理：空大纲不许静默覆盖已有大纲（自动保存/切集踩过同类坑）
+        # 空大纲不许静默覆盖已有大纲（自动保存/切集同样拦截）
         if not str(new_md).strip() and str(old_md).strip() and not b.get("force"):
             kept = True
         else:
@@ -467,7 +467,7 @@ def draft_from_outline(eid):
     if not outline_md:
         return jsonify({"code": 4001, "msg": "本集暂无大纲，先生成大纲"}), 400
     specs, tag = split_outline_to_shots(outline_md, eid, total_s, tier or "")
-    # 幂等：先清本集旧草案（draft=True），保留已定稿镜，防止重复点击堆出 3+3+3…
+    # 幂等：先清本集草案（draft=True），保留已定稿镜，防止重复点击堆出 3+3+3…
     # 另带走无内容空镜（duty/duty_en/sound 全空且无配图，多为分镜页“添加行”残留），免得“无内容”卡占时间轴
     def _is_junk(s):
         if s.get("episode_id") != eid:
@@ -563,7 +563,7 @@ def list_shots():
     eid = request.args.get("episode_id", "")
     rows = [s for s in _SHOTS.values() if not eid or s["episode_id"] == eid]
     rows.sort(key=lambda x: x.get("id", ""))
-    # 老数据补 ord（按镜号顺序）与 images（单图 image 归一为参考）；新数据按 ord 排
+    # 补 ord（按镜号顺序）与 images（单图 image 归一为参考）；按 ord 排
     dirty = False
     for i, s in enumerate(rows):
         if "ord" not in s:
@@ -780,7 +780,7 @@ def import_shots():
                "updated": updated, "count": len(created) + len(updated)})
 
 
-# ── L-Port 详细提示词回传（提示词收口，2026-10-18）─────────────────────
+# ── L-Port 详细提示词回传（提示词收口）─────────────────────
 # 与 shots/import（分镜回执）分两口：这边只把提示词写进"已存在的镜"，
 # 不由提示词造镜（造镜归 shots/import）；缺镜只报告 missing，不静默丢。
 
@@ -826,7 +826,7 @@ def import_shot_prompts():
 
     prompts 每项 {shot_id, seg_id?, director_cn?, camera_note?, key_text_en?,
     dialogue_cn?, ref_status?, ref_missing?, duration_s?, crop?}，
-    按 shot_id 写进该镜的 lport_prompts（当前版本，覆盖旧的）；只写本集已存在的镜，
+    按 shot_id 写进该镜的 lport_prompts（重传覆盖）；只写本集已存在的镜，
     缺镜报告 missing 不造镜。"""
     import datetime as _dt
     b = request.get_json(force=True) or {}
@@ -914,7 +914,7 @@ def import_shot_video_prompts():
 
     prompts 每项 {shot_id, prompt*, engine?, video_model?, ref_mode?, tier?,
     duration_s?, refs?, ref_note?, applied?}，按 shot_id 写进该镜的 lport_video_prompts
-    （当前版本，覆盖旧的）；只写本集已存在的镜，缺镜报告 missing 不造镜。
+    （重传覆盖）；只写本集已存在的镜，缺镜报告 missing 不造镜。
     人工改过的镜（edited=true）默认不覆盖：要覆盖必须显式 force=true。"""
     import datetime as _dt
     b = request.get_json(force=True) or {}
@@ -1049,7 +1049,7 @@ def set_episode_image_meta(eid):
 @bp.post("/shots/<sid>/image")
 def upload_shot_image(sid):
     """分镜配图：落盘 data/uploads。kind=first/last 各占一个槽位（重传替换），kind=ref 可多张追加。
-    form 可带 role/desc（见 attach）。老单图 image 首次带入 images 后清空归一。取图走 /api/images/<name>。"""
+    form 可带 role/desc（见 attach）。单图 image 首次带入 images 后清空归一。取图走 /api/images/<name>。"""
     from pathlib import Path
     import uuid as _uuid
     s = _SHOTS.get(sid)

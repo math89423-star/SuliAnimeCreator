@@ -29,7 +29,7 @@ description: 二次元角色服饰 flat 设定设计。从人物/世界观命题
 ## §3 · 设计管线（顺序执行，不跳步）
 
 0. **选通用版型**：先到 `references/generic-blocks.md` 选 G1–G6（不绑定角色的通用设计），
-   再到 `templates/` 取对应 `.generic.json` 空白模板。**禁止从具体旧款复制数字**（既有实例只是实例，不是库）。
+   再到 `templates/` 取对应 `.generic.json` 空白模板。**禁止从具体实例复制数字**（既有实例只是实例，不是库）。
 1. **实例化**：按人物/世界观填模板全部 `{{变量}}`（颜色进配色槽 C1/C2/C3、符号计数、尺寸重算），
    遵守 `generic-blocks.md` 末尾实例化规则 5 条。
 2. **世界观锚点**：写 3 条服饰铁律（只约束本款配色/禁忌/等级，不许照搬别款铁律），后继设计违者自查。
@@ -51,7 +51,7 @@ description: 二次元角色服饰 flat 设定设计。从人物/世界观命题
 test-flat/<slug>/
   params.json    # 唯一数据源＝templates/<Gx>.generic.json 按 §3 实例化填完（§2＋§3 的全部结论）
   generate.py    # dumb executor，只画本款几何，通用能力一律调 svgkit
-  flat.svg       # 产物（视图＋D1..Dn＋工艺表＋标题栏版本日期，视图按品类见 conventions）
+  flat.svg       # 产物（视图＋D1..Dn＋工艺表＋标题栏，视图按品类见 conventions）
   preview.html   # 浏览器预览
   README.md      # 设计要点＋上限声明＋skill 评审记录
   prompts/       # positive.txt / negative.txt / control-guide.md（垫图用法）
@@ -85,8 +85,3 @@ adstronaut/flat 规范取线型语义与视图完整性，不取黑白印刷限�
 - 本 skill 是设计执行层；`AGENTS.md` 的 Human-in-loop 门禁（GATE-1/GATE-2）在上游拍板命题与冻结。
 - 后端 `pack.json` 产物规范见 `docs/立项文档.md §8`；本 skill 产出的是其中视觉规格的设定输入。
 - 禁止事项遵 `AGENTS.md §8`：不接绘图/本地模型，不碰密钥。
-
----
-*版本 v1.2：通用版型库＋空白实例模板，管线改为通用→实例两步；既有六件降格为实例。
-版本 v1.3：去硬编码——通用层禁实例值（数/色/款号/人物例），只留规则与选项词。修改本 skill 需人类确认。
-版本 v1.4（人类已确认）：conventions 新增 §6 POM 三列表（只转录 params＋缺省公差带）与 §7 比例注记，QA 同步门禁。*

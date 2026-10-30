@@ -1,7 +1,6 @@
 """human-in-loop 最小链：suggest/expand 只给草稿，confirm 才写库。落盘 data/story_db.json。
-轻链（2026-10-13）：expand 走 services/draft，不走 dsh；suggest 保留兼容模板。
-角色库化（2026-10-16）：正文/底稿的说话人一律经 services/cast 解析（点名 → 集内正文 → 角色库 → 占位），
-不再写死演示人名。"""
+expand 走 services/draft，不走 dsh；suggest 保留模板。
+正文/底稿的说话人一律经 services/cast 解析（点名 → 集内正文 → 角色库 → 占位）。"""
 from flask import Blueprint, request, jsonify
 from ..services.disk_store import load, save
 from ..services import cast as cast_svc

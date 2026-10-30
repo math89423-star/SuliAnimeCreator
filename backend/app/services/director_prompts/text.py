@@ -38,14 +38,3 @@ def looks_full(duty):
     if ";" in d or len(d) > 90:
         return True
     return bool(FULL_START.match(d))
-
-
-# 兼容旧名
-_DIALOG = DIALOG
-_CJK = CJK
-_PRONOUN_EN = PRONOUN_EN
-_FULL_START = FULL_START
-_strip_prefix = strip_prefix
-_pixai_preformatted = pixai_preformatted
-_strip_pixai_scaffold = strip_pixai_scaffold
-_looks_full = looks_full

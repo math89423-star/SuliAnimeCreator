@@ -42,8 +42,8 @@ def create_app():
     def health():
         return jsonify({"code": 0, "data": {"ok": True, "blueprints": ["story", "character", "scriptboard", "director", "uploads", "art", "projects", "dsh", "receipts", "settings", "tools", "traffic", "reports"]}})
 
-    # 兼容别名：上传接口返回的都是 /api/images/<name>，而 uploads 蓝图实际挂在 /api/v1/images 下。
-    # 新老数据都用 /api/images 取图，这里补一个直达路由（与蓝图同目录）。
+    # 别名：上传接口返回的都是 /api/images/<name>，而 uploads 蓝图实际挂在 /api/v1/images 下。
+    # 统一用 /api/images 取图，这里补一个直达路由（与蓝图同目录）。
     @app.get("/api/images/<name>")
     def serve_images(name):
         root = Path(__file__).resolve().parents[1] / "data" / "uploads"

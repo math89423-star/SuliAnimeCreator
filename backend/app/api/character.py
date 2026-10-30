@@ -263,7 +263,7 @@ def clear_slot_prompts(cid):
 @bp.post("/<cid>/slot-prompts/generate")
 def gen_slot_prompt(cid):
     """槽位提示词：按目标出图引擎出稿（novelai=tag 轨 / tsubaki3=五槽自然语言 / seedream=用途+连贯描述）。
-    不传 engine 时保持旧行为（兼容既有前端）。craft 归 skills/image/production-image-models。"""
+    不传 engine 时保持默认行为。craft 归 skills/image/production-image-models。"""
     b = request.get_json(force=True) or {}
     kind, slot = b.get("kind", ""), b.get("slot", "")
     engine = (b.get("engine") or "").strip()
@@ -271,7 +271,7 @@ def gen_slot_prompt(cid):
     prompt = build_slot_prompt(c, kind, slot, engine)
     _SLOT_PROMPTS[(cid, kind, slot)] = prompt
     _persist()
-    return ok({"kind": kind, "slot": slot, "prompt": prompt, "mocked": True, "engine": engine or "legacy"})
+    return ok({"kind": kind, "slot": slot, "prompt": prompt, "mocked": True, "engine": engine or "default"})
 
 @bp.get("/<cid>/slot-svgs")
 def list_slot_svgs(cid):

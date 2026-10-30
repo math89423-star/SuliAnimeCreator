@@ -83,7 +83,7 @@ install_dsh() {
   echo "→ 打破甲补丁（仅本版本目录）"
   local core="$DSH_HOME_DIR/profiles/headless/node_modules/dsh-corebreak"
   # profile 里的 dsh-corebreak 软链必须指向 LLMCoreBreak/dsh 真实位置：
-  # 早期版本指向的是仓库改名前的路径（~/<旧名>/dsh），软链悬空 = 破甲层整个不加载
+  # 改名前的路径软链悬空 = 破甲层整个不加载
   # （表现是 dsh 启动 stderr「skipping profile bundle "dsh-corebreak"」）。
   # dsh-home 不入库（有明文凭据），所以每次安装都顺手校正一次，保证新机器也成立。
   for prof in headless web; do

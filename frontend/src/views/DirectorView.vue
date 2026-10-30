@@ -872,7 +872,7 @@ watch(() => store.episodeId, () => { resumePush() })
 const { agentTotal, agentLoading, outline, loadOutline, stopAgent, runBrief } = useAgentDirect(
   () => store.episodeId, refresh,
 )
-// 离开页面时清掉剧本自动保存的 debounce：否则组件销毁后它还会拿旧/空文本再 PUT 一次（2026-10-16 清库事故）
+// 离开页面时清掉剧本自动保存的 debounce：否则组件销毁后它还会拿空文本再 PUT 一次
 onUnmounted(() => { clearTimeout(scriptTimer); clearTimeout(waitTimer) })
 function pickOutlineImage(): string {
   if (outline.value.image) return outline.value.image

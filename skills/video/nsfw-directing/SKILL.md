@@ -109,7 +109,7 @@ compatibility: Portable to any agent that can read local files — no external A
 
 ## 7 降级替换表（**只在目标引擎确带审核时用** —— 默认不出这一版）
 
-> 2026-10-17 修订：主力引擎 NovelAI / Tsubaki / PixAI-Enhanced **直接吃露骨描述**，
+> 主力引擎 NovelAI / Tsubaki / PixAI-Enhanced **直接吃露骨描述**，
 > 默认出稿一律直白（见 `references/acts-lexicon.md` §9 直白词表）。本表只用于**确带审核的通道**（托管平台 / Normal 档）：
 > 回退时**不要删镜、不要写含糊话**，做**等长替换**（时长与运镜不动、只换正文），
 > 且只作为那份降级版存在——**不替换直白原版**。

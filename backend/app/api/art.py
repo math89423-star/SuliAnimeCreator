@@ -81,7 +81,7 @@ def image_models():
 # 与剧本创作同构：Suli 起草方案（意图文本 + 目标引擎 + 参考图），直投 L-Port 收件箱
 # suli_packages/<pkg_id>/（包型 art_plan）；L-Port 侧跑 intent_divergence →
 # intent_blueprint → blueprint_to_<engine> 后调 push-art-prompts-to-suli 回传，
-# 本文件 /prompts/import 收口逐引擎落进方案 prompts（当前版本语义：重传整条覆盖）。
+# 本文件 /prompts/import 收口逐引擎落进方案 prompts（语义：重传整条覆盖）。
 # 数据：backend/data/art_db.json。
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ _TIER_CN = {"tease": "氛围暗示", "undress": "半露", "explicit": "直白", 
 
 
 def _norm_tier(raw):
-    """水位档归一：空串（常规）或四档之一。旧写法 nsfw/sfw 折到四档。"""
+    """水位档归一：空串（常规）或四档之一。nsfw/sfw 折到四档。"""
     k = str(raw or "").strip().lower()
     if not k:
         return ""
@@ -174,7 +174,7 @@ def _norm_refs(raw):
     """参考图归一：[{name, path, url}]，最多 6 张（对齐 L-Port ref_images 上限）。
 
     path 统一成相对 backend 的 uploads 路径（直投打包按它找文件）；url 缺省按 basename
-    补 /api/images/<name>，前端缩略图直接用——agent 只给 path 的旧写法也能看图。
+    补 /api/images/<name>，前端缩略图直接用——只给 path 的写法也能看图。
     """
     out = []
     for it in (raw if isinstance(raw, (list, tuple)) else []):
@@ -209,7 +209,7 @@ def _ref_file(r):
 
 
 def _migrate_refs():
-    """老数据兼容：只有 name/path、没有 url 的参考图，进内存时补齐（缩略图与直投打包都要用）。"""
+    """数据兼容：只有 name/path、没有 url 的参考图，进内存时补齐（缩略图与直投打包都要用）。"""
     dirty = False
     for p in _ART_DB.get("plans") or []:
         raw = p.get("ref_images")
@@ -279,7 +279,7 @@ def _trim(v):
 
 
 def _norm_slot(v):
-    """分镜槽位：""=整镜方案（兼容老数据），first=首帧，last=尾帧，ref=参考图。"""
+    """分镜槽位：""=整镜方案，first=首帧，last=尾帧，ref=参考图。"""
     s = str(v or "").strip().lower()
     return s if s in ("first", "last", "ref") else ""
 
@@ -1133,7 +1133,7 @@ def push_lport():
 
 @bp.post("/prompts/import")
 def prompts_import():
-    """单图提示词回传收口（L-Port 发散/翻译/精修产物回流；当前版本语义：重传整条覆盖）。
+    """单图提示词回传收口（L-Port 发散/翻译/精修产物回流；语义：重传整条覆盖）。
 
     body: {plan_id? | package_id?, source?, engines: {<engine>: {positive*, negative?,
            params?, note?}}, blueprint?}

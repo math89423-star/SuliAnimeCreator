@@ -14,7 +14,7 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 ## 0 命名澄清（查证）
 
 - **Tsubaki / 椿 = PixAI 的图像旗舰模型**（Tsubaki.3 为最新，擅长漫画分页、版面文字、光照叙事、角色一致性）。
-- **PixAI 的视频模型是另一条线**。2026-10-12 复核：**界面（專業档）已上 `Tsubaki Video` 与 `Tsubaki Video Flash`（标 NEW，
+- **PixAI 的视频模型是另一条线**。**界面（專業档）已上 `Tsubaki Video` 与 `Tsubaki Video Flash`（标 NEW，
   多图参考 + 支援音讯）**；官方 Oct 6 周报原文提到 "Tsubaki Video animation generation … could fail in some cases"，
   即**确有其物，只是 docs/blog 尚未出专页**（`docs.pixai.art` 无 tsubaki-video 路径）。
   同档还有 `V4.0 Lite Preview`、`V4.0 Preview`、`V3.2`、`V3.0 Lite`、`V2.7`。
@@ -58,7 +58,7 @@ compatibility: Portable — plain local files, no API calls required. Source: Pi
 
 ## 2 参考图机制（最容易搞错的地方）
 
-**v4.0 系列的参考图不是首帧，是"身份语义锚"。** 老模型（含 v3.x）把参考图当第一帧锁死，
+**v4.0 系列的参考图不是首帧，是"身份语义锚"。** v3.x 及更早把参考图当第一帧锁死，
 v4.0 把身份（发色/瞳色/服装/标志配饰）与姿势/环境解耦，动作完全由提示词驱动。
 
 | 你想要 | 用哪个槽 |
@@ -178,7 +178,7 @@ Add special sound effects for scene transitions.
 | 参考视频 | ≤3 段，单段 ≤50MB / ≤15s，**合计也 ≤15s** |
 | 参考音频 | ≤3 段 |
 | 模式互斥 | Keyframe（首/尾帧）与 Multi-Reference 互斥 |
-| 提示词长度 | **Tsubaki Video / Flash：5000 tokens（操作者核对界面输入上限）**；官方工作流建议的 **≤2000 字符** 仍适用于 v4.0 Preview / Lite 与 v3.x 老口径 —— 两套别混用：给 Tsubaki 出稿按 token 预算写满，给 v4.0 出稿仍按 2000 字符收 |
+| 提示词长度 | **Tsubaki Video / Flash：5000 tokens（操作者核对界面输入上限）**；官方工作流建议的 **≤2000 字符** 仍适用于 v4.0 Preview / Lite 与 v3.x 口径 —— 两套别混用：给 Tsubaki 出稿按 token 预算写满，给 v4.0 出稿仍按 2000 字符收 |
 | 会员门槛 | 视频功能需 Starter+（Normal）；Enhanced 需 Plus+ |
 | 成本与耗时 | 远高于出图（起步约 16,000 credits），单次 1-5 分钟 |
 

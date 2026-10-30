@@ -1,6 +1,6 @@
 """draft 轻链：草案发散不走 dsh，直接调 LLM 网关 + 规则回退。
 
-定位（2026-10-13）：dsh 只留 skill 加载 + 单会话（episode 一集一会话）做导演判断；
+dsh 只留 skill 加载 + 单会话（episode 一集一会话）做导演判断；
 草案发散（发散/大纲/转草案）走本模块，失败永远有 heuristic 保底，不抛 500。
 """
 import re
@@ -14,7 +14,7 @@ CROPS = ["extreme_close", "closeup", "close", "medium_close", "medium",
 
 
 def expand_idea(idea, n=3):
-    """发散 n 个方向：LLM 优先，失败回模板（兼容旧 story/suggest 三档）。"""
+    """发散 n 个方向：LLM 优先，失败回模板（story/suggest 三档）。"""
     idea = (idea or "").strip()
     try:
         from .llm_opencode import llm_cfg, _post
@@ -157,7 +157,7 @@ def _norm_move(v):
 
 
 def _table_columns(header):
-    """大纲表头 → 列下标。认得出就按名字取，认不出按老位置（0..4）兜底。"""
+    """大纲表头 → 列下标。认得出就按名字取，认不出按位置（0..4）兜底。"""
     cells = [c.strip() for c in (header or "").strip().strip("|").split("|")]
     cols = {}
     for i, c in enumerate(cells):
@@ -181,8 +181,8 @@ def _table_columns(header):
 def _parse_outline_rows(text):
     """大纲表 → 行参数：内容 / 时长 / 运镜 / 生成方式 / 备注。
 
-    表头认名字取列（老五列表没有生成方式列就按位置兜底），列值不再丢：
-    旧实现只取 cells[1] 当内容，时长/运镜/备注全扔，运镜靠轮转补——大纲写了等于没写。
+    表头认名字取列（五列表没有生成方式列就按位置兜底），列值不再丢：
+    只取 cells[1] 当内容，时长/运镜/备注全扔，运镜靠轮转补——大纲写了等于没写。
     """
     from .director_prompts.genmode import normalize_gen_mode
     rows = [l for l in text.splitlines() if l.strip().startswith("|")]

@@ -1,4 +1,4 @@
-"""director 配图归一：新 images 数组优先，老单图 image 回退。"""
+"""director 配图归一：新 images 数组优先，单图 image 回退。"""
 
 REF_ROLE_PHRASE = {
     "character": "character identity",
@@ -15,9 +15,9 @@ MAX_REFS = 6  # PixAI 多图参考上限（含首帧）
 
 def shot_images(shot):
     imgs = list(shot.get("images") or [])
-    legacy = shot.get("image") or ""
-    if legacy and not any(x.get("name") == legacy for x in imgs):
-        imgs.append({"name": legacy, "kind": "ref"})
+    single = shot.get("image") or ""
+    if single and not any(x.get("name") == single for x in imgs):
+        imgs.append({"name": single, "kind": "ref"})
     return [x for x in imgs if x.get("name")]
 
 
@@ -53,10 +53,3 @@ def collect_refs(shot, fallback=None):
 def collect_refs_fell_back(shot, fallback=None):
     """本镜是否用了兜底参考（纯函数，给组装层写备注）。"""
     return (not shot_images(shot)) and bool(fallback)
-
-
-# 兼容旧名：director.py 曾用下划线版本
-_shot_images = shot_images
-_first_image = first_image
-_img_url = img_url
-_collect_refs = collect_refs

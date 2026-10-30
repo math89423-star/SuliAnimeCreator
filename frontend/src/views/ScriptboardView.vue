@@ -109,8 +109,7 @@ const genModeOpts = ref<{ key: string; label: string }[]>([
   { key: 'multi-ref', label: '多图参考' },
 ])
 const settings = useSettingsStore()
-// 剧本底稿：空着等生成/手写。旧演示样稿（含固定人名那两句）不再预填，
-// 老浏览器里残留的同一份样稿也清掉，免得 debounce 自动保存把它写进库里。
+// 剧本底稿：空着等生成/手写。不再预填演示样稿，残留的同一份样稿也清掉，免得自动保存把它写进库里。
 purgeLegacySeeds()
 const script = ref('')
 const rows = computed(() => store.shots)
@@ -329,7 +328,7 @@ async function clearWorkspace() {
   clearTimeout(scriptTimer)
   script.value = ''
   savedScript.value = ''
-  await save(true, true)   // force：空内容必须显式声明，否则后端护栏会拒（2026-10-16 事故）
+  await save(true, true)   // force：空内容必须显式声明，否则后端护栏会拒
   await loadShots()
   ElMessage.success('工作区已清空')
 }

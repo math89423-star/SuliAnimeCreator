@@ -228,7 +228,7 @@ const pageContext = computed(() => {
   }
   return ''
 })
-// Agent 运行模型（2026-10-17）：白名单与后端 _RUN_MODELS 对齐；每次发送按当前选择生效
+// Agent 运行模型：白名单与后端对齐；每次发送按当前选择生效
 
 function findSession(scope: string, key: string) {
   return sessions.value.find(s => s.scope === scope && s.key === key)
@@ -671,7 +671,7 @@ async function delSession(s: any) {
   } catch {
     remoteOk = false
   }
-  // 本地秒删：即使后端是没重启的老版本也先清掉，不让卡片卡死
+  // 本地秒删：先清掉，不让卡片卡死
   try { localStorage.removeItem(`dsh-turns:${s.scope || curScope.value}:${s.key}`) } catch {}
   sessions.value = sessions.value.filter(x => !(x.key === s.key && (x.scope || '') === (s.scope || '')))
   if (curKey.value === s.key) {
@@ -937,8 +937,8 @@ onMounted(async () => {
   await backToPageSessionSilent()
   await resumeIfAny()   // 刷新后把后台还在跑/刚跑完的那一轮接回来
 })
-// 一次性迁移：一集一会之前攒下的异域旧缓存（story/character/traffic/global 的 turns 与 run 游标）清掉，
-// 只保留 episode 与 art 域；旧后缀 EP-xxx-2 的 turns 一起清（后端映射本就只剩这两域，删本地即对齐）。
+// 一次性清理：只保留当前在用的域（episode/art/video/traffic/page），其余域的 turns 与 run 游标清掉，
+// 后端映射本就只有这些域，删本地即对齐；带后缀 EP-xxx-2 的 turns 一起清。
 function purgeLegacyDomainCaches() {
   try {
     if (localStorage.getItem('suli.dsh.purged-v1')) return
@@ -947,13 +947,13 @@ function purgeLegacyDomainCaches() {
       const k = localStorage.key(i) || ''
       if (k.startsWith('dsh-turns:') || k.startsWith('dsh-run:')) {
         const scope = k.split(':')[1] || ''
-        if (scope && scope !== 'episode' && scope !== 'art') drop.push(k)
+        if (scope && !['episode', 'art', 'video', 'traffic', 'page'].includes(scope)) drop.push(k)
       }
     }
     drop.forEach(k => { try { localStorage.removeItem(k) } catch {} })
     try { localStorage.setItem('suli.dsh.purged-v1', String(Date.now())) } catch {}
   } catch {}
-  // 一次性：单图页的占位会话键 studio-draft（没选方案时的兜底键）留下的旧桶
+  // 单图页占位会话键 studio-draft 留下的桶
   try {
     if (!localStorage.getItem('suli.dsh.purged-v2')) {
       for (const k of ['dsh-turns:art:studio-draft', 'dsh-run:art:studio-draft']) {

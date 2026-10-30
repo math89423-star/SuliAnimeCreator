@@ -1,5 +1,5 @@
 """director_prompts：纯组装函数包。路由层只调这里，不碰别家蓝图私有变量。"""
-from .tiers import TIERS, LEGACY_TIERS, normalize_tier, tier_list, WATER_CLAUSES, WATER_LABELS, normalize_water, water_clause
+from .tiers import TIERS, TIER_ALIAS, normalize_tier, tier_list, WATER_CLAUSES, WATER_LABELS, normalize_water, water_clause
 from .still import VAGUE_BAN, clean, build_prompt
 from .h3 import I2VA_ALIGN, MOVEMENT_EN, CROP_EN, build_i2va
 from .pixai import (
@@ -19,7 +19,7 @@ from .text import (
 )
 
 __all__ = [
-    "TIERS", "LEGACY_TIERS", "normalize_tier", "tier_list",
+    "TIERS", "TIER_ALIAS", "normalize_tier", "tier_list",
     "WATER_CLAUSES", "WATER_LABELS", "normalize_water", "water_clause",
     "VAGUE_BAN", "clean", "build_prompt",
     "I2VA_ALIGN", "MOVEMENT_EN", "CROP_EN", "build_i2va",

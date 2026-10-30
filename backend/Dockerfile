@@ -22,11 +22,11 @@ ENV PYTHONUNBUFFERED=1 DSH_TIMEOUT_S=180
 EXPOSE 5001
 CMD ["python", "run.py"]
 
-# ── CA 信任库（防回归）──────────────────────────────────────────────
-# 2026-10-20 Debian DSA-6572-1：eMudhra 中间 CA 被攻破 → 移除 emSign ECC Root CA - G3 与
+# ── CA 信任库 ───────────────────────────────────────────────
+# eMudhra 中间 CA 被攻破 → 移除 emSign ECC Root CA - G3 与
 # Comodo AAA Services root。镜像层会缓存，重建时 --pull（基础镜像 digest 变了）或 --no-cache
 # 才会重跑这层；平时改 CA_REFRESH 的值也能强制刷新。
-ARG CA_REFRESH=2026-10-21
+ARG CA_REFRESH=2
 RUN echo "ca-refresh=$CA_REFRESH" \
  && apt-get update \
  && apt-get install -y --only-upgrade ca-certificates \

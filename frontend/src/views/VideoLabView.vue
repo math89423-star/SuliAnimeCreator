@@ -701,9 +701,9 @@ function buildDeepBrief(): string {
     lines.push(`素材区间：${fmtT(segStart.value)} → ${fmtT(effEnd.value)}（${segDur.value.toFixed(1)}s），只拆这个区间。`)
   }
   lines.push('目标：复刻级拆解 → 详细设计报告（复刻规格版）。执行《深度拉片工作流》：')
-  lines.push('先重读 ../skills/video/deep-teardown/SKILL.md（每轮都重读，以文件最新版为准，不要凭记忆跑旧流程）。')
+  lines.push('先重读 ../skills/video/deep-teardown/SKILL.md（每轮都重读，以文件为准，不要凭记忆跑流程）。')
   lines.push('按 S0 切点扫描 → S1 逐镜帧墙 → 逐镜镜头卡 → S2 关键镜精拆 → S3 节奏结构 → S4 详细设计报告 逐步跑完。')
-  lines.push('本轮为完整重跑：切点/帧墙现场重新生成，逐镜交给本轮工具结果（即使与上一轮同源，也不要复用上一轮结论与数据）。')
+  lines.push('本轮为完整重跑：切点/帧墙现场重新生成，逐镜交给本轮工具结果（即使同源，也不要复用上一轮结论与数据）。')
   lines.push('每镜必须配 1 张帧图：用本轮 shots-frames 返回的 frames[] 里该镜的中间帧，在镜块里写 ![镜 N · 时间码](/api/images/<name>)（name 逐字复制，别手敲）。')
   lines.push('交稿前自检：报告里 /api/images/ 的引用数 ≥ 镜数，不够就补齐再交。')
   lines.push('只出报告：不落盘、不出分镜、不改任何库；报告全文直接输出（这就是交付物）。')

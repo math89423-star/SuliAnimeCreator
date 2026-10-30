@@ -340,7 +340,3 @@ def build_pixai(shot, character=None, locks=None, style_bible="", tier="", mode=
             "first_image": first.get("name") if first else "",
             "first_image_url": img_url(first.get("name")) if first else "",
             "duration_s": duration, "prompt": prompt, "locks_hit": locks_hit, "warnings": warnings}
-
-
-# 兼容旧名
-_apply_pixai_model_deltas = apply_pixai_model_deltas

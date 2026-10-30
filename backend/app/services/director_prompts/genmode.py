@@ -51,11 +51,11 @@ def normalize_gen_mode(v):
 
 
 def shot_kinds(shot):
-    """本镜素材事实：有没有首帧 / 尾帧 / 其它参考图（老单图 image 字段算 ref）。"""
+    """本镜素材事实：有没有首帧 / 尾帧 / 其它参考图（单图 image 字段算 ref）。"""
     imgs = [x for x in (shot.get("images") or []) if x.get("name")]
-    legacy = shot.get("image") or ""
-    if legacy and not any(x.get("name") == legacy for x in imgs):
-        imgs.append({"name": legacy, "kind": "ref"})
+    single = shot.get("image") or ""
+    if single and not any(x.get("name") == single for x in imgs):
+        imgs.append({"name": single, "kind": "ref"})
     first = any(x.get("kind") == "first" for x in imgs)
     last = any(x.get("kind") == "last" for x in imgs)
     others = [x for x in imgs if x.get("kind") not in ("first", "last")]
