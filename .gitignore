@@ -42,3 +42,9 @@ backend/data/model-patches/
 .DS_Store
 *.local
 .run/
+
+# 2026-11-13: 运行时状态不入库（公开仓库，避免创作/会话内容外泄）
+backend/data/*_db.json
+backend/data/reports/
+backend/instance/
+backend/data/dsh_sessions.json
